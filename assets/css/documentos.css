@@ -1,0 +1,282 @@
+@charset "UTF-8";
+
+@page {
+  background: #fff;
+}
+
+html,
+body {
+  background: #fff;
+}
+
+* {
+  line-height: 1.15em;
+}
+
+*,
+*:after,
+*:before {
+  font-family: "Noto Sans", "Tahoma", "Arial", "sans-serif";
+  font-size: 10pt;
+}
+
+*:after,
+*:before {
+  display: inline-block;
+}
+
+p {
+  margin-bottom: 0.2cm;
+  direction: ltr;
+  color: #000;
+  text-align: justify;
+  orphans: 0;
+  widows: 0;
+  line-height: 1.2em;
+  background: transparent;
+}
+
+div.main {
+  width: calc(100% - .3cm);
+  box-sizing: border-box;
+}
+
+table {
+  width: 100%;
+}
+
+table tr,
+table tr td,
+table tr td>input {
+  background: #fff;
+}
+
+table tr td {
+  vertical-align: middle;
+  padding: 0.3rem 0.4rem;
+}
+
+table tr td,
+table tr td>*,
+table tr td>input {
+  line-height: 2.55rem;
+  height: 2.55rem;
+}
+
+table tr td>input {
+  width: calc(100% + 0.1rem);
+  margin: 0 -0.2rem;
+  border: none;
+  font-weight: bold;
+}
+
+table.fields tr td {
+  border-top: 1px solid #333;
+  border-left: 1px solid #333;
+  white-space: nowrap;
+}
+
+table.fields tr td:last-of-type {
+  border-right: 1px solid #333;
+}
+
+table.fields tr td>span:after {
+  content: ": \25BE";
+  background-position: 1em;
+  font-size: 1em;
+  height: 1em;
+  width: 2em;
+  position: absolute;
+  overflow: hidden;
+}
+
+table.fields tr:last-of-type td {
+  border-bottom: 1px solid #333;
+}
+
+table.fields tr:nth-child(odd),
+table.fields tr:nth-child(odd)>*,
+table.fields tr:nth-child(odd) *,
+table.fields tr:nth-child(odd) *>* {
+  height: 1rem;
+  line-height: 1rem !important;
+  max-height: 1rem;
+}
+
+table.fields tr:nth-child(odd),
+table.fields tr:nth-child(odd) td {
+  background: #ccc;
+}
+
+img.logo {
+  display: none;
+  max-height: 2.5cm;
+  max-width: 100%;
+  margin-bottom: .65cm;
+}
+
+.autosave,
+.nota,
+.menu,
+.cookie,
+.no-print {
+  background: #ff3333;
+  color: #fff;
+  padding: .4em .8rem;
+  top: 0;
+  left: 0;
+  max-width: 100%;
+  clear: both;
+}
+
+div.nota {
+  background: #ddd;
+  color: #111;
+}
+
+div.autosave {
+  background: #222;
+  color: #eee;
+}
+
+div.autosave:before {
+  color: red;
+  font-size: 1.8em;
+}
+
+div.menu {
+  background: #dedede;
+}
+
+::placeholder {
+  font-weight: normal;
+  color: #777;
+}
+
+.ico.share:before {
+  content: "\27A6";
+  font-family: "Noto Sans", "sans serif", "tahoma";
+}
+
+.ico.print.pdf:before {
+  content: "\1F5B6";
+}
+
+.ico.print:before,
+.ico.pdf.formulario:before {
+  content: "\1F5B6";
+}
+
+.ico.timbre:before {
+  content: "\1F5BC";
+}
+
+.ico.clear:before {
+  content: "\232B";
+}
+
+.ico.save:before {
+  content: "\25A3";
+}
+
+.ico.save2:before {
+  content: "\25A2";
+}
+
+.ico:before {
+  content: " ";
+  display: inline-block;
+  min-height: 1em;
+  font-size: 1.5em;
+  width: 1.5em;
+  float: left;
+  margin: 0;
+}
+
+.menu>* {
+  position: relative;
+  text-decoration: none;
+  background-size: 1.5rem;
+  background-position: .3rem center;
+  display: inline-block;
+  margin: -.3rem .1rem;
+  padding: .75rem;
+  cursor: pointer;
+  color: #555;
+  max-height: 1.2em;
+  border-radius: .3em;
+}
+
+.menu input {
+  position: fixed;
+  left: -10rem;
+  top: -10rem;
+  width: 1px;
+}
+
+.menu>*:hover {
+  background-color: #2b92db;
+  color: #fff;
+}
+
+div.versao {
+  transform: rotate(-90deg);
+  position: fixed;
+  right: -3.55cm;
+  top: 12.4cm;
+  display: none;
+}
+
+div.versao *,
+div.versao {
+  text-align: left;
+  font-size: .8em;
+  color: #000;
+}
+
+@media print {
+  body {
+    margin-right: .9cm;
+  }
+
+  div.versao {
+    display: flex !important;
+  }
+
+  .autosave,
+  .menu,
+  .nota,
+  .cookie,
+  .no-print {
+    display: none !important;
+  }
+
+  ::placeholder {
+    color: #fff;
+    opacity: 0;
+  }
+}
+
+body.imprimir {
+  margin-right: .9cm;
+}
+
+body.imprimir div.versao {
+  display: flex !important;
+}
+
+body.imprimir .autosave,
+body.imprimir .menu,
+body.imprimir .nota,
+body.imprimir .cookie,
+body.imprimir .no-print {
+  display: none !important;
+}
+
+body.imprimir ::placeholder,
+body.imprimir input::placeholder {
+  color: transparent;
+  opacity: 0;
+  display: none;
+}
+

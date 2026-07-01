@@ -6,28 +6,38 @@ Modelos Web JCEM.
 
 ## Objetivo
 
-Disponibilizar modelos e utilitários Web estáticos, com foco principal em documentos editáveis para impressão fiel em A4. O documento admissional em `oficios/admissional/index.html` é a referência funcional atual para geração, preenchimento, validação, salvamento local, timbre, compartilhamento parametrizado e exportação PDF.
+Disponibilizar modelos e utilitários Web estáticos, com infraestrutura compartilhada para documentos editáveis, parametrizáveis e imprimíveis com fidelidade em A4.
 
 ## Escopo
 
 - Páginas estáticas executadas no navegador.
-- Documentos imprimíveis, especialmente ofícios e modelos formais.
-- Utilitários Web simples, como a calculadora em `dizimo/`.
+- Documentos imprimíveis organizados por categoria e módulo.
+- Utilitários Web simples que não dependem de backend.
 - Bookmarklets utilitários em `favoritos/`.
+- Componentes reutilizáveis em `assets/`.
+- Fontes TypeScript em `src/`, compiladas para artefatos estáticos publicados.
 - Persistência local no navegador por `localStorage`.
 - Geração de PDF no cliente quando houver botão dedicado.
 - Preenchimento parametrizado por query string.
 - Publicação estática sob o domínio `modelos.jcem.pro`.
 
-## Regras de Negócio
+## Regras de Negócio Globais
 
-### RN001 - Documento como Artefato de Impressão
+### RN001 - Separação de Escopos Normativos
 
-O objetivo principal dos documentos em `oficios/` é gerar artefatos para impressão em papel A4.
+O `RCF.md` global deve conter apenas regras transversais ao sistema.
 
-Toda estilização de documentos imprimíveis deve priorizar fidelidade de impressão, mesmo quando a visualização Web oferecer recursos extras de edição, aviso, compartilhamento ou navegação.
+Cada documento ou módulo especializado deve possuir seu próprio `RCF.md` quando tiver objetivo, campos, validações, layout ou decisões que não façam sentido para todo o projeto.
 
-### RN002 - Separação entre Interface Web e Área Imprimível
+Regras específicas não devem ser promovidas ao RCF global apenas por terem surgido durante a implementação de um documento.
+
+### RN002 - Documento como Artefato de Impressão
+
+Documentos imprimíveis têm como finalidade gerar artefatos previsíveis para papel ou PDF.
+
+Toda estilização de documentos imprimíveis deve priorizar fidelidade de impressão, sem impedir uma experiência Web utilizável para edição, avisos e ações auxiliares.
+
+### RN003 - Separação entre Interface Web e Área Imprimível
 
 Documentos devem separar conceitualmente:
 
@@ -36,196 +46,172 @@ Documentos devem separar conceitualmente:
 
 Elementos não imprimíveis devem ser visíveis apenas na interface Web e ocultados em `@media print` e em qualquer modo programático de geração de PDF.
 
-### RN003 - Fidelidade A4
+### RN004 - Fidelidade A4
 
-A área imprimível deve possuir layout preciso e previsível em A4.
+A área imprimível deve possuir layout preciso e previsível em A4 quando o documento declarar esse formato.
 
-Margens, dimensões, largura útil, posicionamento, tabelas, assinatura, timbre, rodapé lateral de versão e paginação devem ser controlados por CSS e configuração explícita, evitando dependência de comportamento implícito do navegador.
+Margens, dimensões, largura útil, posicionamento, tabelas, campos, timbres, rodapés de versão e paginação devem ser controlados por CSS e configuração explícita, evitando dependência de comportamento implícito do navegador.
 
-O documento admissional usa como configuração efetiva:
+### RN005 - Impressão pelo Navegador e por PDF Dedicado
 
-```text
-Tamanho: 21 cm x 29,7 cm
-Margem esquerda: 1,4 cm
-Margem direita: 0,5 cm
-Margem superior: 1 cm
-Margem inferior: 1,5 cm
-Unidade: cm
-Orientação: retrato
-```
-
-### RN004 - Impressão pelo Navegador e por PDF Dedicado
-
-A impressão deve funcionar corretamente tanto via Ctrl+P, ou equivalente do sistema/navegador, quanto por botão dedicado de geração de PDF.
+A impressão deve funcionar corretamente tanto via Ctrl+P, ou equivalente do sistema/navegador, quanto por botão dedicado de geração de PDF quando o documento oferecer essa ação.
 
 O botão dedicado deve preparar o documento para impressão, ocultar placeholders e elementos de interface, aplicar configuração de página e restaurar o estado visual depois da geração.
 
-Quando a impressão depender de configuração do usuário no navegador, como desabilitar cabeçalhos e rodapés padrão, a interface Web pode orientar o usuário, mas o layout do documento deve reduzir ao máximo essa dependência.
-
-### RN005 - Responsividade Restrita
+### RN006 - Responsividade Restrita
 
 A visualização Web pode ser responsiva para melhorar uso em telas diferentes.
 
 A responsividade deve ficar restrita a elementos de interface, barras, avisos e controles. Ela não deve alterar medidas fundamentais, proporções, margens, paginação ou alinhamentos da área imprimível.
 
-### RN006 - Salvamento Automático
+### RN007 - Componentes Reutilizáveis
 
-Documentos editáveis devem possuir salvamento automático durante a edição.
+Tudo que possuir potencial de reutilização entre documentos deve ficar em camada compartilhada do projeto.
 
-No documento admissional, campos `input` são carregados e persistidos por `localStorage` usando o `id` do campo. Campos sem `id` recebem identificador automático `iN`.
+Devem ser centralizados, quando aplicável:
 
-O salvamento deve ocorrer durante interações de edição e validação, sem exigir botão manual de salvar.
+- Barra de ferramentas.
+- Sistema de impressão e exportação PDF.
+- Estilos documentais comuns.
+- Componentes de formulário.
+- Salvamento automático.
+- Preenchimento por parâmetros.
+- Utilitários de validação e formatação.
+- Timbre ou upload de imagem documental.
+- Funções de data.
+- Acesso à área de transferência.
 
-### RN007 - Validação e Normalização de Campos
+### RN008 - Barra de Ferramentas Extensível
 
-Campos obrigatórios devem ser validados antes da geração de PDF ou compartilhamento parametrizado.
-
-O documento admissional formaliza as seguintes validações e normalizações existentes:
-
-- CPF deve conter 11 dígitos e dígitos verificadores válidos.
-- CNPJ deve aceitar valor com 3 a 14 dígitos, completar com zeros à esquerda até 14 dígitos e validar dígitos verificadores.
-- Celular deve conter 11 dígitos, DDD válido maior ou igual a 11 e iniciar com `9` após o DDD.
-- Telefone fixo deve conter 10 dígitos e DDD válido maior ou igual a 11.
-- CEP deve conter 8 dígitos.
-- Moeda deve aceitar entrada numérica com vírgula ou ponto e normalizar para BRL em `pt-BR`.
-- UF deve pertencer ao conjunto de unidades federativas brasileiras aceitas pelo documento.
-- Nome da empresa deve ser convertido para maiúsculas.
-- Campos com `pattern` devem respeitar a expressão regular definida no HTML.
-
-Mensagens de erro devem ser claras para o usuário e impedir geração quando campos obrigatórios estiverem vazios ou inválidos.
-
-### RN008 - Campos da Empresa para Compartilhamento
-
-O compartilhamento de documento pré-preenchido deve validar, no mínimo, os campos da empresa marcados com atributo `empresa`.
-
-No documento admissional, estes campos são:
-
-- `nome`: nome da empresa.
-- `cnpj`: CNPJ da empresa.
-- `fone`: telefone fixo da empresa com DDD.
-
-### RN009 - Timbre
-
-Documentos podem permitir upload de timbre em imagem.
-
-No documento admissional, o timbre é carregado de arquivo local aceitando `.svg`, `.jpg`, `.jpeg` e `.png`, convertido para Data URL e persistido em `localStorage` pela chave `timbre`.
-
-Quando houver timbre salvo, ele deve ser exibido no início do documento e incluído na impressão/PDF.
-
-### RN010 - Preenchimento por Query String
-
-Qualquer documento deverá poder ser totalmente preenchido por parâmetros recebidos via JSON na query string, codificados em Base64.
-
-Base64 deve ser tratado como mecanismo de ofuscação e transporte, nunca como segurança, autenticação, assinatura ou criptografia.
-
-O documento admissional já suporta preenchimento parcial por parâmetros individuais em Base64:
-
-- `empresa` ou `nome` para `#nome`.
-- `cnpj` para `#cnpj`.
-- `tel`, `fone` ou `telefone` para `#fone`.
-- `timbre` ou `logo` para a imagem de timbre.
-
-A evolução normativa é aceitar também um payload JSON Base64 capaz de preencher todos os campos documentais mapeados, preservando aliases legados quando existirem.
-
-### RN011 - Compartilhamento de Modelo Preenchido
-
-Documentos podem disponibilizar ação de compartilhamento que gere URL com dados pré-preenchidos.
-
-No documento admissional, a ação copia para a área de transferência uma URL pública contendo telefone, CNPJ, empresa e timbre codificados em Base64.
-
-URLs compartilhadas não devem conter dados tratados como secretos, pois Base64 não fornece proteção.
-
-### RN012 - Limpeza de Campos
-
-Documentos editáveis podem oferecer ação para limpar campos de preenchimento do usuário.
-
-No documento admissional, a ação limpa apenas campos com `id` automático no formato `iN`, preservando campos estruturais da empresa e demais dados persistidos que não sigam esse padrão.
-
-### RN013 - Data do Documento
-
-Documentos podem gerar data automaticamente no carregamento.
-
-No documento admissional, a data é renderizada em português no formato:
-
-```text
-DD de Mês de AAAA
-```
-
-### RN014 - Conteúdo Formal do Ofício Admissional
-
-O documento admissional declara ao Banco do Brasil S.A. que a pessoa qualificada pertence ao quadro de funcionários ou contratados da empresa declarante.
-
-O conteúdo formal exige que o documento seja acompanhado da Cédula de Identidade original.
-
-O formulário coleta, no mínimo:
-
-- Nome da pessoa.
-- CPF.
-- E-mail.
-- Celular.
-- Telefone de recado.
-- Logradouro/endereço.
-- Bairro.
-- Município.
-- UF.
-- CEP.
-- Cargo ou função.
-- Salário.
-- Assinatura física ou digital via gov.br.
-- Dados, carimbo e assinatura da empresa.
-- Campo de reconhecimento, validação ou assinatura do Banco do Brasil.
-
-### RN015 - Barra de Ferramentas Reutilizável
-
-A barra de ferramentas deve ser desacoplada do documento atual e tratada como componente reutilizável, configurável e extensível.
+A barra de ferramentas deve ser desacoplada do documento e tratada como componente reutilizável, configurável e extensível.
 
 A barra poderá conter ações:
 
 - Globais, disponíveis em todo o projeto.
 - Específicas do tipo documental.
-- Específicas da categoria, por exemplo `oficios`.
+- Específicas da categoria.
 - Específicas do documento individual.
 
 A configuração deve permitir habilitar, ocultar, ordenar e parametrizar ações sem duplicar lógica em cada documento.
 
-### RN016 - Ações de Documento
+### RN009 - Salvamento Automático
 
-O documento admissional possui as seguintes ações de interface:
+Documentos editáveis devem possuir salvamento automático durante a edição quando houver campos de usuário.
 
-- Gerar PDF preenchido.
-- Gerar PDF em branco/formulário.
-- Limpar campos.
-- Carregar timbre.
-- Compartilhar URL pré-preenchida.
-- Exibir estado de autosave.
+A persistência padrão deve ser local ao navegador, usando `localStorage`, sem exigir botão manual de salvar.
 
-Essas ações devem servir como base funcional para a primeira extração de toolbar reutilizável.
+Campos sem identificador explícito podem receber identificador automático, desde que esse comportamento preserve compatibilidade com documentos existentes.
 
-### RN017 - Dependências de Terceiros em CDN
+### RN010 - Validação e Normalização Reutilizáveis
 
-Dependências externas carregadas por CDN devem ser explícitas, versionadas e justificadas pela necessidade do documento.
+Validações com uso potencialmente comum devem ficar na camada compartilhada.
 
-O documento admissional usa `html2pdf.js` para geração de PDF no navegador.
+O sistema compartilhado deve disponibilizar um catálogo global de validadores e normalizadores, no mínimo para:
 
-Mudanças que introduzam novas dependências externas devem registrar a decisão neste RCF.
+- CPF.
+- CNPJ.
+- CEP.
+- Telefone fixo brasileiro.
+- Celular brasileiro.
+- Moeda em BRL.
+- Padrões HTML definidos por `pattern`.
+- Campos obrigatórios.
 
-### RN018 - Compatibilidade Estática
+O uso desses validadores deve ser opt-in por documento e por campo. Cada documento deve poder declarar, para cada campo, se a validação é exigida, opcional, desativada ou substituída por validador próprio.
+
+A configuração por campo deve permitir definir seletor, obrigatoriedade, tipo de validador, normalização, mensagem, `pattern` e transformações simples como maiúsculas.
+
+Mensagens específicas de domínio devem permanecer configuráveis por documento.
+
+### RN011 - Preenchimento por Query String
+
+Qualquer documento deverá poder ser totalmente preenchido por parâmetros recebidos via JSON na query string, codificados em Base64.
+
+Base64 deve ser tratado como mecanismo de ofuscação e transporte, nunca como segurança, autenticação, assinatura ou criptografia.
+
+A camada compartilhada deve oferecer leitura de payload JSON Base64 e aplicação por mapeamento configurado pelo documento.
+
+Aliases legados por parâmetros individuais podem ser preservados no módulo específico do documento.
+
+### RN012 - Compartilhamento de Modelo Preenchido
+
+Documentos podem disponibilizar ação de compartilhamento que gere URL com dados pré-preenchidos.
+
+URLs compartilhadas com dados em Base64 devem ser tratadas como potencialmente públicas.
+
+O conteúdo compartilhado e os aliases disponíveis devem ser definidos no RCF específico do documento ou módulo.
+
+### RN013 - Timbre e Imagens Documentais
+
+Documentos podem permitir upload de timbre ou imagem documental.
+
+A infraestrutura compartilhada deve permitir ler arquivo local aceito pelo documento, armazenar Data URL em `localStorage` e restaurar a imagem durante a edição e impressão.
+
+Formatos aceitos, posicionamento e obrigatoriedade são regras específicas de cada documento.
+
+### RN014 - Limpeza de Campos
+
+Documentos editáveis podem oferecer ação para limpar campos de preenchimento do usuário.
+
+A estratégia de limpeza deve ser configurável, permitindo limpar apenas campos automáticos, campos selecionados ou escopos documentais definidos.
+
+### RN015 - Data Gerada no Cliente
+
+Documentos podem preencher data automaticamente no carregamento.
+
+A infraestrutura compartilhada deve fornecer formatação local em português, enquanto o local de exibição e a necessidade da data pertencem ao documento.
+
+### RN016 - Dependências de Terceiros em CDN
+
+Dependências externas carregadas por CDN devem ser explícitas, versionadas e justificadas pela necessidade do documento ou módulo.
+
+Mudanças que introduzam novas dependências externas devem registrar a decisão no RCF apropriado.
+
+### RN017 - Compatibilidade Estática
 
 O projeto deve continuar funcionando como site estático.
 
 Não deve ser exigido servidor de aplicação, etapa de build, backend ou banco de dados para uso dos documentos atuais, salvo decisão arquitetural futura registrada neste RCF.
 
-### RN019 - Redirecionamentos Legados
+### RN018 - Redirecionamentos Legados
 
 Arquivos legados podem redirecionar para a nova estrutura de diretórios quando necessário para preservar links públicos.
 
-O arquivo versionado `modeloCartaRendaAdmissional.html` redireciona para `https://modelos.jcem.pro/oficios/admissional`.
+Redirecionamentos específicos devem permanecer simples, estáticos e sem acoplar regras de negócio ao arquivo legado.
 
-### RN020 - Calculadora de Dízimo
+### RN019 - Utilitários Não Documentais
 
-A calculadora em `dizimo/` é um utilitário Web separado dos documentos de ofício.
+Utilitários Web que não sejam documentos imprimíveis devem permanecer isolados das regras de impressão, salvo quando consumirem componentes compartilhados realmente genéricos.
 
-Ela calcula recebimentos, oferta/pacto, correção de dízimo, dízimo e dízimo corrigido com formatação monetária brasileira. Alterações nesse utilitário não devem contaminar regras documentais de impressão, salvo componentes realmente compartilháveis e registrados neste RCF.
+Regras próprias desses utilitários devem ficar em RCF específico quando o módulo evoluir para além de página simples.
+
+### RN020 - TypeScript como Fonte
+
+TypeScript é a linguagem padrão do projeto.
+
+Todo código de aplicação deve ter fonte em `.ts` ou `.tsx`, com JavaScript permitido apenas como artefato compilado, bookmarklet publicado, script de bootstrap de tooling Node.js ou exceção técnica documentada.
+
+O alvo mínimo de compilação é ES2020. Alvos superiores podem ser adotados quando preservarem compatibilidade com GitHub Pages, navegadores suportados e GitHub Actions.
+
+### RN021 - Componentes TSX
+
+`.tsx` é o formato preferencial para componentes de interface reutilizáveis.
+
+Novas interfaces devem privilegiar componentes tipados, reutilizáveis e desacoplados de regras específicas de documento.
+
+### RN022 - Build, CI e Cache Incremental
+
+O projeto deve possuir scripts NPM para desenvolvimento, compilação, build, testes, lint, type-check e validação.
+
+O build deve reutilizar cache incremental sempre que possível, recompilando e copiando apenas artefatos alterados, sem comprometer consistência do `_site`.
+
+Operações críticas de build devem ser fail-safe: falhas de IO, cache corrompido, lock concorrente, erro de compilação ou inconsistência de tipos devem interromper a publicação antes de gerar saída inconsistente.
+
+### RN023 - Robustez Permanente
+
+Toda implementação deve ser fortemente tipada, modular, reutilizável, blindada e fail-safe.
+
+Tratamentos preventivos devem cobrir erros de compilação, inconsistências de tipos, falhas de build, problemas de cache, condições de corrida, falhas de IO e estados ausentes no navegador.
 
 ## Arquitetura
 
@@ -233,35 +219,61 @@ Ela calcula recebimentos, oferta/pacto, correção de dízimo, dízimo e dízimo
 
 ```text
 /
+├── assets/
+│   ├── css/
+│   └── js/
+├── dizimo/
+├── favoritos/
+├── oficios/
+│   └── <documento>/
+│       ├── index.html
+│       ├── RCF.md
+│       ├── <documento>.css
+│       └── <documento>.js
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── dizimo/
+│   ├── favoritos/
+│   └── oficios/
+├── tests/
+├── scripts/
+├── .github/
+│   └── workflows/
+├── AGENTS.md
 ├── CNAME
 ├── LICENSE
+├── RCF.md
 ├── README.md
-├── dizimo/
-│   ├── index.html
-│   └── assets/
-├── favoritos/
-│   ├── dark.discourse.js
-│   └── remover.paywall.js
-├── modeloCartaRendaAdmissional.html
-└── oficios/
-    └── admissional/
-        └── index.html
+└── continue.ia
 ```
 
-### ARQ002 - Separação Recomendada para Documentos
+### ARQ002 - Camada Compartilhada
 
-Documentos imprimíveis devem evoluir para a seguinte separação lógica:
+A camada `assets/` concentra infraestrutura reutilizável:
 
-- Núcleo de documento: HTML sem dependência direta da toolbar.
+- `assets/js/documentos.js`: utilitários e serviços compartilhados para documentos.
+- `assets/css/documentos.css`: estilos documentais e componentes visuais reutilizáveis.
+
+Documentos devem consumir essa camada e manter localmente apenas inicialização, configuração, mapeamentos e estilos exclusivos.
+
+Os arquivos JavaScript em `assets/`, `oficios/`, `dizimo/` e `favoritos/` são artefatos públicos gerados a partir de `src/`.
+
+### ARQ003 - Separação Recomendada para Documentos
+
+Documentos imprimíveis devem seguir a seguinte separação lógica:
+
+- Núcleo de documento: HTML com conteúdo formal e marcação mínima.
 - Área imprimível: contêiner exclusivo para conteúdo formal.
-- Toolbar: componente reutilizável externo ao documento.
-- Configuração: metadados do documento, categoria e tipo documental.
-- Persistência: módulo de autosave e restauração de dados.
-- Parametrização: módulo para ler JSON Base64 e aliases legados.
-- Impressão/PDF: módulo para preparar, gerar e restaurar estado.
-- Validação: módulo reutilizável para formatos como CPF, CNPJ, telefone, CEP, moeda e UF.
+- Toolbar: componente reutilizável externo à regra do documento.
+- Configuração local: metadados, ações, mensagens e mapeamentos.
+- Persistência: serviço compartilhado de autosave.
+- Parametrização: serviço compartilhado de query string e JSON Base64.
+- Impressão/PDF: serviço compartilhado.
+- Validação: utilitários compartilhados com configuração local.
+- RCF específico: contrato do documento ou módulo.
 
-### ARQ003 - Configuração por Escopo
+### ARQ004 - Configuração por Escopo
 
 A configuração de ações deve respeitar precedência:
 
@@ -271,13 +283,13 @@ global < categoria < tipo documental < documento individual
 
 Uma ação mais específica pode sobrescrever, ocultar ou complementar uma ação mais geral.
 
-### ARQ004 - Persistência Local
+### ARQ005 - Persistência Local
 
 A persistência deve permanecer local ao navegador por padrão.
 
 As chaves de `localStorage` devem ser estáveis e, em evolução futura, preferencialmente namespaced por categoria/documento para evitar colisões entre modelos.
 
-### ARQ005 - Parametrização JSON Base64
+### ARQ006 - Parametrização JSON Base64
 
 A arquitetura de preenchimento parametrizado deve aceitar um parâmetro único contendo JSON codificado em Base64, por exemplo:
 
@@ -287,37 +299,44 @@ A arquitetura de preenchimento parametrizado deve aceitar um parâmetro único c
 
 O JSON deve mapear campos por identificador estável, nome lógico ou alias documentado. A rotina deve validar estrutura, ignorar chaves desconhecidas sem falhar e aplicar os mesmos normalizadores usados na edição manual.
 
-### ARQ006 - Fidelidade de Impressão Permanente
+### ARQ007 - Fidelidade de Impressão Permanente
 
 Toda mudança em documentos imprimíveis deve considerar fidelidade de impressão como requisito funcional, não como detalhe visual.
 
 Mudanças em CSS, fontes, escalas, margens, tabelas, inputs, placeholders, timbre, assinatura, toolbar ou geração de PDF devem ser revisadas contra impressão/PDF.
 
-### ARQ007 - Interface Não Imprimível
+### ARQ008 - Interface Não Imprimível
 
 Interface Web deve usar classes ou atributos claros para indicar elementos não imprimíveis.
 
-O padrão atual usa `.autosave`, `.menu`, `.nota` e `.cookie` ocultados em `@media print` e em `body.imprimir`. Evoluções devem preservar esse princípio e podem consolidá-lo em classe comum como `.no-print`.
+O padrão compartilhado deve suportar classes como `.menu`, `.nota`, `.cookie`, `.autosave` e `.no-print`, ocultando-as em impressão e no modo programático de PDF.
 
-### ARQ008 - Decisões Arquiteturais
+### ARQ009 - Decisões Arquiteturais
 
-Todas as decisões arquiteturais devem ser registradas nesta seção do RCF.
+Todas as decisões arquiteturais devem ser registradas no RCF apropriado.
 
-Decisões registradas:
+Decisões globais registradas:
 
 - O projeto permanece estático, sem backend obrigatório.
-- O padrão documental é reaproveitado de `whatsapp` apenas no formato de documentação, não em regras funcionais.
-- A prioridade permanente dos documentos em `oficios/` é impressão A4 fiel.
+- O RCF global contém apenas regras transversais; documentos especializados possuem RCF próprio.
+- Infraestrutura com potencial de reuso fica em `assets/`.
+- Documentos consomem APIs compartilhadas e mantêm localmente apenas configuração e regras específicas.
+- Validações comuns pertencem ao catálogo global, mas sua aplicação é declarada por campo em cada documento.
+- A prioridade permanente dos documentos imprimíveis é impressão A4 fiel quando esse formato for declarado.
 - A responsividade deve beneficiar a interface Web sem modificar a precisão da área imprimível.
-- A toolbar deve evoluir como componente reutilizável configurável por escopo.
 - O preenchimento por JSON Base64 deve ser universal para documentos, tratando Base64 como ofuscação.
 - Dependências externas devem ser explícitas, versionadas e registradas quando introduzidas.
+- TypeScript passa a ser a fonte canônica do código de aplicação.
+- `.tsx` passa a ser o padrão para componentes de interface reutilizáveis.
+- JavaScript versionado em áreas públicas é artefato compilado para preservar compatibilidade retroativa com GitHub Pages.
+- Scripts Node.js de build permanecem em `.mjs` por serem bootstrap executável antes da compilação TypeScript.
+- O build incremental usa manifesto em `.cache/build/manifest.json` e lock de concorrência para proteger `_site`.
 
 ## Requisitos Não Funcionais
 
 ### RNF001 - Plataforma
 
-Compatível com navegadores modernos em desktop e mobile, preservando impressão confiável especialmente em navegadores Chromium quando houver geração por `html2pdf.js`.
+Compatível com navegadores modernos em desktop e mobile, preservando impressão confiável especialmente em navegadores Chromium quando houver geração por PDF no cliente.
 
 ### RNF002 - Operação Estática
 
@@ -331,7 +350,7 @@ Alertas, notas e ferramentas devem ajudar o usuário sem aparecer no documento i
 
 ### RNF004 - Manutenibilidade
 
-Novas regras de negócio devem ser documentadas neste RCF no mesmo ciclo da alteração.
+Novas regras de negócio devem ser documentadas no RCF apropriado no mesmo ciclo da alteração.
 
 Lógica duplicada entre documentos deve ser candidata a componente reutilizável.
 
@@ -353,3 +372,8 @@ Alterações devem preservar arquitetura existente e evitar reestruturações am
 
 Quando uma refatoração for necessária, ela deve manter comportamento atual antes de acrescentar novas capacidades.
 
+### RNF008 - Toolchain
+
+A toolchain deve usar tecnologias maduras, amplamente mantidas e compatíveis com GitHub Actions e GitHub Pages.
+
+Type-check, lint, testes e build devem ser executáveis por NPM em ambiente Linux de CI e em ambiente local.

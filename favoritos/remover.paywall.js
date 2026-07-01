@@ -1,3 +1,1 @@
-javascript:(w=>{
-  w.location = "https://leiaisso.net/"+w.location.href;
-})(window)
+javascript:"use strict";(()=>{(i=>{"use strict";i.location.href=`https://leiaisso.net/${i.location.href}`})(window);})();

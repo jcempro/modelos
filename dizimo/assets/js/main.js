@@ -1,65 +1,64 @@
-(function ($, w, _, N, XLOG, XWARN, XERROR) {
-	var _modelo = "<div class='input al currency deposito coin'><input name='al' placeholder='{{HINT}}' type='currency' inputmode='numeric' f='pm' class='recebimentos coin' min='0' inner='<i class='go result'>Alimentação</i>' /><i class='go result'>{{HINT}}</i></div>";
-
-	w.isNum = function (c) {
-		return (!isNaN(c) && isFinite(c) && (c !== null) && (c !== null) && (typeof c !== undefined) && (typeof c !== "undefined") && (c !== ''));
-	};
-
-	var calcular = (e) => {
-		var total = 0;
-		var r = $('input.recebimentos');
-		for (var i = 0; i < r.length; i++) {
-			total += parseFloat(w.isNum(r[i].value) ? r[i].value : 0);
-		}
-
-		$('div.input.rc > i').innerHTML = total.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-
-		var oferta = $('input[name="of"]').value;
-		oferta = parseFloat(w.isNum(oferta) ? oferta : 1) / 100 * total;
-		$('div.input.of > i').innerHTML = oferta.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-
-		var dizimo = total * 0.1;
-
-		var cd = $('input[name="cd"]').value;
-		cd = parseFloat(w.isNum(cd) ? cd : 7) / 100 * dizimo;
-		$('div.input.cd > i').innerHTML = cd.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-		$('div.input.dz > i').innerHTML = dizimo.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-		$('div.input.dc > i').innerHTML = (dizimo + cd).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-		$('div.input.tt > i').innerHTML = (dizimo + cd + oferta).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-	};
-
-	window.onload = () => {
-		var inp = $('input');
-
-		for (var i = 0; i < inp.length; i++) {
-			inp[i].on('keyup', calcular);
-			inp[i].on('focusout', calcular);
-			j[i].on("blur", (e) => {
-				var realFormat = (c) => {
-					c = c.replace(/[^\d,]/g, '');
-					c = c.replace(/[,]/g, '.');
-
-					if (c.trim().length == 0) {
-						return -1;
-					}
-
-					try {
-						c = parseFloat(c);
-					} catch (e) {
-						return -2;
-					}
-
-					return (new Intl.NumberFormat('pt-BR', {
-						style: 'currency',
-						currency: 'BRL',
-					})).format(c);
-				};
-
-				e.target.value = realFormat(e.target.value);
-			});
-		}
-
-
-
-	};
-})(Zepto, window, this, navigator, console.log, console.warn, console.error);
+"use strict";
+(() => {
+  // src/dizimo/assets/js/main.ts
+  (function bootstrapDizimo($, w) {
+    "use strict";
+    function isNum(value) {
+      return value !== null && typeof value !== "undefined" && value !== "" && !Number.isNaN(Number(value)) && Number.isFinite(Number(value));
+    }
+    function setHtml(selector, value) {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.innerHTML = value;
+      }
+    }
+    function brl(value) {
+      return value.toLocaleString("pt-BR", { currency: "BRL", style: "currency" });
+    }
+    function normalizeCurrency(value) {
+      const cleaned = value.replace(/[^\d,]/g, "").replace(/[,]/g, ".");
+      if (cleaned.trim().length === 0) {
+        return "";
+      }
+      const parsed = Number.parseFloat(cleaned);
+      return Number.isNaN(parsed) ? "" : brl(parsed);
+    }
+    function calcular() {
+      let total = 0;
+      const recebimentos = $("input.recebimentos");
+      for (let index = 0; index < recebimentos.length; index++) {
+        const input = recebimentos[index];
+        total += Number.parseFloat(input && isNum(input.value) ? input.value : "0");
+      }
+      setHtml("div.input.rc > i", brl(total));
+      const ofertaInput = document.querySelector('input[name="of"]');
+      const oferta = Number.parseFloat(isNum(ofertaInput?.value) ? ofertaInput?.value ?? "1" : "1") / 100 * total;
+      setHtml("div.input.of > i", brl(oferta));
+      const dizimo = total * 0.1;
+      const correcaoInput = document.querySelector('input[name="cd"]');
+      const correcao = Number.parseFloat(isNum(correcaoInput?.value) ? correcaoInput?.value ?? "7" : "7") / 100 * dizimo;
+      setHtml("div.input.cd > i", brl(correcao));
+      setHtml("div.input.dz > i", brl(dizimo));
+      setHtml("div.input.dc > i", brl(dizimo + correcao));
+      setHtml("div.input.tt > i", brl(dizimo + correcao + oferta));
+    }
+    w.isNum = isNum;
+    w.onload = () => {
+      const inputs = $("input");
+      for (let index = 0; index < inputs.length; index++) {
+        const input = inputs[index];
+        if (!input) {
+          continue;
+        }
+        input.addEventListener("keyup", calcular);
+        input.addEventListener("focusout", calcular);
+        input.addEventListener("blur", (event) => {
+          const target = event.target;
+          if (target instanceof HTMLInputElement && target.getAttribute("type") === "currency") {
+            target.value = normalizeCurrency(target.value);
+          }
+        });
+      }
+    };
+  })(window.Zepto, window);
+})();

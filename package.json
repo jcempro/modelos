@@ -1,0 +1,28 @@
+{
+  "name": "modelos-jcem",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run compile && npm run build:site",
+    "build:site": "node scripts/build-site.mjs",
+    "check": "npm run type-check && npm run lint && npm test && npm run build",
+    "compile": "node scripts/compile.mjs",
+    "compile:watch": "node scripts/compile.mjs --watch",
+    "dev": "node scripts/dev.mjs",
+    "lint": "eslint . --cache --cache-location .cache/eslint/",
+    "test": "tsx --test tests/**/*.test.ts",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

@@ -1,6 +1,5 @@
 # continue.ia
 
-Antes de continuar qualquer alteração, leia [AGENTS.md](AGENTS.md), [RCF.md](RCF.md) e o arquivo alvo.
+Antes de continuar qualquer alteração, leia [AGENTS.md](AGENTS.md), [RCF.md](RCF.md), todos os `RCF.md` específicos envolvidos e o arquivo alvo.
 
-Este projeto prioriza documentos Web estáticos com impressão fiel em A4. Preserve a separação entre interface Web e área imprimível, mantenha autosave, compatibilidade com Ctrl+P/PDF dedicado e preenchimento parametrizado por JSON Base64 conforme o RCF.
-
+Este projeto prioriza documentos Web estáticos com impressão fiel em A4. Preserve a separação entre interface Web e área imprimível, mantenha autosave, compatibilidade com Ctrl+P/PDF dedicado, preenchimento parametrizado por JSON Base64 e centralização de recursos reutilizáveis em `assets/`. Use `src/**/*.ts` e `src/**/*.tsx` como fonte canônica e gere os `.js` públicos pelo build.
