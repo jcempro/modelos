@@ -146,18 +146,23 @@ O timbre é opcional e deve aceitar `.svg`, `.jpg`, `.jpeg` e `.png`.
 
 Quando carregado, deve aparecer no topo do documento e ser incluído na impressão/PDF.
 
-### RN014 - Compartilhamento Pré-Preenchido
+### RN014 - Compartilhamento
 
-A ação de compartilhamento deve validar os campos da empresa e copiar URL pública com:
+A ação de compartilhamento deve consumir a infraestrutura global de `share`.
+
+Quando o usuário escolher compartilhar apenas o link limpo, nenhuma validação específica do admissional deve ser exigida.
+
+Quando o usuário escolher compartilhar o modelo preenchido, a ação deve validar os campos da empresa e copiar URL pública com JSON Base64 contendo:
 
 - Telefone da empresa.
 - CNPJ da empresa.
 - Nome da empresa.
 - Timbre, quando houver.
+- Campos pessoais, profissionais, residenciais e empresariais preenchidos no formulário.
 
 Os dados devem ser codificados em Base64 apenas como ofuscação.
 
-Aliases legados aceitos:
+Aliases legados aceitos para leitura e compatibilidade retroativa:
 
 - `empresa` ou `nome` para nome da empresa.
 - `cnpj` para CNPJ da empresa.

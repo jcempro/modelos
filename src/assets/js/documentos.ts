@@ -580,6 +580,22 @@
       }
     }
 
+    if (payload) {
+      for (const mapping of options.storageMappings ?? []) {
+        const keys = Array.isArray(mapping.jsonKeys) ? mapping.jsonKeys : [mapping.jsonKeys].filter(Boolean);
+
+        for (const key of keys as string[]) {
+          if (Object.prototype.hasOwnProperty.call(payload, key)) {
+            const value = payload[key];
+            (options.storage ?? storage).setItem(mapping.key, value == null ? "" : `${value}`);
+            mapping.afterSet?.();
+            changed = true;
+            break;
+          }
+        }
+      }
+    }
+
     for (const mapping of options.storageMappings ?? []) {
       const value = getQueryValue(mapping.params);
 
@@ -623,6 +639,138 @@
     return Promise.resolve();
   }
 
+  function cleanPageUrl(options: ShareOptions = {}): string {
+    if (typeof options.cleanUrl === "function") {
+      return options.cleanUrl();
+    }
+
+    if (typeof options.cleanUrl === "string" && options.cleanUrl.trim()) {
+      return options.cleanUrl.trim();
+    }
+
+    return `${w.location.origin}${w.location.pathname}`;
+  }
+
+  function shareRoot(options: ShareOptions = {}): ParentNode {
+    if (typeof options.root === "string") {
+      return one(options.root) ?? d;
+    }
+
+    return options.root ?? d;
+  }
+
+  function defaultSharePayload(options: ShareOptions = {}): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    const selector = options.fieldSelector ?? "input, select, textarea";
+    const controls = $<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(selector, shareRoot(options));
+
+    for (const control of controls) {
+      if (control instanceof HTMLInputElement && ["button", "file", "reset", "submit"].includes(control.type)) {
+        continue;
+      }
+
+      const key = control.id || control.name;
+      if (!key) {
+        continue;
+      }
+
+      if (control instanceof HTMLInputElement && control.type === "checkbox") {
+        result[key] = control.checked;
+        continue;
+      }
+
+      if (control instanceof HTMLInputElement && control.type === "radio") {
+        if (control.checked) {
+          result[key] = control.value;
+        }
+        continue;
+      }
+
+      result[key] = control.value;
+    }
+
+    return result;
+  }
+
+  function normalizePayload(value: Record<string, unknown> | null | undefined): Record<string, unknown> {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  function chooseShareMode(options: ShareOptions, context: ShareContext): ShareMode | null {
+    if (options.promptMode) {
+      return options.promptMode(context);
+    }
+
+    const question = options.messages?.question
+      ?? "Compartilhar link com os dados preenchidos?\n\nOK: compartilhar com dados preenchidos.\nCancelar: compartilhar apenas o link limpo da pagina.";
+
+    return w.confirm(question) ? "filled" : "clean";
+  }
+
+  function buildShareUrl(mode: ShareMode, options: ShareOptions = {}, event?: Event): ShareBuildResult {
+    const cleanUrl = cleanPageUrl(options);
+    const context: ShareContext = { cleanUrl, event, mode };
+
+    if (mode === "clean") {
+      return { cleanUrl, mode, url: cleanUrl };
+    }
+
+    let payload = normalizePayload(options.payload ? options.payload() : defaultSharePayload(options));
+    const extended = options.extendPayload?.(payload, { ...context, payload });
+
+    if (extended && typeof extended === "object" && !Array.isArray(extended)) {
+      payload = { ...payload, ...extended };
+    }
+
+    const url = new URL(cleanUrl, w.location.href);
+    url.searchParams.set(options.dataParamName ?? "data", encodeBase64(JSON.stringify(payload)));
+
+    return {
+      cleanUrl,
+      mode,
+      payload,
+      url: url.toString()
+    };
+  }
+
+  async function runShare(options: ShareOptions = {}, event?: Event): Promise<ShareResult | null> {
+    const cleanUrl = cleanPageUrl(options);
+    const mode = chooseShareMode(options, { cleanUrl, event, mode: "clean" });
+
+    if (!mode) {
+      return null;
+    }
+
+    const beforeContext: ShareContext = { cleanUrl, event, mode };
+    if (options.beforeShare?.(beforeContext) === false) {
+      return null;
+    }
+
+    const built = buildShareUrl(mode, options, event);
+    const result: ShareResult = { ...built, copied: false };
+
+    try {
+      await copyToClipboard(built.url);
+      result.copied = true;
+      options.afterShare?.(result);
+      w.alert(mode === "filled"
+        ? options.messages?.copiedFilled ?? "Endereco da pagina com dados preenchidos copiado para a area de transferencia."
+        : options.messages?.copiedClean ?? "Endereco limpo da pagina copiado para a area de transferencia.");
+      return result;
+    } catch (_error) {
+      w.alert(options.messages?.failed ?? "Nao foi possivel copiar o endereco para a area de transferencia.");
+      return null;
+    }
+  }
+
+  function bindShareToolbar(selector: string, options: ShareOptions = {}): void {
+    for (const element of $(selector)) {
+      on(element, "click", (event) => {
+        void runShare(options, event);
+      });
+    }
+  }
+
   w.JCEMDocumentos = {
     $,
     attr,
@@ -658,6 +806,11 @@
       json: readJsonPayload
     },
     ready,
+    share: {
+      bindToolbar: bindShareToolbar,
+      buildUrl: buildShareUrl,
+      run: runShare
+    },
     storage,
     toolbar: {
       bind: bindToolbar

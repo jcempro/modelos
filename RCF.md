@@ -80,6 +80,7 @@ Devem ser centralizados, quando aplicável:
 - Timbre ou upload de imagem documental.
 - Funções de data.
 - Acesso à área de transferência.
+- Compartilhamento de link limpo ou preenchido por JSON Base64.
 
 ### RN008 - Barra de Ferramentas Extensível
 
@@ -133,13 +134,22 @@ A camada compartilhada deve oferecer leitura de payload JSON Base64 e aplicaçã
 
 Aliases legados por parâmetros individuais podem ser preservados no módulo específico do documento.
 
-### RN012 - Compartilhamento de Modelo Preenchido
+### RN012 - Compartilhamento de Página ou Modelo Preenchido
 
-Documentos podem disponibilizar ação de compartilhamento que gere URL com dados pré-preenchidos.
+Documentos podem disponibilizar ação de compartilhamento na barra de ferramentas.
+
+A ação compartilhada de `share` deve pertencer à camada global e perguntar ao usuário se deseja:
+
+- Compartilhar apenas o link limpo da página, sem query string e sem dados preenchidos.
+- Compartilhar o link da página com dados preenchidos em JSON codificado em Base64 no parâmetro `data`, ou nome equivalente configurado.
 
 URLs compartilhadas com dados em Base64 devem ser tratadas como potencialmente públicas.
 
-O conteúdo compartilhado e os aliases disponíveis devem ser definidos no RCF específico do documento ou módulo.
+A implementação global deve montar a URL, codificar JSON em Base64, copiar o endereço para a área de transferência e tratar falhas de forma recuperável.
+
+Cada documento pode configurar gatilhos e pontos de extensão para complementar o comportamento global, incluindo validação prévia, definição ou extensão do payload, URL canônica, mensagens específicas e ações posteriores ao compartilhamento.
+
+O conteúdo compartilhado, campos incluídos, validações prévias e aliases legados devem ser definidos no RCF específico do documento ou módulo quando forem regras particulares.
 
 ### RN013 - Timbre e Imagens Documentais
 
@@ -331,6 +341,7 @@ Decisões globais registradas:
 - A prioridade permanente dos documentos imprimíveis é impressão A4 fiel quando esse formato for declarado.
 - A responsividade deve beneficiar a interface Web sem modificar a precisão da área imprimível.
 - O preenchimento por JSON Base64 deve ser universal para documentos, tratando Base64 como ofuscação.
+- A ação global de share deve perguntar se o link será limpo ou preenchido, centralizando URL, Base64, clipboard e hooks de extensão por documento.
 - Dependências externas devem ser explícitas, versionadas e registradas quando introduzidas.
 - TypeScript passa a ser a fonte canônica do código de aplicação.
 - `.tsx` passa a ser o padrão para componentes de interface reutilizáveis.

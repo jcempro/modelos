@@ -755,12 +755,6 @@ Simples Nacional: at\xE9 ${formatCurrencyFromCents(SIMPLES_NACIONAL_LIMIT_CENTS)
         uf: input("uf").value
       };
     }
-    function shareUrl() {
-      const url = `${w.location.origin}${w.location.pathname}?data=${api.base64.encode(JSON.stringify(payload()))}`;
-      void api.clipboard.copy(url).then(() => {
-        w.alert("Endereco da relacao preenchida copiado para a area de transferencia.");
-      });
-    }
     function assignIfPresent(id, value) {
       if (typeof value !== "string" && typeof value !== "number") {
         return;
@@ -889,8 +883,18 @@ Simples Nacional: at\xE9 ${formatCurrencyFromCents(SIMPLES_NACIONAL_LIMIT_CENTS)
       api.toolbar.bind({
         ".browser-print": () => w.print(),
         ".clear-form": clearForm,
-        ".pdf.print": printPdf,
-        ".share-url": shareUrl
+        ".pdf.print": printPdf
+      });
+      api.share.bindToolbar(".share-url", {
+        beforeShare: () => {
+          refreshPeriodIfNeeded();
+          renderPreview();
+        },
+        messages: {
+          copiedClean: "Endereco limpo da relacao copiado para a area de transferencia.",
+          copiedFilled: "Endereco da relacao preenchida copiado para a area de transferencia."
+        },
+        payload
       });
       const distribute = api.one("#distribuir-faturamento");
       api.on(distribute, "click", distributeAnnual);

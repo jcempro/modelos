@@ -67,6 +67,11 @@ declare global {
     clipboard: {
       copy: (value: string) => Promise<void>;
     };
+    share: {
+      bindToolbar: (selector: string, options?: ShareOptions) => void;
+      buildUrl: (mode: ShareMode, options?: ShareOptions, event?: Event) => ShareBuildResult;
+      run: (options?: ShareOptions, event?: Event) => Promise<ShareResult | null>;
+    };
     util: {
       digits: (value: string) => string;
       capitalizeFirst: (value: string) => string;
@@ -180,6 +185,7 @@ declare global {
 
   interface QueryStorageMapping {
     afterSet?: () => void;
+    jsonKeys?: string | string[];
     key: string;
     params: string | string[];
   }
@@ -200,5 +206,46 @@ declare global {
 
   interface ZeptoStatic {
     (selector: string | string[]): ZeptoCollection;
+  }
+
+  type ShareMode = "clean" | "filled";
+
+  interface ShareMessages {
+    copiedClean?: string;
+    copiedFilled?: string;
+    failed?: string;
+    question?: string;
+  }
+
+  interface ShareContext {
+    cleanUrl: string;
+    event?: Event;
+    mode: ShareMode;
+    payload?: Record<string, unknown>;
+    url?: string;
+  }
+
+  interface ShareBuildResult {
+    cleanUrl: string;
+    mode: ShareMode;
+    payload?: Record<string, unknown>;
+    url: string;
+  }
+
+  interface ShareResult extends ShareBuildResult {
+    copied: boolean;
+  }
+
+  interface ShareOptions {
+    afterShare?: (result: ShareResult) => void;
+    beforeShare?: (context: ShareContext) => boolean | void;
+    cleanUrl?: string | (() => string);
+    dataParamName?: string;
+    extendPayload?: (payload: Record<string, unknown>, context: ShareContext) => Record<string, unknown> | void | null;
+    fieldSelector?: string;
+    messages?: ShareMessages;
+    payload?: () => Record<string, unknown> | null | undefined;
+    promptMode?: (context: ShareContext) => ShareMode | null;
+    root?: ParentNode | string;
   }
 }

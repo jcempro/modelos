@@ -72,33 +72,28 @@
       api.autosave.clearAutoFields({ removeStorage: false });
       api.print.pdf({ filename, pageConfig });
     }
-    function requireField(selector) {
-      const field = api.one(selector);
-      if (!field) {
-        w.alert(`Campo nao encontrado: ${selector}`);
-        return null;
-      }
-      return field;
+    function fieldValue(selector) {
+      return api.one(selector)?.value ?? "";
     }
-    function sharePrefilled() {
-      if (!validateCompany()) {
-        return;
-      }
-      const phone = requireField("#fone");
-      const cnpj = requireField("#cnpj");
-      const company = requireField("#nome");
-      if (!phone || !cnpj || !company) {
-        return;
-      }
-      const timbre = api.storage.getItem("timbre") || "";
-      const url = "https://modelos.jcem.pro/oficios/admissional/index.html";
-      let query = `?tel=${api.base64.encode(api.util.digits(phone.value))}`;
-      query += `&cnpj=${api.base64.encode(api.util.digits(cnpj.value))}`;
-      query += `&empresa=${api.base64.encode(company.value)}`;
-      query += `&timbre=${api.base64.encode(timbre)}`;
-      void api.clipboard.copy(url + query).then(() => {
-        w.alert("Endereco do modelo pre preenchido copiado para a area de transferencia.");
-      });
+    function sharePayload() {
+      return {
+        bairro: fieldValue('input[hint="Bairro"]'),
+        cargo: fieldValue('input[hint="Cargo/Fun\xE7\xE3o"]'),
+        celular: fieldValue('input[hint="Celular"]'),
+        cep: fieldValue("#cep"),
+        cnpj: fieldValue("#cnpj"),
+        cpf: fieldValue("#cpf"),
+        email: fieldValue('input[hint="e-mail"]'),
+        empresa: fieldValue("#nome"),
+        logradouro: fieldValue('input[hint="Logradouro"]'),
+        municipio: fieldValue('input[hint="Munic\xEDpio"]'),
+        pessoaNome: fieldValue('input[name="nome"]'),
+        recado: fieldValue('input[hint="Recado"]'),
+        salario: fieldValue('input[hint="Sal\xE1rio"]'),
+        telefone: fieldValue("#fone"),
+        timbre: api.storage.getItem("timbre") || "",
+        uf: fieldValue('input[hint="UF"]')
+      };
     }
     function applyParams() {
       api.query.apply({
@@ -124,6 +119,7 @@
             afterSet: () => {
               w.setTimeout(() => api.image.load({ key: "timbre", selector: "img.logo" }), 100);
             },
+            jsonKeys: ["timbre", "logo"],
             key: "timbre",
             params: ["timbre", "logo"]
           }
@@ -140,8 +136,15 @@
       api.toolbar.bind({
         ".menu .clear": () => api.autosave.clearAutoFields(),
         ".menu .pdf.formulario": printBlankPdf,
-        ".menu .pdf.print": printPdf,
-        ".menu .share": sharePrefilled
+        ".menu .pdf.print": printPdf
+      });
+      api.share.bindToolbar(".menu .share", {
+        beforeShare: (context) => context.mode === "clean" || validateCompany(),
+        messages: {
+          copiedClean: "Endereco limpo do modelo copiado para a area de transferencia.",
+          copiedFilled: "Endereco do modelo preenchido copiado para a area de transferencia."
+        },
+        payload: sharePayload
       });
       applyParams();
     });

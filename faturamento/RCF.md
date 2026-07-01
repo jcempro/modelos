@@ -256,6 +256,8 @@ Chaves desconhecidas devem ser ignoradas sem interromper o carregamento.
 
 Dados parametrizados devem passar pelas mesmas normalizacoes e validacoes aplicadas a edicao manual.
 
+Quando a acao global de compartilhamento for usada no modo preenchido, o payload do modulo deve representar a Relacao de Faturamento completa: empresa, assinantes, cidade/UF, data, mes de referencia, distribuicao, periodo mensal, percentuais, regime tributario, prazo medio e valores financeiros.
+
 ### RN018 - Salvamento Automatico
 
 O modulo deve salvar automaticamente os dados durante a edicao, usando persistencia local do navegador.

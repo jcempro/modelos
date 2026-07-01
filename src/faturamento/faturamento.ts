@@ -720,13 +720,6 @@ import {
     };
   }
 
-  function shareUrl(): void {
-    const url = `${w.location.origin}${w.location.pathname}?data=${api.base64.encode(JSON.stringify(payload()))}`;
-    void api.clipboard.copy(url).then(() => {
-      w.alert("Endereco da relacao preenchida copiado para a area de transferencia.");
-    });
-  }
-
   function assignIfPresent(id: string, value: unknown): void {
     if (typeof value !== "string" && typeof value !== "number") {
       return;
@@ -878,8 +871,19 @@ import {
     api.toolbar.bind({
       ".browser-print": () => w.print(),
       ".clear-form": clearForm,
-      ".pdf.print": printPdf,
-      ".share-url": shareUrl
+      ".pdf.print": printPdf
+    });
+
+    api.share.bindToolbar(".share-url", {
+      beforeShare: () => {
+        refreshPeriodIfNeeded();
+        renderPreview();
+      },
+      messages: {
+        copiedClean: "Endereco limpo da relacao copiado para a area de transferencia.",
+        copiedFilled: "Endereco da relacao preenchida copiado para a area de transferencia."
+      },
+      payload
     });
 
     const distribute = api.one<HTMLButtonElement>("#distribuir-faturamento");
