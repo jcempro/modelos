@@ -67,6 +67,18 @@
           <legend>Faturamento</legend>
           <label for="faturamento-alvo">Faturamento Bruto Anual</label>
           <input id="faturamento-alvo" name="faturamentoBrutoAnual" class="money" type="text" inputmode="decimal">
+          <div class="field-row two">
+            <div>
+              <label for="distribuicao-vista">À vista (%)</label>
+              <input id="distribuicao-vista" name="distribuicaoVista" class="percent distribution-percent" type="text"
+                inputmode="decimal" value="100%">
+            </div>
+            <div>
+              <label for="distribuicao-prazo">A prazo (%)</label>
+              <input id="distribuicao-prazo" name="distribuicaoPrazo" class="percent distribution-percent" type="text"
+                inputmode="decimal" value="0%">
+            </div>
+          </div>
           <button type="button" id="distribuir-faturamento" class="secondary-action">Distribuir</button>
         </fieldset>
 
@@ -83,38 +95,33 @@
         </fieldset>
 
         <fieldset>
-          <legend>Regime e Comitê</legend>
+          <legend>Regime</legend>
           <label for="regime-tributacao">Regime de Tributação</label>
-          <input id="regime-tributacao" name="regimeTributacao" type="text">
-
-          <label for="comite">Comitê</label>
-          <input id="comite" name="comite" type="text">
+          <select id="regime-tributacao" name="regimeTributacao">
+            <option value="">Selecione</option>
+            <option value="MEI">MEI</option>
+            <option value="Simples Nacional">Simples Nacional</option>
+            <option value="Lucro Presumido">Lucro Presumido</option>
+            <option value="Lucro Real">Lucro Real</option>
+          </select>
         </fieldset>
 
         <fieldset>
           <legend>Assinantes</legend>
-          <div class="signer-grid">
-            <label for="assinante-1-nome">Nome 1</label>
-            <input id="assinante-1-nome" name="assinante1Nome" type="text" required>
-            <label for="assinante-1-cpf">CPF 1</label>
-            <input id="assinante-1-cpf" name="assinante1Cpf" type="text" inputmode="numeric" required>
-            <label for="assinante-1-papel">Papel 1</label>
-            <input id="assinante-1-papel" name="assinante1Papel" type="text" value="PROPRIETÁRIO/SÓCIO/MANDATÁRIO">
-
-            <label for="assinante-2-nome">Nome 2</label>
-            <input id="assinante-2-nome" name="assinante2Nome" type="text">
-            <label for="assinante-2-cpf">CPF 2</label>
-            <input id="assinante-2-cpf" name="assinante2Cpf" type="text" inputmode="numeric">
-            <label for="assinante-2-papel">Papel 2</label>
-            <input id="assinante-2-papel" name="assinante2Papel" type="text">
-
-            <label for="assinante-3-nome">Nome 3</label>
-            <input id="assinante-3-nome" name="assinante3Nome" type="text">
-            <label for="assinante-3-cpf">CPF 3</label>
-            <input id="assinante-3-cpf" name="assinante3Cpf" type="text" inputmode="numeric">
-            <label for="assinante-3-papel">Papel 3</label>
-            <input id="assinante-3-papel" name="assinante3Papel" type="text">
+          <div id="assinantes-lista" class="signer-list">
+            <div class="signer-card" data-signer-index="1">
+              <div class="signer-title">Assinante</div>
+              <label for="assinante-1-nome">Nome</label>
+              <input id="assinante-1-nome" name="assinante1Nome" class="signer-name" type="text" required>
+              <label for="assinante-1-cpf">CPF</label>
+              <input id="assinante-1-cpf" name="assinante1Cpf" class="signer-cpf" type="text" inputmode="numeric"
+                required>
+              <label for="assinante-1-papel">Papel</label>
+              <input id="assinante-1-papel" name="assinante1Papel" class="signer-role" type="text"
+                value="PROPRIETÁRIO/SÓCIO/MANDATÁRIO">
+            </div>
           </div>
+          <button type="button" id="adicionar-assinante" class="secondary-action">Adicionar assinante</button>
         </fieldset>
       </div>
 
@@ -226,7 +233,7 @@
           <span id="print-cpfs"></span>
         </section>
 
-        <p class="committee"><strong>COMITÊ:</strong> <span id="print-comite"></span></p>
+        <p class="committee"><strong>COMITÊ:</strong></p>
       </article>
     </section>
   </main>

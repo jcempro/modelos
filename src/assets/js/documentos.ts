@@ -375,10 +375,14 @@
           }, 100);
 
           if (result) {
+            if (!shouldNormalize) {
+              return;
+            }
             if (input.value.trim().length > 0 && shouldNormalize && typeof result === "string") {
               w.alert(result);
             }
             input.value = "";
+            store.removeItem(input.id);
             return;
           }
 

@@ -19,6 +19,11 @@ export interface TotaisFaturamento {
   vista: number;
 }
 
+export type RegimeTributario = "MEI" | "Simples Nacional" | "Lucro Presumido" | "Lucro Real";
+
+export const MEI_LIMIT_CENTS = 8_100_000;
+export const SIMPLES_NACIONAL_LIMIT_CENTS = 480_000_000;
+
 const currencyFormatter = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
 const percentFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2,
@@ -88,6 +93,33 @@ export function parsePercent(value: string): number | null {
 
 export function formatPercent(value: number): string {
   return percentFormatter.format(Math.min(100, Math.max(0, value)) / 100);
+}
+
+export function splitAnnualTargets(total: number, vistaPercent: number): { prazo: number; vista: number } {
+  const normalizedTotal = Math.max(0, Math.round(total));
+  const normalizedPercent = Math.min(100, Math.max(0, Number.isFinite(vistaPercent) ? vistaPercent : 100));
+  const vista = Math.round((normalizedTotal * normalizedPercent) / 100);
+
+  return {
+    prazo: normalizedTotal - vista,
+    vista
+  };
+}
+
+export function isRegimeAllowed(regime: string, annualCents: number | null): boolean {
+  if (!regime || annualCents === null || annualCents <= 0) {
+    return true;
+  }
+
+  if (regime === "MEI") {
+    return annualCents <= MEI_LIMIT_CENTS;
+  }
+
+  if (regime === "Simples Nacional") {
+    return annualCents <= SIMPLES_NACIONAL_LIMIT_CENTS;
+  }
+
+  return true;
 }
 
 export function parseMesAno(value: string): MesAno | null {
