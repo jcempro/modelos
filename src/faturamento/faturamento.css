@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
 :root {
   --ink: #111;
   --line: #202020;
@@ -531,7 +536,10 @@ select:focus {
 }
 
 @media print {
+  html,
   body {
+    width: 21cm;
+    min-height: 29.7cm;
     margin: 0;
     background: #fff;
   }
@@ -548,10 +556,14 @@ select:focus {
 
   .print-page {
     width: 21cm;
-    min-height: 29.7cm;
+    min-height: 0;
+    height: 29.7cm;
     margin: 0;
     padding: 1cm 0.9cm 0.9cm;
     box-shadow: none;
+    overflow: hidden;
+    break-after: avoid;
+    page-break-after: avoid;
   }
 }
 
@@ -572,12 +584,9 @@ body.imprimir .preview-wrap {
 
 body.imprimir .print-page {
   width: 21cm;
-  min-height: 29.7cm;
+  min-height: 0;
+  height: 29.7cm;
   margin: 0;
   box-shadow: none;
-}
-
-table th,
-table td {
-  padding: 1mm !important;  
+  overflow: hidden;
 }
