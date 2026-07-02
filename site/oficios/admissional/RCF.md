@@ -221,8 +221,8 @@ site/oficios/admissional/
 
 O documento deve consumir:
 
-- `../../assets/css/documentos.css`.
-- `../../assets/js/documentos.js`.
+- `/assets/css/documentos.css`.
+- `/assets/js/documentos.js`.
 
 O arquivo `admissional.js` deve conter somente configuração e comportamentos específicos do documento.
 

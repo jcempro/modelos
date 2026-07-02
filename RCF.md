@@ -186,6 +186,8 @@ O projeto deve continuar funcionando como site estático.
 
 Não deve ser exigido servidor de aplicação, etapa de build, backend ou banco de dados para uso dos documentos atuais, salvo decisão arquitetural futura registrada neste RCF.
 
+Páginas publicadas em subdiretórios devem permanecer funcionais quando acessadas com ou sem barra final na URL. Recursos locais referenciados por HTML, como CSS, JavaScript e bundles para download, devem usar caminhos absolutos a partir da raiz do site publicado para não depender da base relativa inferida pelo navegador.
+
 ### RN018 - Redirecionamentos Legados
 
 Arquivos legados podem redirecionar para a nova estrutura de diretórios quando necessário para preservar links públicos.
@@ -392,6 +394,7 @@ Decisões globais registradas:
 - A publicação estática deve usar `dist/`, preservando a saída de produção já validada.
 - O workflow de publicação deve enviar `dist/` ao GitHub Pages em push na branch de publicação configurada, mantendo pull requests restritos a validação, testes e geração de artefatos.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
+- URLs internas de assets e bundles em páginas publicadas devem ser estáveis com ou sem barra final, preferencialmente root-relative sob `https://modelos.jcem.pro/`.
 - O GitHub Actions deve evitar cache de build quando ele tornar o workflow mais lento que a recomputação e deve publicar artefatos já contendo saídas Web e Bundle.
 
 ## Requisitos Não Funcionais

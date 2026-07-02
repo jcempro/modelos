@@ -65,6 +65,12 @@ const server = createServer(async (request, response) => {
     }
 
     const info = await stat(requested).catch(() => undefined);
+    if (info?.isDirectory() && pathname !== "/" && !pathname.endsWith("/")) {
+      response.writeHead(308, { location: `${url.pathname}/${url.search}` });
+      response.end();
+      return;
+    }
+
     const file = info?.isDirectory() ? path.join(requested, "index.html") : requested;
     const fileInfo = await stat(file);
 

@@ -96,7 +96,9 @@ function resolveResource(ref, baseDir) {
   }
 
   const normalized = decodeURIComponent(ref.split("#")[0].split("?")[0]);
-  const resolved = path.resolve(baseDir, normalized);
+  const resolved = normalized.startsWith("/")
+    ? path.resolve(siteDir, normalized.slice(1))
+    : path.resolve(baseDir, normalized);
   const relative = path.relative(root, resolved);
 
   if (relative.startsWith("..") || path.isAbsolute(relative)) {

@@ -25,13 +25,20 @@ const server = createServer(async (request, response) => {
     const pathname = decodeURIComponent(url.pathname);
     const requested = path.normalize(path.join(siteRoot, pathname));
 
-    if (!requested.startsWith(siteRoot)) {
+    const relative = path.relative(siteRoot, requested);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) {
       response.writeHead(403);
       response.end("Forbidden");
       return;
     }
 
     const info = await stat(requested).catch(() => undefined);
+    if (info?.isDirectory() && pathname !== "/" && !pathname.endsWith("/")) {
+      response.writeHead(308, { location: `${url.pathname}/${url.search}` });
+      response.end();
+      return;
+    }
+
     const file = info?.isDirectory() ? path.join(requested, "index.html") : requested;
     const fileInfo = await stat(file);
 
