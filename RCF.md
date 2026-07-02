@@ -223,6 +223,21 @@ Toda implementação deve ser fortemente tipada, modular, reutilizável, blindad
 
 Tratamentos preventivos devem cobrir erros de compilação, inconsistências de tipos, falhas de build, problemas de cache, condições de corrida, falhas de IO e estados ausentes no navegador.
 
+### RN024 - Otimização e Saída Dupla de Produção
+
+Toda ferramenta publicada pelo projeto deve possuir dois artefatos gerados automaticamente pelo pipeline de build:
+
+- Saída Web: `index.html` otimizado para hospedagem estática e uso online.
+- Saída Bundle: arquivo HTML autocontido nomeado como `<nome-da-pasta>.bundle.html`, destinado a uso totalmente offline.
+
+A saída Bundle deve incorporar internamente todos os recursos necessários ao funcionamento da ferramenta, incluindo HTML, CSS, JavaScript, fontes, imagens, SVGs, JSON, ícones e dependências estáticas aplicáveis.
+
+O Bundle não deve depender de requisições externas para executar a ferramenta. Dependências externas usadas pela versão Web devem possuir cópia local versionada ou mapeamento de build capaz de incorporá-las ao Bundle.
+
+Ambas as saídas devem ser produzidas em modo de produção, com minificação, eliminação de código morto, otimização de tamanho e priorização de carregamento rápido.
+
+O build deve falhar de forma segura quando não conseguir gerar, otimizar, incorporar ou validar qualquer artefato obrigatório.
+
 ## Arquitetura
 
 ### ARQ001 - Estrutura Atual
@@ -237,14 +252,16 @@ Tratamentos preventivos devem cobrir erros de compilação, inconsistências de 
 │   ├── index.html
 │   ├── RCF.md
 │   ├── faturamento.css
-│   └── faturamento.js
+│   ├── faturamento.js
+│   └── faturamento.bundle.html
 ├── favoritos/
 ├── oficios/
 │   └── <documento>/
 │       ├── index.html
 │       ├── RCF.md
 │       ├── <documento>.css
-│       └── <documento>.js
+│       ├── <documento>.js
+│       └── <documento>.bundle.html
 ├── src/
 │   ├── assets/
 │   ├── components/
@@ -348,6 +365,10 @@ Decisões globais registradas:
 - JavaScript versionado em áreas públicas é artefato compilado para preservar compatibilidade retroativa com GitHub Pages.
 - Scripts Node.js de build permanecem em `.mjs` por serem bootstrap executável antes da compilação TypeScript.
 - O build incremental usa manifesto em `.cache/build/manifest.json` e lock de concorrência para proteger `_site`.
+- Cada ferramenta com `index.html` deve gerar também um Bundle offline autocontido nomeado pelo diretório da ferramenta.
+- A publicação em `_site` deve otimizar HTML, CSS, JavaScript e JSON textuais para produção sem alterar a fonte canônica.
+- Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
+- O GitHub Actions deve restaurar cache incremental de build e publicar artefatos já contendo saídas Web e Bundle.
 
 ## Requisitos Não Funcionais
 

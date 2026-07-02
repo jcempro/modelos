@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
-import { copyFile, mkdir, open, readFile, readdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { optimizeTextByPath } from "./asset-optimizer.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const siteDir = path.join(root, "_site");
@@ -12,6 +13,8 @@ const lockPath = path.join(cacheDir, "build.lock");
 
 const excludedTopLevel = new Set([".cache", ".git", ".github", "_site", "node_modules", "scripts", "src", "tests"]);
 const excludedFiles = new Set([".gitignore", "eslint.config.mjs", "package.json", "package-lock.json", "tsconfig.json"]);
+const optimizerVersion = "site-optimizer-v1";
+const textExtensions = new Set([".css", ".html", ".js", ".json"]);
 
 async function acquireLock() {
   await mkdir(cacheDir, { recursive: true });
@@ -41,9 +44,20 @@ async function writeManifest(manifest) {
   await rename(tmp, manifestPath);
 }
 
-async function hashFile(file) {
-  const data = await readFile(file);
+function hashBuffer(data) {
   return createHash("sha256").update(data).digest("hex");
+}
+
+async function buildOutput(rel, src) {
+  const ext = path.extname(rel).toLowerCase();
+
+  if (!textExtensions.has(ext)) {
+    return await readFile(src);
+  }
+
+  const source = await readFile(src, "utf8");
+  const optimized = await optimizeTextByPath(rel, source);
+  return Buffer.from(optimized, "utf8");
 }
 
 async function collectFiles(dir = root, prefix = "") {
@@ -77,17 +91,20 @@ async function copyChanged(files, oldManifest) {
   for (const rel of files) {
     const src = path.join(root, rel);
     const dest = path.join(siteDir, rel);
-    const fileStat = await stat(src);
-    const hash = await hashFile(src);
+    await stat(src);
+    const output = await buildOutput(rel, src);
+    const hash = hashBuffer(Buffer.concat([Buffer.from(`${optimizerVersion}\0${rel}\0`, "utf8"), output]));
     const old = oldManifest.files[rel];
-    nextManifest.files[rel] = { hash, size: fileStat.size };
+    nextManifest.files[rel] = { hash, size: output.byteLength };
 
-    if (old && old.hash === hash && old.size === fileStat.size) {
+    if (old && old.hash === hash && old.size === output.byteLength) {
       continue;
     }
 
     await mkdir(path.dirname(dest), { recursive: true });
-    await copyFile(src, dest);
+    const tmp = `${dest}.tmp-${process.pid}`;
+    await writeFile(tmp, output);
+    await rename(tmp, dest);
   }
 
   for (const rel of Object.keys(oldManifest.files || {})) {

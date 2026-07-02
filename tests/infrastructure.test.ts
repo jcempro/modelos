@@ -7,7 +7,7 @@ test("package exposes the full development lifecycle", async () => {
     scripts: Record<string, string>;
   };
 
-  for (const script of ["build", "build:site", "check", "compile", "dev", "lint", "test", "type-check", "validate"]) {
+  for (const script of ["build", "build:site", "bundle", "check", "compile", "dev", "lint", "test", "type-check", "validate"]) {
     assert.ok(pkg.scripts[script], `missing npm script: ${script}`);
   }
 });
@@ -19,4 +19,3 @@ test("TypeScript target is ES2020 or newer", async () => {
 
   assert.match(tsconfig.compilerOptions.target, /^ES20(2\d|[3-9]\d)$/);
 });
-

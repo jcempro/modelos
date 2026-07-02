@@ -21,4 +21,6 @@ npm run check
 npm run build
 ```
 
+O build compila os artefatos públicos, gera os bundles offline `*.bundle.html` e prepara `_site` com arquivos otimizados para hospedagem.
+
 O código-fonte canônico fica em `src/**/*.ts` e `src/**/*.tsx`. Os arquivos `.js` em diretórios públicos são artefatos compilados para manter compatibilidade com publicação estática.
