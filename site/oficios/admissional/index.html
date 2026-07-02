@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Carta Renda Admissional</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.0/html2pdf.bundle.min.js"
+    integrity="sha512-w3u9q/DeneCSwUDjhiMNibTRh/1i/gScBVp2imNVAMCt6cUHIw6xzhzcPFIaL3Q1EbI2l+nu17q2aLJJLo4ZYg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="/assets/css/documentos.css">
+  <link rel="stylesheet" href="/oficios/admissional/admissional.css">
+  <script src="/assets/js/documentos.js"></script>
+  <script src="/oficios/admissional/admissional.js"></script>
+</head>
+
+<body>
+  <div class="versao">1.0.1 | modelos.jcem.pro/modeloCartaRendaAdmissional.html</div>
+  <div class="main">
+    <div class="cookie">Usa-se COOKIES e similares. É proibido permanecer, usar, imprimir e compartilhar se
+      discordar.</div>
+    <div class="nota">Versão atualizada disponível em <a
+        href="https://modelos.jcem.pro/oficios/admissional">//modelos.jcem.pro/oficios/admissional</a><br>
+      Ao imprimir, desabilite o cabeçalho e rodape!</div>
+    <div class="ico autosave">Salvamento offline automático.</div>
+
+    <div class="menu">
+      <div class="ico print" style="display: none;">Imprimir</div>
+      <div class="ico pdf print">Imprimir PDF</div>
+      <div class="ico pdf formulario">Imprimir Branco</div>
+      <div class="ico clear">Limpar</div>
+      <input type="file" id="logo" accept=".svg,.jpg,.jpeg,.png" />
+      <label for="logo" class="ico timbre">Timbre</label>
+      <div class="ico share">Share</div>
+      <a class="ico bundle" href="/oficios/admissional/admissional.bundle.html" download hidden
+        data-bundle-download>Bundle</a>
+    </div>
+
+    <p><img class="logo" /></p>
+    <p style=" text-align: right;">Pirassununga-SP, <span class="data"></span>,</p>
+    <p>&nbsp;</p>
+    <p>
+      <b>Ao</b><br />
+      <b>Banco do Brasil S.A.</b>
+    </p>
+    <p>&nbsp;</p>
+    <p>
+      Declaro(amos) que a pessoa abaixo qualificada pertence ao meu(nosso) quadro de funcionário(s) ou contratado(s),
+      cujo dados abaixo ora valido(amos) e confirmo(amos); responsabilizando-me(nos) por comunicar qualquer
+      alteração e/ou remoção do quadro. Este documento DEVE ser <b>acompanhado</b> da Cédula de Identidade ORIGINAL.
+    </p>
+
+    <table cellpadding="0" cellspacing="0" class="fields">
+      <tr>
+        <td colspan="4"><span>Nome</span></td>
+        <td><span>CPF</span></td>
+      </tr>
+      <tr>
+        <td colspan="4">
+          <input required type="text" name="nome" pattern="\w(\w{2,20} ){1,20}\w{2,20}" hint="Nome"
+            placeholder="Dino da Silva Sauro" />
+        </td>
+        <td>
+          <input required type="text" id="cpf" hint="CPF" placeholder="123.456.789-01" />
+        </td>
+      </tr>
+      <tbody>
+        <tr>
+          <td colspan="3"><span>E-mail</span></td>
+          <td><span>Celular (DDD+Telefone)</span></td>
+          <td><span>Recado (DDD+Telefone)</span></td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <input pattern="[\w\d\.\-_]@[\w\d\-_]{3,64}(\.[\w\d\-_]{2,64})+" type="email" hint="e-mail"
+              placeholder="dinosauro@sauros.com.br" />
+          </td>
+          <td>
+            <input required type="cel" hint="Celular" placeholder="(99) 9 9999-9999" />
+          </td>
+          <td>
+            <input type="cel" hint="Recado" placeholder="(19) 9 9999-9999" />
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5"><span>Logradouro/Endereço</span></td>
+        </tr>
+        <tr>
+          <td colspan="5">
+            <input required type="text" hint="Logradouro" placeholder="Rua Era do Gero, 33" />
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2"><span>Bairro</span></td>
+          <td colspan="3"><span>Município</span></td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <input required type="text" hint="Bairro" placeholder="Natureza II" />
+          </td>
+          <td colspan="3">
+            <input required type="text" hint="Município" placeholder="Pangéa" />
+          </td>
+        </tr>
+        <tr>
+          <td><span>UF</span></td>
+          <td><span>CEP</span></td>
+          <td colspan="2"><span>Cargo/Função</span></td>
+          <td><span>Salário (R$)</span></td>
+        </tr>
+        <tr>
+          <td>
+            <input required type="text" hint="UF" placeholder="GL"
+              pattern="^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$" />
+          </td>
+          <td>
+            <input required id="cep" type="text" hint="CEP" placeholder="00.000-000" />
+          </td>
+          <td colspan="2">
+            <input required type="text" hint="Cargo/Função" placeholder="Pai de Família" />
+          </td>
+          <td>
+            <input required type="currency" hint="Salário" pattern="^[\w,\.]+$" placeholder="9.999,99" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <table cellpadding="0" cellspacing="0" class="ass">
+      <tr>
+        <td>
+          <p><span>Assinatura física ou digital (</span><b>gov.br</b><span>)</span></p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+        </td>
+        <td style="width: .5cm;max-width: .5cm;"></td>
+        <td>
+          <p>Reconhecimento de Firma BB ou documento validado em</p>
+          <p>_____ / _____ / 20 _____ as _____H
+            ______M, com _____________________________
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-top: 1px solid #111;">
+          <input required type="text" id="nome" pattern="\w{1,20}(\ \w{1,20})" empresa
+            placeholder="Nome Empresa" /><br />
+          <input required type="text" id="cnpj" empresa placeholder="CNPJ Empresa" />
+          <input required type="tel" id="fone" empresa placeholder="Telefone Fixo Empresa com DDD" /><br />
+          <span>Carimbo/Nome do Representante</span>
+        </td>
+        <td></td>
+        <td style="border-top: 1px solid #111;">
+          Carimbo e Assinatura funcionário BB ou <u>assinatura </u><span><u>DIGITAL</u></span> (<span>vide</span>
+          <span><b>RODAPÉ</b> ou <b>ANEXO</b></span>)
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+
+</html>
