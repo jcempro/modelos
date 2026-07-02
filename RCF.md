@@ -13,8 +13,8 @@ Disponibilizar modelos e utilitários Web estáticos, com infraestrutura compart
 - Páginas estáticas executadas no navegador.
 - Documentos imprimíveis organizados por categoria e módulo.
 - Utilitários Web simples que não dependem de backend.
-- Bookmarklets utilitários em `favoritos/`.
-- Componentes reutilizáveis em `assets/`.
+- Bookmarklets utilitários em `site/favoritos/`.
+- Componentes reutilizáveis em `site/assets/`.
 - Fontes TypeScript em `src/`, compiladas para artefatos estáticos publicados.
 - Persistência local no navegador por `localStorage`.
 - Geração de PDF no cliente quando houver botão dedicado.
@@ -213,7 +213,7 @@ Novas interfaces devem privilegiar componentes tipados, reutilizáveis e desacop
 
 O projeto deve possuir scripts NPM para desenvolvimento, compilação, build, testes, lint, type-check e validação.
 
-O build deve reutilizar cache incremental sempre que possível, recompilando e copiando apenas artefatos alterados, sem comprometer consistência do `_site`.
+O build deve reutilizar cache incremental sempre que possível, recompilando e copiando apenas artefatos alterados, sem comprometer consistência de `site/` e `dist/`.
 
 Operações críticas de build devem ser fail-safe: falhas de IO, cache corrompido, lock concorrente, erro de compilação ou inconsistência de tipos devem interromper a publicação antes de gerar saída inconsistente.
 
@@ -236,11 +236,11 @@ O Bundle não deve depender de requisições externas para executar a ferramenta
 
 Ambas as saídas devem ser produzidas em modo de produção, com minificação, eliminação de código morto, otimização de tamanho e priorização de carregamento rápido.
 
-Transpilação agressiva, minificação e otimização de produção devem ocorrer exclusivamente em `_dist` e nos artefatos publicados em `_site`.
+Transpilação agressiva, minificação e otimização de produção devem ocorrer exclusivamente em `dist/`.
 
-Fora de `_dist` e `_site`, os artefatos JavaScript públicos gerados a partir de `src/` devem permanecer adequados a desenvolvimento local, rastreio de erros e depuração, sem minificação agressiva.
+Fora de `dist/`, os artefatos JavaScript públicos gerados a partir de `src/` devem permanecer adequados a desenvolvimento local, rastreio de erros e depuração, sem minificação agressiva.
 
-O `_site` deve ser construído a partir de `_dist`, nunca diretamente a partir do workspace de desenvolvimento.
+O `dist/` deve ser construído a partir de `site/`, nunca diretamente a partir de arquivos espalhados na raiz do workspace.
 
 O build deve falhar de forma segura quando não conseguir gerar, otimizar, incorporar ou validar qualquer artefato obrigatório.
 
@@ -250,24 +250,25 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 
 ```text
 /
-├── assets/
-│   ├── css/
-│   └── js/
-├── _dist/
+├── dist/
 │   └── <artefatos otimizados para producao>
-├── dizimo/
-├── faturamento/
-│   ├── index.html
-│   ├── RCF.md
-│   ├── faturamento.css
-│   └── faturamento.js
-├── favoritos/
-├── oficios/
-│   └── <documento>/
-│       ├── index.html
-│       ├── RCF.md
-│       ├── <documento>.css
-│       └── <documento>.js
+├── site/
+│   ├── assets/
+│   │   ├── css/
+│   │   └── js/
+│   ├── dizimo/
+│   ├── faturamento/
+│   │   ├── index.html
+│   │   ├── RCF.md
+│   │   ├── faturamento.css
+│   │   └── faturamento.js
+│   ├── favoritos/
+│   └── oficios/
+│       └── <documento>/
+│           ├── index.html
+│           ├── RCF.md
+│           ├── <documento>.css
+│           └── <documento>.js
 ├── src/
 │   ├── assets/
 │   ├── components/
@@ -276,7 +277,7 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 │   ├── favoritos/
 │   └── oficios/
 ├── tests/
-├── scripts/
+├── script/
 ├── .github/
 │   └── workflows/
 ├── AGENTS.md
@@ -289,14 +290,16 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 
 ### ARQ002 - Camada Compartilhada
 
-A camada `assets/` concentra infraestrutura reutilizável:
+A camada `site/assets/` concentra infraestrutura reutilizável:
 
-- `assets/js/documentos.js`: utilitários e serviços compartilhados para documentos.
-- `assets/css/documentos.css`: estilos documentais e componentes visuais reutilizáveis.
+- `site/assets/js/documentos.js`: utilitários e serviços compartilhados para documentos.
+- `site/assets/css/documentos.css`: estilos documentais e componentes visuais reutilizáveis.
 
 Documentos devem consumir essa camada e manter localmente apenas inicialização, configuração, mapeamentos e estilos exclusivos.
 
-Os arquivos JavaScript em `assets/`, `oficios/`, `faturamento/`, `dizimo/` e `favoritos/` são artefatos públicos gerados a partir de `src/`.
+Os arquivos JavaScript em `site/assets/`, `site/oficios/`, `site/faturamento/`, `site/dizimo/` e `site/favoritos/` são artefatos públicos legíveis gerados a partir de `src/`.
+
+O diretório `dist/` é a saída de produção otimizada e autocontida quando aplicável. Ele deve ser gerado pelo pipeline e não é fonte canônica.
 
 ### ARQ003 - Separação Recomendada para Documentos
 
@@ -358,7 +361,9 @@ Decisões globais registradas:
 
 - O projeto permanece estático, sem backend obrigatório.
 - O RCF global contém apenas regras transversais; documentos especializados possuem RCF próprio.
-- Infraestrutura com potencial de reuso fica em `assets/`.
+- A raiz do repositório deve concentrar apenas arquivos esperados de configuração, documentação e metadados, como `AGENTS.md`, `CNAME`, `LICENSE`, `README.md`, `RCF.md`, `package.json`, `tsconfig.json`, `.gitignore` e `.github/`.
+- Conteúdo estático real do site deve ficar em `site/`.
+- Infraestrutura com potencial de reuso fica em `site/assets/`.
 - Documentos consomem APIs compartilhadas e mantêm localmente apenas configuração e regras específicas.
 - Validações comuns pertencem ao catálogo global, mas sua aplicação é declarada por campo em cada documento.
 - A prioridade permanente dos documentos imprimíveis é impressão A4 fiel quando esse formato for declarado.
@@ -369,12 +374,12 @@ Decisões globais registradas:
 - TypeScript passa a ser a fonte canônica do código de aplicação.
 - `.tsx` passa a ser o padrão para componentes de interface reutilizáveis.
 - JavaScript versionado em áreas públicas é artefato compilado para preservar compatibilidade retroativa com GitHub Pages.
-- JavaScript versionado em áreas públicas fora de `_dist` e `_site` deve permanecer legível para desenvolvimento, suporte e rastreio de problemas.
-- Scripts Node.js de build permanecem em `.mjs` por serem bootstrap executável antes da compilação TypeScript.
-- O build incremental usa manifestos em `.cache/build/` e locks de concorrência para proteger `_dist` e `_site`.
-- Cada ferramenta com `index.html` deve gerar também um Bundle offline autocontido nomeado pelo diretório da ferramenta dentro de `_dist` e `_site`.
-- A otimização de HTML, CSS, JavaScript e JSON textuais deve ocorrer na construção de `_dist`, sem alterar a fonte canônica nem os artefatos de desenvolvimento.
-- A publicação em `_site` deve partir de `_dist`, preservando a saída de produção já validada.
+- JavaScript versionado em `site/` deve permanecer legível para desenvolvimento, suporte e rastreio de problemas.
+- Scripts Node.js de build permanecem em `.mjs` dentro de `script/` por serem bootstrap executável antes da compilação TypeScript.
+- O build incremental usa manifestos em `.cache/build/` e locks de concorrência para proteger `site/` e `dist/`.
+- Cada ferramenta com `index.html` deve gerar também um Bundle offline autocontido nomeado pelo diretório da ferramenta dentro de `dist/`.
+- A otimização de HTML, CSS, JavaScript e JSON textuais deve ocorrer na construção de `dist/`, sem alterar a fonte canônica nem os artefatos de desenvolvimento em `site/`.
+- A publicação estática deve usar `dist/`, preservando a saída de produção já validada.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
 - O GitHub Actions deve restaurar cache incremental de build e publicar artefatos já contendo saídas Web e Bundle.
 

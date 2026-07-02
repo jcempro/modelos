@@ -210,7 +210,7 @@ A seleção de quais validadores globais se aplicam a cada campo pertence ao mó
 ### ARQ001 - Arquivos
 
 ```text
-oficios/admissional/
+site/oficios/admissional/
 ├── RCF.md
 ├── admissional.css
 ├── admissional.js
@@ -226,7 +226,7 @@ O documento deve consumir:
 
 O arquivo `admissional.js` deve conter somente configuração e comportamentos específicos do documento.
 
-O código-fonte canônico do comportamento local é `src/oficios/admissional/admissional.ts`; `oficios/admissional/admissional.js` é artefato compilado para compatibilidade com publicação estática.
+O código-fonte canônico do comportamento local é `src/oficios/admissional/admissional.ts`; `site/oficios/admissional/admissional.js` é artefato compilado legível para compatibilidade com publicação estática e depuração local.
 
 O arquivo `admissional.css` deve conter somente estilos particulares que não pertencem ao padrão comum de documentos.
 
@@ -235,7 +235,7 @@ O arquivo `admissional.css` deve conter somente estilos particulares que não pe
 Decisões registradas:
 
 - O documento permanece estático e executado integralmente no navegador.
-- A infraestrutura reutilizável foi extraída para `assets/`.
+- A infraestrutura reutilizável foi extraída para `site/assets/`.
 - O módulo local mantém apenas configuração, mapeamentos e layout específico de assinatura.
 - O comportamento local do documento é escrito em TypeScript e publicado como JavaScript compilado.
 - As validações comuns são consumidas do catálogo global e selecionadas por campo no módulo local.

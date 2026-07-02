@@ -8,15 +8,15 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const watch = process.argv.includes("--watch");
 
 const entries = [
-  ["src/assets/js/documentos.ts", "assets/js/documentos.js"],
-  ["src/oficios/admissional/admissional.ts", "oficios/admissional/admissional.js"],
-  ["src/faturamento/faturamento.ts", "faturamento/faturamento.js"],
-  ["src/dizimo/assets/js/main.ts", "dizimo/assets/js/main.js"]
+  ["src/assets/js/documentos.ts", "site/assets/js/documentos.js"],
+  ["src/oficios/admissional/admissional.ts", "site/oficios/admissional/admissional.js"],
+  ["src/faturamento/faturamento.ts", "site/faturamento/faturamento.js"],
+  ["src/dizimo/assets/js/main.ts", "site/dizimo/assets/js/main.js"]
 ];
 
 const bookmarklets = [
-  ["src/favoritos/remover.paywall.ts", "favoritos/remover.paywall.js"],
-  ["src/favoritos/dark.discourse.ts", "favoritos/dark.discourse.js"]
+  ["src/favoritos/remover.paywall.ts", "site/favoritos/remover.paywall.js"],
+  ["src/favoritos/dark.discourse.ts", "site/favoritos/dark.discourse.js"]
 ];
 
 async function ensureParent(file) {

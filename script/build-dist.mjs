@@ -6,22 +6,22 @@ import { fileURLToPath } from "node:url";
 import { optimizeTextByPath } from "./asset-optimizer.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const distDir = path.join(root, "_dist");
+const siteDir = path.join(root, "site");
+const distDir = path.join(root, "dist");
 const cacheDir = path.join(root, ".cache", "build");
 const manifestPath = path.join(cacheDir, "dist-manifest.json");
 const lockPath = path.join(cacheDir, "dist.lock");
 
-const excludedTopLevel = new Set([".cache", ".git", ".github", "_dist", "_site", "node_modules", "scripts", "src", "tests"]);
-const excludedFiles = new Set([".gitignore", "eslint.config.mjs", "package.json", "package-lock.json", "tsconfig.json"]);
 const optimizerVersion = "dist-optimizer-v1";
 const textExtensions = new Set([".css", ".html", ".js", ".json"]);
+const rootPassthroughFiles = ["CNAME"];
 
 async function acquireLock() {
   await mkdir(cacheDir, { recursive: true });
   try {
     return await open(lockPath, fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_RDWR);
   } catch (error) {
-    throw new Error(`Build de _dist ja esta em execucao ou lock antigo presente em ${lockPath}. Erro: ${error.message}`);
+    throw new Error(`Build de dist ja esta em execucao ou lock antigo presente em ${lockPath}. Erro: ${error.message}`);
   }
 }
 
@@ -60,15 +60,13 @@ async function buildOutput(rel, src) {
   return Buffer.from(optimized, "utf8");
 }
 
-async function collectFiles(dir = root, prefix = "") {
+async function collectFiles(dir = siteDir, prefix = "") {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
     const rel = prefix ? path.join(prefix, entry.name) : entry.name;
-    const top = rel.split(path.sep)[0];
-
-    if (excludedTopLevel.has(top) || excludedFiles.has(rel) || rel.endsWith(".bundle.html")) {
+    if (rel.endsWith(".bundle.html")) {
       continue;
     }
 
@@ -84,20 +82,64 @@ async function collectFiles(dir = root, prefix = "") {
   return files;
 }
 
+async function collectAllFiles(dir = distDir, prefix = "") {
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  const files = [];
+
+  for (const entry of entries) {
+    const rel = prefix ? path.join(prefix, entry.name) : entry.name;
+    const full = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...await collectAllFiles(full, rel));
+    } else if (entry.isFile()) {
+      files.push(rel);
+    }
+  }
+
+  return files;
+}
+
 async function writeChanged(files, oldManifest) {
   const nextManifest = { files: {} };
   await mkdir(distDir, { recursive: true });
 
   for (const rel of files) {
-    const src = path.join(root, rel);
+    const src = path.join(siteDir, rel);
     const dest = path.join(distDir, rel);
     await stat(src);
     const output = await buildOutput(rel, src);
     const hash = hashBuffer(Buffer.concat([Buffer.from(`${optimizerVersion}\0${rel}\0`, "utf8"), output]));
     const old = oldManifest.files[rel];
     nextManifest.files[rel] = { hash, size: output.byteLength };
+    const currentDest = await stat(dest).catch(() => undefined);
 
-    if (old && old.hash === hash && old.size === output.byteLength) {
+    if (old && old.hash === hash && old.size === output.byteLength && currentDest?.isFile()) {
+      continue;
+    }
+
+    await mkdir(path.dirname(dest), { recursive: true });
+    const tmp = `${dest}.tmp-${process.pid}`;
+    await writeFile(tmp, output);
+    await rename(tmp, dest);
+  }
+
+  for (const rel of rootPassthroughFiles) {
+    const src = path.join(root, rel);
+    const exists = await stat(src).catch(() => undefined);
+
+    if (!exists?.isFile()) {
+      continue;
+    }
+
+    const dest = path.join(distDir, rel);
+    const output = await readFile(src);
+    const hash = hashBuffer(Buffer.concat([Buffer.from(`${optimizerVersion}\0${rel}\0`, "utf8"), output]));
+    const old = oldManifest.files[rel];
+    nextManifest.files[rel] = { hash, size: output.byteLength };
+    const currentDest = await stat(dest).catch(() => undefined);
+
+    if (old && old.hash === hash && old.size === output.byteLength && currentDest?.isFile()) {
       continue;
     }
 
@@ -113,20 +155,30 @@ async function writeChanged(files, oldManifest) {
     }
   }
 
+  for (const rel of await collectAllFiles()) {
+    if (!nextManifest.files[rel]) {
+      await rm(path.join(distDir, rel), { force: true });
+    }
+  }
+
   return nextManifest;
 }
 
 const lock = await acquireLock();
 try {
+  const siteInfo = await stat(siteDir).catch(() => undefined);
+  if (!siteInfo?.isDirectory()) {
+    throw new Error("site ausente. Execute npm run compile antes de gerar dist.");
+  }
+
   const oldManifest = await readManifest();
   const files = await collectFiles();
   const nextManifest = await writeChanged(files, oldManifest);
   await writeManifest(nextManifest);
-  console.log(`_dist atualizado: ${Object.keys(nextManifest.files).length} arquivos rastreados.`);
+  console.log(`dist atualizado: ${Object.keys(nextManifest.files).length} arquivos rastreados.`);
 } catch (error) {
   console.error(error);
   process.exitCode = 1;
 } finally {
   await releaseLock(lock);
 }
-

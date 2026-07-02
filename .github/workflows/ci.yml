@@ -21,16 +21,15 @@ jobs:
             .cache/build
             .cache/eslint
             .cache/ts
-            _dist
-            _site
-          key: modelos-build-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'scripts/**/*.mjs', 'src/**/*.ts', 'src/**/*.tsx', '**/*.html', '**/*.css') }}
+            dist
+          key: modelos-build-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'script/**/*.mjs', 'src/**/*.ts', 'src/**/*.tsx', 'site/**/*.html', 'site/**/*.css') }}
           restore-keys: |
             modelos-build-${{ runner.os }}-
       - run: npm ci
       - run: npm run check
       - uses: actions/upload-artifact@v4
         with:
-          name: site
-          path: _site
+          name: dist
+          path: dist
           if-no-files-found: error
           retention-days: 14

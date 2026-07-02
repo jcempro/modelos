@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ["_dist/**", "_site/**", ".cache/**", "node_modules/**", "assets/**/*.js", "oficios/**/*.js", "faturamento/**/*.js", "dizimo/**/*.js", "favoritos/**/*.js"]
+    ignores: ["dist/**", "site/**/*.js", ".cache/**", "node_modules/**"]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -20,7 +20,7 @@ export default [
     }
   },
   {
-    files: ["scripts/**/*.mjs", "eslint.config.mjs"],
+    files: ["script/**/*.mjs", "eslint.config.mjs"],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.node

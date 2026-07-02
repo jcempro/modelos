@@ -6,11 +6,11 @@ import { fileURLToPath } from "node:url";
 import { minifyCssText, minifyHtmlText, minifyJsText } from "./asset-optimizer.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const distDir = path.join(root, "_dist");
+const siteDir = path.join(root, "site");
+const distDir = path.join(root, "dist");
 const cacheDir = path.join(root, ".cache", "build");
 const lockPath = path.join(cacheDir, "bundle.lock");
 
-const excludedTopLevel = new Set([".cache", ".git", ".github", "_dist", "_site", "node_modules", "scripts", "src", "tests"]);
 const externalResources = new Map([
   [
     "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.0/html2pdf.bundle.min.js",
@@ -54,18 +54,12 @@ async function releaseLock(handle) {
   await unlink(lockPath).catch(() => undefined);
 }
 
-async function collectIndexFiles(dir = root, prefix = "") {
+async function collectIndexFiles(dir = siteDir, prefix = "") {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
     const rel = prefix ? path.join(prefix, entry.name) : entry.name;
-    const top = rel.split(path.sep)[0];
-
-    if (excludedTopLevel.has(top)) {
-      continue;
-    }
-
     const full = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
@@ -223,7 +217,7 @@ function assertOffline(html, rel) {
 }
 
 async function buildBundle(rel) {
-  const indexFile = path.join(root, rel);
+  const indexFile = path.join(siteDir, rel);
   const dir = path.dirname(indexFile);
   const bundleName = `${path.basename(dir)}.bundle.html`;
   const outputFile = path.join(distDir, path.dirname(rel), bundleName);

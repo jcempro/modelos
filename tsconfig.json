@@ -23,5 +23,5 @@
     "useDefineForClassFields": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"],
-  "exclude": ["_site", ".cache", "node_modules"]
+  "exclude": ["dist", ".cache", "node_modules"]
 }
