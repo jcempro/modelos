@@ -21,6 +21,7 @@ jobs:
             .cache/build
             .cache/eslint
             .cache/ts
+            _dist
             _site
           key: modelos-build-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json', 'scripts/**/*.mjs', 'src/**/*.ts', 'src/**/*.tsx', '**/*.html', '**/*.css') }}
           restore-keys: |

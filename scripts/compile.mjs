@@ -6,7 +6,6 @@ import * as esbuild from "esbuild";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const watch = process.argv.includes("--watch");
-const production = !watch;
 
 const entries = [
   ["src/assets/js/documentos.ts", "assets/js/documentos.js"],
@@ -34,7 +33,7 @@ async function buildBrowserScripts() {
       format: "iife",
       legalComments: "none",
       logLevel: "silent",
-      minify: production,
+      minify: false,
       sourcemap: false,
       target: "es2020"
     });

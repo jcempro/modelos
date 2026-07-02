@@ -1,5 +1,677 @@
-"use strict";(()=>{(function(o,c){"use strict";let g=o.localStorage,L=new WeakMap;function d(e,t=c){return Array.from(t.querySelectorAll(e))}function f(e,t=c){return t.querySelector(e)}function u(e,t,r){if(!e)return;if(typeof r<"u")return e.setAttribute(t,r),e;if(!e.hasAttribute(t))return;let a=e.getAttribute(t);return a||!0}function y(e,t,r){e?.addEventListener(t,r)}function q(e){if(["interactive","complete"].includes(c.readyState)){o.setTimeout(e,50);return}y(c,"DOMContentLoaded",e)}function h(e){return(e||"").replace(/[^\d]/g,"")}function D(e,t){return(e||"").replace(t,"")}function R(e){return e?e.charAt(0).toUpperCase()+e.substring(1):""}function b(e,t,r=!1){let a=0,n=typeof t=="string"?t.split("").map(Number):t,i=`${e}`.split("").reduce((l,s)=>(a>n.length-1&&(a=0),(n[a++]??0)*parseInt(s,10)+l),0)%11;return r?i:11-i>=10?0:11-i}function A(e){let t=h(e);return t.length!==8?-1:`${t.substring(0,2)}.${t.substring(2,5)}-${t.substring(5)}`}function C(e){let t=(e||"").replace(/[^\d,]/g,"").replace(/[,]/g,".");if(t.trim().length===0)return-1;let r=Number.parseFloat(t);return Number.isNaN(r)?-1:new Intl.NumberFormat("pt-BR",{currency:"BRL",style:"currency"}).format(r)}function $(e){let t=h(e);return t.length!==11||t[2]!=="9"||Number.parseInt(t.substring(0,2),10)<11?-1:`(${t.substring(0,2)}) ${t[2]} ${t.substring(3,7)}-${t.substring(7)}`}function E(e){let t=h(e);return t.length!==10||Number.parseInt(t.substring(0,2),10)<11?-1:`(${t.substring(0,2)}) ${t.substring(2,6)}-${t.substring(6)}`}function P(e){let t=h(e);if(t.length>14||t.length<3)return-1;t=t.padStart(14,"0");let r=t.substring(0,12);return Number(t[12])!==b(r,"543298765432")||Number(t[13])!==b(r+t[12],"6543298765432")?-1:`${t[0]}${t[1]}.${t[2]}${t[3]}${t[4]}.${t[5]}${t[6]}${t[7]}/${t[8]}${t[9]}${t[10]}${t[11]}-${t[12]}${t[13]}`}function N(e){let t=h(e).padStart(11,"0");if(t.length!==11)return-1;let r=t.substring(0,9);return Number(t[9])!==b(r,[10,9,8,7,6,5,4,3,2])||Number(t[10])!==b(r+t[9],[11,10,9,8,7,6,5,4,3,2])?-1:`${t.substring(0,3)}.${t.substring(3,6)}.${t.substring(6,9)}-${t[9]}${t[10]}`}let v={cel:$,celular:$,cep:A,cnpj:P,cpf:N,currency:C,mobile:$,moeda:C,phone:E,tel:E,telefone:E};function S(e){if(!e)return"";try{return decodeURIComponent(Array.from(o.atob(e),t=>`%${`00${t.charCodeAt(0).toString(16)}`.slice(-2)}`).join(""))}catch{try{return o.atob(e)}catch{return""}}}function x(e){try{return o.btoa(unescape(encodeURIComponent(e||"")))}catch{return o.btoa(e||"")}}function T(e){let t=new URLSearchParams(o.location.search),r=Array.isArray(e)?e:[e];for(let a of r){let n=t.get(a)?.trim();if(n)return n}return""}function k(e=["data","json","payload"]){let t=T(e);if(!t)return null;try{let r=JSON.parse(S(t));return r&&typeof r=="object"&&!Array.isArray(r)?r:null}catch{return null}}function z(e,t={}){return e.id&&t.fields?.[e.id]?t.fields[e.id]??{}:(t.fieldRules??t.rules??[]).find(a=>a.selector&&e.matches(a.selector))??{}}function B(e,t,r){if(r.message)return r.message;let a=r.hint??u(e,"hint");return a?(t.emptyFieldMessage??"Campo '${0}' vazio ou invalido").replace(/\$\{0\}/g,a):e.id&&t.messages?.[e.id]?t.messages[e.id]??"Campo invalido":"Campo invalido"}function K(e,t,r){let a=`${r.type??r.validator??u(e,"type")??"text"}`.toLowerCase();return typeof r.validate=="function"?r.validate:r.validate===!1||r.validator===!1?null:typeof r.validator=="function"?r.validator:typeof r.validator=="string"&&v[r.validator.toLowerCase()]?v[r.validator.toLowerCase()]??null:e.id&&t.customValidators?.[e.id]?t.customValidators[e.id]??null:v[a]??(e.id?v[e.id]??null:null)}function I(e,t,r={},a=null){if(u(e,"type")==="file"||a&&!u(e,a))return 0;let n=z(e,r),i=B(e,r,n),l=typeof n.required=="boolean"?n.required:!!u(e,"required"),s=K(e,r,n);if(s){if(e.value.trim().length===0&&!l)return 0;let p=s(e.value);return typeof p=="string"&&p.length>0?(t&&(e.value=p),0):l||e.value.trim().length>0?i:-1}if(e.value.trim().length===0&&l)return i;let m=n.pattern??u(e,"pattern");return e.value.length>0&&m&&!new RegExp(m,"i").test(e.value)?i:((n.uppercase||(r.uppercaseFields??[]).includes(e.id))&&(e.value=e.value.toUpperCase()),0)}function w(e={}){let t=d(e.selector??"input",e.root),r=[];for(let a of t){if(e.onlyAttribute&&!u(a,e.onlyAttribute))continue;let n=I(a,!1,e.validation??{},e.onlyAttribute??null);typeof n=="string"&&r.push(n)}return r.length>0?(o.alert(r.join(`\r
-`)),!1):!0}function _(e={}){let t=d(e.selector??"input",e.root),r=e.storage??g,a=e.validation??{},n=e.idPrefix??"i";t.forEach((i,l)=>{if(u(i,"type")!=="file"){(!i.id||i.id.length<2)&&(i.id=`${n}${l}`),i.value=r.getItem(i.id)??"";for(let s of["blur","keyup","input"])y(i,s,m=>{if("tratando"in i&&i.tratando===!0)return;i.tratando=!0;let p=m.type==="blur",M=I(i,p,a);if(o.setTimeout(()=>{i.tratando=!1},100),M){if(!p)return;i.value.trim().length>0&&p&&typeof M=="string"&&o.alert(M),i.value="",r.removeItem(i.id);return}r.setItem(i.id,i.value)})}})}function J(e=".autosave"){let t=f(e);if(!t)return;let r=t;function a(n){r.className=r.className.replace(/( |^)save2? ?/i,""),r.className+=n?" save":" save2",o.setTimeout(()=>a(n?0:1),600)}a(0)}function Q(e={}){let t=d(e.selector??"input",e.root),r=e.idPattern??/^i\d+$/i;for(let a of t)a.id&&r.test(a.id)&&(a.value="",e.removeStorage!==!1&&(e.storage??g).removeItem(a.id))}function W(e){let t=c.createElement("style"),[r,a]=e.size,n=e.unit;t.textContent=`@page{size:${r}${n} ${a}${n};margin-left:${e.left}${n};margin-right:${e.right}${n};margin-top:${e.top}${n};margin-bottom:${e.bottom}${n};}`,t.textContent+=`*{max-width:calc(${r}${n} - ${e.left+e.right}${n});}`,c.head.appendChild(t)}function O(e,t={}){let r=c.body.className,a=d("input");c.body.className=`${r?`${r} `:""}${t.printClass??"imprimir"}`;for(let n of a)L.set(n,n.getAttribute("placeholder")),n.removeAttribute("placeholder");e(()=>{for(let n of a){let i=L.get(n);i!=null&&n.setAttribute("placeholder",i)}c.body.className=r})}function G(e){let t=o.html2pdf;if(!t){o.alert("Gerador de PDF indisponivel.");return}O(r=>{o.setTimeout(()=>{let a=typeof e.filename=="function"?e.filename():e.filename;a=a||"documento.pdf",/\.pdf$/i.test(a)||(a+=".pdf"),t(e.source??c.documentElement,{filename:a,html2canvas:{scale:e.scale??6},image:{quality:.98,type:"jpeg"},jsPDF:{format:e.pageConfig.size,orientation:e.orientation??"portrait",unit:e.pageConfig.unit},margin:[e.pageConfig.top,e.pageConfig.left,e.pageConfig.bottom,e.pageConfig.right]}),o.setTimeout(r,50)},100)},e)}function j(e){let t=f(e.selector),r=(e.storage??g).getItem(e.key??"timbre");!t||!r||(t.src=r,t.style.display="block")}function Y(e){let t=f(e.inputSelector);t&&y(t,"change",r=>{let a=r.target;if(!(a instanceof HTMLInputElement)||!a.files||a.files.length===0)return;let n=a.files[0];if(!n)return;let i=new FileReader;i.addEventListener("load",()=>{typeof i.result=="string"&&((e.storage??g).setItem(e.key??"timbre",i.result),o.setTimeout(()=>j(e),100))}),i.readAsDataURL(n)})}function X(e){let t=f(e);if(!t)return;let r=new Date;t.innerHTML=`${`${r.getDate()}`.padStart(2,"0")} de ${R(r.toLocaleString("default",{month:"long"}))} de ${r.getFullYear()}`}function Z(e,t,r){let a=f(e);return!a||t.length===0?!1:(a.value=S(t),a.value=r?D(a.value,r):a.value,a.dispatchEvent(new Event("blur")),!0)}function ee(e){let t=!1,r=k(e.jsonParamNames),a=e.fields??[];if(r)for(let n of a){let i=Array.isArray(n.jsonKeys??n.params)?n.jsonKeys??n.params:[n.jsonKeys??n.params].filter(Boolean);for(let l of i)if(Object.prototype.hasOwnProperty.call(r,l)){let s=f(n.selector);if(s){let m=r[l];s.value=m==null?"":`${m}`,s.dispatchEvent(new Event("blur")),t=!0;break}}}for(let n of a)n.params&&(t=Z(n.selector,T(n.params),n.sanitizeRegex)||t);if(r)for(let n of e.storageMappings??[]){let i=Array.isArray(n.jsonKeys)?n.jsonKeys:[n.jsonKeys].filter(Boolean);for(let l of i)if(Object.prototype.hasOwnProperty.call(r,l)){let s=r[l];(e.storage??g).setItem(n.key,s==null?"":`${s}`),n.afterSet?.(),t=!0;break}}for(let n of e.storageMappings??[]){let i=T(n.params);i.length!==0&&((e.storage??g).setItem(n.key,S(i)),n.afterSet?.(),t=!0)}return t&&e.reload!==!1&&o.location.assign(o.location.pathname),t}function te(e){for(let[t,r]of Object.entries(e))for(let a of d(t))y(a,"click",r)}function H(e){if(o.navigator.clipboard?.writeText)return o.navigator.clipboard.writeText(e);let t=c.createElement("textarea");return t.value=e,t.style.position="fixed",t.style.left="-1000px",c.body.appendChild(t),t.select(),c.execCommand("copy"),c.body.removeChild(t),Promise.resolve()}function U(e={}){return typeof e.cleanUrl=="function"?e.cleanUrl():typeof e.cleanUrl=="string"&&e.cleanUrl.trim()?e.cleanUrl.trim():`${o.location.origin}${o.location.pathname}`}function re(e={}){return typeof e.root=="string"?f(e.root)??c:e.root??c}function ne(e={}){let t={},r=e.fieldSelector??"input, select, textarea",a=d(r,re(e));for(let n of a){if(n instanceof HTMLInputElement&&["button","file","reset","submit"].includes(n.type))continue;let i=n.id||n.name;if(i){if(n instanceof HTMLInputElement&&n.type==="checkbox"){t[i]=n.checked;continue}if(n instanceof HTMLInputElement&&n.type==="radio"){n.checked&&(t[i]=n.value);continue}t[i]=n.value}}return t}function ae(e){return e&&typeof e=="object"&&!Array.isArray(e)?e:{}}function ie(e,t){if(e.promptMode)return e.promptMode(t);let r=e.messages?.question??`Compartilhar link com os dados preenchidos?
-
-OK: compartilhar com dados preenchidos.
-Cancelar: compartilhar apenas o link limpo da pagina.`;return o.confirm(r)?"filled":"clean"}function F(e,t={},r){let a=U(t),n={cleanUrl:a,event:r,mode:e};if(e==="clean")return{cleanUrl:a,mode:e,url:a};let i=ae(t.payload?t.payload():ne(t)),l=t.extendPayload?.(i,{...n,payload:i});l&&typeof l=="object"&&!Array.isArray(l)&&(i={...i,...l});let s=new URL(a,o.location.href);return s.searchParams.set(t.dataParamName??"data",x(JSON.stringify(i))),{cleanUrl:a,mode:e,payload:i,url:s.toString()}}async function V(e={},t){let r=U(e),a=ie(e,{cleanUrl:r,event:t,mode:"clean"});if(!a)return null;let n={cleanUrl:r,event:t,mode:a};if(e.beforeShare?.(n)===!1)return null;let i=F(a,e,t),l={...i,copied:!1};try{return await H(i.url),l.copied=!0,e.afterShare?.(l),o.alert(a==="filled"?e.messages?.copiedFilled??"Endereco da pagina com dados preenchidos copiado para a area de transferencia.":e.messages?.copiedClean??"Endereco limpo da pagina copiado para a area de transferencia."),l}catch{return o.alert(e.messages?.failed??"Nao foi possivel copiar o endereco para a area de transferencia."),null}}function oe(e,t={}){for(let r of d(e))y(r,"click",a=>{V(t,a)})}o.JCEMDocumentos={$:d,attr:u,autosave:{clearAutoFields:Q,indicator:J,init:_},base64:{decode:S,encode:x},clipboard:{copy:H},date:{current:X},image:{bindUpload:Y,load:j},on:y,one:f,print:{createPageStyle:W,pdf:G,withPrintMode:O},query:{apply:ee,get:T,json:k},ready:q,share:{bindToolbar:oe,buildUrl:F,run:V},storage:g,toolbar:{bind:te},util:{capitalizeFirst:R,digits:h},validate:{all:w,input:I},validators:{catalog:v,cep:A,cnpj:P,cpf:N,currency:C,mobile:$,mod11:b,phone:E}}})(window,document);})();
+"use strict";
+(() => {
+  // src/assets/js/documentos.ts
+  (function bootstrapDocumentos(w, d) {
+    "use strict";
+    const storage = w.localStorage;
+    const placeholders = /* @__PURE__ */ new WeakMap();
+    function $(selector, root = d) {
+      return Array.from(root.querySelectorAll(selector));
+    }
+    function one(selector, root = d) {
+      return root.querySelector(selector);
+    }
+    function attr(element, key, value) {
+      if (!element) {
+        return void 0;
+      }
+      if (typeof value !== "undefined") {
+        element.setAttribute(key, value);
+        return element;
+      }
+      if (!element.hasAttribute(key)) {
+        return void 0;
+      }
+      const result = element.getAttribute(key);
+      return result ? result : true;
+    }
+    function on(element, eventName, handler) {
+      element?.addEventListener(eventName, handler);
+    }
+    function ready(handler) {
+      if (["interactive", "complete"].includes(d.readyState)) {
+        w.setTimeout(handler, 50);
+        return;
+      }
+      on(d, "DOMContentLoaded", handler);
+    }
+    function digits(value) {
+      return (value || "").replace(/[^\d]/g, "");
+    }
+    function strip(value, pattern) {
+      return (value || "").replace(pattern, "");
+    }
+    function capitalizeFirst(value) {
+      return value ? value.charAt(0).toUpperCase() + value.substring(1) : "";
+    }
+    function mod11(number, multipliers, rawRemainder = false) {
+      let index = 0;
+      const list = typeof multipliers === "string" ? multipliers.split("").map(Number) : multipliers;
+      const remainder = `${number}`.split("").reduce((sum, digit) => {
+        if (index > list.length - 1) {
+          index = 0;
+        }
+        const multiplier = list[index++] ?? 0;
+        return multiplier * parseInt(digit, 10) + sum;
+      }, 0) % 11;
+      return rawRemainder ? remainder : 11 - remainder >= 10 ? 0 : 11 - remainder;
+    }
+    function formatCep(value) {
+      const cleaned = digits(value);
+      if (cleaned.length !== 8) {
+        return -1;
+      }
+      return `${cleaned.substring(0, 2)}.${cleaned.substring(2, 5)}-${cleaned.substring(5)}`;
+    }
+    function formatCurrency(value) {
+      const cleaned = (value || "").replace(/[^\d,]/g, "").replace(/[,]/g, ".");
+      if (cleaned.trim().length === 0) {
+        return -1;
+      }
+      const parsed = Number.parseFloat(cleaned);
+      if (Number.isNaN(parsed)) {
+        return -1;
+      }
+      return new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" }).format(parsed);
+    }
+    function formatMobile(value) {
+      const cleaned = digits(value);
+      if (cleaned.length !== 11 || cleaned[2] !== "9" || Number.parseInt(cleaned.substring(0, 2), 10) < 11) {
+        return -1;
+      }
+      return `(${cleaned.substring(0, 2)}) ${cleaned[2]} ${cleaned.substring(3, 7)}-${cleaned.substring(7)}`;
+    }
+    function formatPhone(value) {
+      const cleaned = digits(value);
+      if (cleaned.length !== 10 || Number.parseInt(cleaned.substring(0, 2), 10) < 11) {
+        return -1;
+      }
+      return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 6)}-${cleaned.substring(6)}`;
+    }
+    function formatCnpj(value) {
+      let cleaned = digits(value);
+      if (cleaned.length > 14 || cleaned.length < 3) {
+        return -1;
+      }
+      cleaned = cleaned.padStart(14, "0");
+      const base = cleaned.substring(0, 12);
+      if (Number(cleaned[12]) !== mod11(base, "543298765432")) {
+        return -1;
+      }
+      if (Number(cleaned[13]) !== mod11(base + cleaned[12], "6543298765432")) {
+        return -1;
+      }
+      return `${cleaned[0]}${cleaned[1]}.${cleaned[2]}${cleaned[3]}${cleaned[4]}.${cleaned[5]}${cleaned[6]}${cleaned[7]}/${cleaned[8]}${cleaned[9]}${cleaned[10]}${cleaned[11]}-${cleaned[12]}${cleaned[13]}`;
+    }
+    function formatCpf(value) {
+      const cleaned = digits(value).padStart(11, "0");
+      if (cleaned.length !== 11) {
+        return -1;
+      }
+      const base = cleaned.substring(0, 9);
+      if (Number(cleaned[9]) !== mod11(base, [10, 9, 8, 7, 6, 5, 4, 3, 2])) {
+        return -1;
+      }
+      if (Number(cleaned[10]) !== mod11(base + cleaned[9], [11, 10, 9, 8, 7, 6, 5, 4, 3, 2])) {
+        return -1;
+      }
+      return `${cleaned.substring(0, 3)}.${cleaned.substring(3, 6)}.${cleaned.substring(6, 9)}-${cleaned[9]}${cleaned[10]}`;
+    }
+    const validatorCatalog = {
+      cel: formatMobile,
+      celular: formatMobile,
+      cep: formatCep,
+      cnpj: formatCnpj,
+      cpf: formatCpf,
+      currency: formatCurrency,
+      mobile: formatMobile,
+      moeda: formatCurrency,
+      phone: formatPhone,
+      tel: formatPhone,
+      telefone: formatPhone
+    };
+    function decodeBase64(value) {
+      if (!value) {
+        return "";
+      }
+      try {
+        return decodeURIComponent(Array.from(w.atob(value), (char) => `%${`00${char.charCodeAt(0).toString(16)}`.slice(-2)}`).join(""));
+      } catch (_error) {
+        try {
+          return w.atob(value);
+        } catch (_ignore) {
+          return "";
+        }
+      }
+    }
+    function encodeBase64(value) {
+      try {
+        return w.btoa(unescape(encodeURIComponent(value || "")));
+      } catch (_error) {
+        return w.btoa(value || "");
+      }
+    }
+    function getQueryValue(names) {
+      const params = new URLSearchParams(w.location.search);
+      const list = Array.isArray(names) ? names : [names];
+      for (const name of list) {
+        const value = params.get(name)?.trim();
+        if (value) {
+          return value;
+        }
+      }
+      return "";
+    }
+    function readJsonPayload(names = ["data", "json", "payload"]) {
+      const raw = getQueryValue(names);
+      if (!raw) {
+        return null;
+      }
+      try {
+        const parsed = JSON.parse(decodeBase64(raw));
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+      } catch (_error) {
+        return null;
+      }
+    }
+    function getFieldRule(input, config = {}) {
+      if (input.id && config.fields?.[input.id]) {
+        return config.fields[input.id] ?? {};
+      }
+      const rules = config.fieldRules ?? config.rules ?? [];
+      return rules.find((rule) => rule.selector && input.matches(rule.selector)) ?? {};
+    }
+    function fieldWarning(input, config, rule) {
+      if (rule.message) {
+        return rule.message;
+      }
+      const hint = rule.hint ?? attr(input, "hint");
+      if (hint) {
+        return (config.emptyFieldMessage ?? "Campo '${0}' vazio ou invalido").replace(/\$\{0\}/g, hint);
+      }
+      if (input.id && config.messages?.[input.id]) {
+        return config.messages[input.id] ?? "Campo invalido";
+      }
+      return "Campo invalido";
+    }
+    function resolveValidator(input, config, rule) {
+      const type = `${rule.type ?? rule.validator ?? attr(input, "type") ?? "text"}`.toLowerCase();
+      if (typeof rule.validate === "function") {
+        return rule.validate;
+      }
+      if (rule.validate === false || rule.validator === false) {
+        return null;
+      }
+      if (typeof rule.validator === "function") {
+        return rule.validator;
+      }
+      if (typeof rule.validator === "string" && validatorCatalog[rule.validator.toLowerCase()]) {
+        return validatorCatalog[rule.validator.toLowerCase()] ?? null;
+      }
+      if (input.id && config.customValidators?.[input.id]) {
+        return config.customValidators[input.id] ?? null;
+      }
+      return validatorCatalog[type] ?? (input.id ? validatorCatalog[input.id] ?? null : null);
+    }
+    function validateAndNormalize(input, shouldNormalize, config = {}, onlyAttribute = null) {
+      if (attr(input, "type") === "file") {
+        return 0;
+      }
+      if (onlyAttribute && !attr(input, onlyAttribute)) {
+        return 0;
+      }
+      const rule = getFieldRule(input, config);
+      const message = fieldWarning(input, config, rule);
+      const required = typeof rule.required === "boolean" ? rule.required : !!attr(input, "required");
+      const formatter = resolveValidator(input, config, rule);
+      if (formatter) {
+        if (input.value.trim().length === 0 && !required) {
+          return 0;
+        }
+        const result = formatter(input.value);
+        if (typeof result === "string" && result.length > 0) {
+          if (shouldNormalize) {
+            input.value = result;
+          }
+          return 0;
+        }
+        return required || input.value.trim().length > 0 ? message : -1;
+      }
+      if (input.value.trim().length === 0 && required) {
+        return message;
+      }
+      const pattern = rule.pattern ?? attr(input, "pattern");
+      if (input.value.length > 0 && pattern && !new RegExp(pattern, "i").test(input.value)) {
+        return message;
+      }
+      if (rule.uppercase || (config.uppercaseFields ?? []).includes(input.id)) {
+        input.value = input.value.toUpperCase();
+      }
+      return 0;
+    }
+    function validateInputs(options = {}) {
+      const inputs = $(options.selector ?? "input", options.root);
+      const errors = [];
+      for (const input of inputs) {
+        if (options.onlyAttribute && !attr(input, options.onlyAttribute)) {
+          continue;
+        }
+        const result = validateAndNormalize(input, false, options.validation ?? {}, options.onlyAttribute ?? null);
+        if (typeof result === "string") {
+          errors.push(result);
+        }
+      }
+      if (errors.length > 0) {
+        w.alert(errors.join("\r\n"));
+        return false;
+      }
+      return true;
+    }
+    function initAutosave(options = {}) {
+      const inputs = $(options.selector ?? "input", options.root);
+      const store = options.storage ?? storage;
+      const validation = options.validation ?? {};
+      const idPrefix = options.idPrefix ?? "i";
+      inputs.forEach((input, index) => {
+        if (attr(input, "type") === "file") {
+          return;
+        }
+        if (!input.id || input.id.length < 2) {
+          input.id = `${idPrefix}${index}`;
+        }
+        input.value = store.getItem(input.id) ?? "";
+        for (const eventName of ["blur", "keyup", "input"]) {
+          on(input, eventName, (event) => {
+            if ("tratando" in input && input.tratando === true) {
+              return;
+            }
+            input.tratando = true;
+            const shouldNormalize = event.type === "blur";
+            const result = validateAndNormalize(input, shouldNormalize, validation);
+            w.setTimeout(() => {
+              input.tratando = false;
+            }, 100);
+            if (result) {
+              if (!shouldNormalize) {
+                return;
+              }
+              if (input.value.trim().length > 0 && shouldNormalize && typeof result === "string") {
+                w.alert(result);
+              }
+              input.value = "";
+              store.removeItem(input.id);
+              return;
+            }
+            store.setItem(input.id, input.value);
+          });
+        }
+      });
+    }
+    function initAutosaveIndicator(selector = ".autosave") {
+      const indicator = one(selector);
+      if (!indicator) {
+        return;
+      }
+      const indicatorElement = indicator;
+      function tick(state) {
+        indicatorElement.className = indicatorElement.className.replace(/( |^)save2? ?/i, "");
+        indicatorElement.className += state ? " save" : " save2";
+        w.setTimeout(() => tick(state ? 0 : 1), 600);
+      }
+      tick(0);
+    }
+    function clearAutoFields(options = {}) {
+      const inputs = $(options.selector ?? "input", options.root);
+      const pattern = options.idPattern ?? /^i\d+$/i;
+      for (const input of inputs) {
+        if (input.id && pattern.test(input.id)) {
+          input.value = "";
+          if (options.removeStorage !== false) {
+            (options.storage ?? storage).removeItem(input.id);
+          }
+        }
+      }
+    }
+    function createPageStyle(pageConfig) {
+      const style = d.createElement("style");
+      const [width, height] = pageConfig.size;
+      const unit = pageConfig.unit;
+      style.textContent = `@page{size:${width}${unit} ${height}${unit};margin-left:${pageConfig.left}${unit};margin-right:${pageConfig.right}${unit};margin-top:${pageConfig.top}${unit};margin-bottom:${pageConfig.bottom}${unit};}`;
+      style.textContent += `*{max-width:calc(${width}${unit} - ${pageConfig.left + pageConfig.right}${unit});}`;
+      d.head.appendChild(style);
+    }
+    function withPrintMode(callback, options = {}) {
+      const previousClass = d.body.className;
+      const inputs = $("input");
+      d.body.className = `${previousClass ? `${previousClass} ` : ""}${options.printClass ?? "imprimir"}`;
+      for (const input of inputs) {
+        placeholders.set(input, input.getAttribute("placeholder"));
+        input.removeAttribute("placeholder");
+      }
+      callback(() => {
+        for (const input of inputs) {
+          const placeholder = placeholders.get(input);
+          if (placeholder !== void 0 && placeholder !== null) {
+            input.setAttribute("placeholder", placeholder);
+          }
+        }
+        d.body.className = previousClass;
+      });
+    }
+    function printPdf(options) {
+      const html2pdf = w.html2pdf;
+      if (!html2pdf) {
+        w.alert("Gerador de PDF indisponivel.");
+        return;
+      }
+      withPrintMode((restore) => {
+        w.setTimeout(() => {
+          let filename = typeof options.filename === "function" ? options.filename() : options.filename;
+          filename = filename || "documento.pdf";
+          if (!/\.pdf$/i.test(filename)) {
+            filename += ".pdf";
+          }
+          html2pdf(options.source ?? d.documentElement, {
+            filename,
+            html2canvas: { scale: options.scale ?? 6 },
+            image: { quality: 0.98, type: "jpeg" },
+            jsPDF: { format: options.pageConfig.size, orientation: options.orientation ?? "portrait", unit: options.pageConfig.unit },
+            margin: [options.pageConfig.top, options.pageConfig.left, options.pageConfig.bottom, options.pageConfig.right]
+          });
+          w.setTimeout(restore, 50);
+        }, 100);
+      }, options);
+    }
+    function loadStoredImage(options) {
+      const image = one(options.selector);
+      const value = (options.storage ?? storage).getItem(options.key ?? "timbre");
+      if (!image || !value) {
+        return;
+      }
+      image.src = value;
+      image.style.display = "block";
+    }
+    function bindImageUpload(options) {
+      const input = one(options.inputSelector);
+      if (!input) {
+        return;
+      }
+      on(input, "change", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement) || !target.files || target.files.length === 0) {
+          return;
+        }
+        const file = target.files[0];
+        if (!file) {
+          return;
+        }
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          if (typeof reader.result !== "string") {
+            return;
+          }
+          (options.storage ?? storage).setItem(options.key ?? "timbre", reader.result);
+          w.setTimeout(() => loadStoredImage(options), 100);
+        });
+        reader.readAsDataURL(file);
+      });
+    }
+    function formatCurrentDate(selector) {
+      const target = one(selector);
+      if (!target) {
+        return;
+      }
+      const now = /* @__PURE__ */ new Date();
+      target.innerHTML = `${`${now.getDate()}`.padStart(2, "0")} de ${capitalizeFirst(now.toLocaleString("default", { month: "long" }))} de ${now.getFullYear()}`;
+    }
+    function setFieldValue(selector, value, sanitizeRegex) {
+      const field = one(selector);
+      if (!field || value.length === 0) {
+        return false;
+      }
+      field.value = decodeBase64(value);
+      field.value = sanitizeRegex ? strip(field.value, sanitizeRegex) : field.value;
+      field.dispatchEvent(new Event("blur"));
+      return true;
+    }
+    function applyQueryParams(options) {
+      let changed = false;
+      const payload = readJsonPayload(options.jsonParamNames);
+      const mappings = options.fields ?? [];
+      if (payload) {
+        for (const mapping of mappings) {
+          const keys = Array.isArray(mapping.jsonKeys ?? mapping.params) ? mapping.jsonKeys ?? mapping.params : [mapping.jsonKeys ?? mapping.params].filter(Boolean);
+          for (const key of keys) {
+            if (Object.prototype.hasOwnProperty.call(payload, key)) {
+              const field = one(mapping.selector);
+              if (field) {
+                const value = payload[key];
+                field.value = value == null ? "" : `${value}`;
+                field.dispatchEvent(new Event("blur"));
+                changed = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      for (const mapping of mappings) {
+        if (mapping.params) {
+          changed = setFieldValue(mapping.selector, getQueryValue(mapping.params), mapping.sanitizeRegex) || changed;
+        }
+      }
+      if (payload) {
+        for (const mapping of options.storageMappings ?? []) {
+          const keys = Array.isArray(mapping.jsonKeys) ? mapping.jsonKeys : [mapping.jsonKeys].filter(Boolean);
+          for (const key of keys) {
+            if (Object.prototype.hasOwnProperty.call(payload, key)) {
+              const value = payload[key];
+              (options.storage ?? storage).setItem(mapping.key, value == null ? "" : `${value}`);
+              mapping.afterSet?.();
+              changed = true;
+              break;
+            }
+          }
+        }
+      }
+      for (const mapping of options.storageMappings ?? []) {
+        const value = getQueryValue(mapping.params);
+        if (value.length === 0) {
+          continue;
+        }
+        (options.storage ?? storage).setItem(mapping.key, decodeBase64(value));
+        mapping.afterSet?.();
+        changed = true;
+      }
+      if (changed && options.reload !== false) {
+        w.location.assign(w.location.pathname);
+      }
+      return changed;
+    }
+    function bindToolbar(actions) {
+      for (const [selector, handler] of Object.entries(actions)) {
+        for (const element of $(selector)) {
+          on(element, "click", handler);
+        }
+      }
+    }
+    function copyToClipboard(value) {
+      if (w.navigator.clipboard?.writeText) {
+        return w.navigator.clipboard.writeText(value);
+      }
+      const input = d.createElement("textarea");
+      input.value = value;
+      input.style.position = "fixed";
+      input.style.left = "-1000px";
+      d.body.appendChild(input);
+      input.select();
+      d.execCommand("copy");
+      d.body.removeChild(input);
+      return Promise.resolve();
+    }
+    function cleanPageUrl(options = {}) {
+      if (typeof options.cleanUrl === "function") {
+        return options.cleanUrl();
+      }
+      if (typeof options.cleanUrl === "string" && options.cleanUrl.trim()) {
+        return options.cleanUrl.trim();
+      }
+      return `${w.location.origin}${w.location.pathname}`;
+    }
+    function shareRoot(options = {}) {
+      if (typeof options.root === "string") {
+        return one(options.root) ?? d;
+      }
+      return options.root ?? d;
+    }
+    function defaultSharePayload(options = {}) {
+      const result = {};
+      const selector = options.fieldSelector ?? "input, select, textarea";
+      const controls = $(selector, shareRoot(options));
+      for (const control of controls) {
+        if (control instanceof HTMLInputElement && ["button", "file", "reset", "submit"].includes(control.type)) {
+          continue;
+        }
+        const key = control.id || control.name;
+        if (!key) {
+          continue;
+        }
+        if (control instanceof HTMLInputElement && control.type === "checkbox") {
+          result[key] = control.checked;
+          continue;
+        }
+        if (control instanceof HTMLInputElement && control.type === "radio") {
+          if (control.checked) {
+            result[key] = control.value;
+          }
+          continue;
+        }
+        result[key] = control.value;
+      }
+      return result;
+    }
+    function normalizePayload(value) {
+      return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    }
+    function chooseShareMode(options, context) {
+      if (options.promptMode) {
+        return options.promptMode(context);
+      }
+      const question = options.messages?.question ?? "Compartilhar link com os dados preenchidos?\n\nOK: compartilhar com dados preenchidos.\nCancelar: compartilhar apenas o link limpo da pagina.";
+      return w.confirm(question) ? "filled" : "clean";
+    }
+    function buildShareUrl(mode, options = {}, event) {
+      const cleanUrl = cleanPageUrl(options);
+      const context = { cleanUrl, event, mode };
+      if (mode === "clean") {
+        return { cleanUrl, mode, url: cleanUrl };
+      }
+      let payload = normalizePayload(options.payload ? options.payload() : defaultSharePayload(options));
+      const extended = options.extendPayload?.(payload, { ...context, payload });
+      if (extended && typeof extended === "object" && !Array.isArray(extended)) {
+        payload = { ...payload, ...extended };
+      }
+      const url = new URL(cleanUrl, w.location.href);
+      url.searchParams.set(options.dataParamName ?? "data", encodeBase64(JSON.stringify(payload)));
+      return {
+        cleanUrl,
+        mode,
+        payload,
+        url: url.toString()
+      };
+    }
+    async function runShare(options = {}, event) {
+      const cleanUrl = cleanPageUrl(options);
+      const mode = chooseShareMode(options, { cleanUrl, event, mode: "clean" });
+      if (!mode) {
+        return null;
+      }
+      const beforeContext = { cleanUrl, event, mode };
+      if (options.beforeShare?.(beforeContext) === false) {
+        return null;
+      }
+      const built = buildShareUrl(mode, options, event);
+      const result = { ...built, copied: false };
+      try {
+        await copyToClipboard(built.url);
+        result.copied = true;
+        options.afterShare?.(result);
+        w.alert(mode === "filled" ? options.messages?.copiedFilled ?? "Endereco da pagina com dados preenchidos copiado para a area de transferencia." : options.messages?.copiedClean ?? "Endereco limpo da pagina copiado para a area de transferencia.");
+        return result;
+      } catch (_error) {
+        w.alert(options.messages?.failed ?? "Nao foi possivel copiar o endereco para a area de transferencia.");
+        return null;
+      }
+    }
+    function bindShareToolbar(selector, options = {}) {
+      for (const element of $(selector)) {
+        on(element, "click", (event) => {
+          void runShare(options, event);
+        });
+      }
+    }
+    w.JCEMDocumentos = {
+      $,
+      attr,
+      autosave: {
+        clearAutoFields,
+        indicator: initAutosaveIndicator,
+        init: initAutosave
+      },
+      base64: {
+        decode: decodeBase64,
+        encode: encodeBase64
+      },
+      clipboard: {
+        copy: copyToClipboard
+      },
+      date: {
+        current: formatCurrentDate
+      },
+      image: {
+        bindUpload: bindImageUpload,
+        load: loadStoredImage
+      },
+      on,
+      one,
+      print: {
+        createPageStyle,
+        pdf: printPdf,
+        withPrintMode
+      },
+      query: {
+        apply: applyQueryParams,
+        get: getQueryValue,
+        json: readJsonPayload
+      },
+      ready,
+      share: {
+        bindToolbar: bindShareToolbar,
+        buildUrl: buildShareUrl,
+        run: runShare
+      },
+      storage,
+      toolbar: {
+        bind: bindToolbar
+      },
+      util: {
+        capitalizeFirst,
+        digits
+      },
+      validate: {
+        all: validateInputs,
+        input: validateAndNormalize
+      },
+      validators: {
+        catalog: validatorCatalog,
+        cep: formatCep,
+        cnpj: formatCnpj,
+        cpf: formatCpf,
+        currency: formatCurrency,
+        mobile: formatMobile,
+        mod11,
+        phone: formatPhone
+      }
+    };
+  })(window, document);
+})();

@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ["_site/**", ".cache/**", "node_modules/**", "assets/**/*.js", "oficios/**/*.js", "faturamento/**/*.js", "dizimo/**/*.js", "favoritos/**/*.js"]
+    ignores: ["_dist/**", "_site/**", ".cache/**", "node_modules/**", "assets/**/*.js", "oficios/**/*.js", "faturamento/**/*.js", "dizimo/**/*.js", "favoritos/**/*.js"]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

@@ -236,6 +236,12 @@ O Bundle não deve depender de requisições externas para executar a ferramenta
 
 Ambas as saídas devem ser produzidas em modo de produção, com minificação, eliminação de código morto, otimização de tamanho e priorização de carregamento rápido.
 
+Transpilação agressiva, minificação e otimização de produção devem ocorrer exclusivamente em `_dist` e nos artefatos publicados em `_site`.
+
+Fora de `_dist` e `_site`, os artefatos JavaScript públicos gerados a partir de `src/` devem permanecer adequados a desenvolvimento local, rastreio de erros e depuração, sem minificação agressiva.
+
+O `_site` deve ser construído a partir de `_dist`, nunca diretamente a partir do workspace de desenvolvimento.
+
 O build deve falhar de forma segura quando não conseguir gerar, otimizar, incorporar ou validar qualquer artefato obrigatório.
 
 ## Arquitetura
@@ -247,21 +253,21 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 ├── assets/
 │   ├── css/
 │   └── js/
+├── _dist/
+│   └── <artefatos otimizados para producao>
 ├── dizimo/
 ├── faturamento/
 │   ├── index.html
 │   ├── RCF.md
 │   ├── faturamento.css
-│   ├── faturamento.js
-│   └── faturamento.bundle.html
+│   └── faturamento.js
 ├── favoritos/
 ├── oficios/
 │   └── <documento>/
 │       ├── index.html
 │       ├── RCF.md
 │       ├── <documento>.css
-│       ├── <documento>.js
-│       └── <documento>.bundle.html
+│       └── <documento>.js
 ├── src/
 │   ├── assets/
 │   ├── components/
@@ -363,10 +369,12 @@ Decisões globais registradas:
 - TypeScript passa a ser a fonte canônica do código de aplicação.
 - `.tsx` passa a ser o padrão para componentes de interface reutilizáveis.
 - JavaScript versionado em áreas públicas é artefato compilado para preservar compatibilidade retroativa com GitHub Pages.
+- JavaScript versionado em áreas públicas fora de `_dist` e `_site` deve permanecer legível para desenvolvimento, suporte e rastreio de problemas.
 - Scripts Node.js de build permanecem em `.mjs` por serem bootstrap executável antes da compilação TypeScript.
-- O build incremental usa manifesto em `.cache/build/manifest.json` e lock de concorrência para proteger `_site`.
-- Cada ferramenta com `index.html` deve gerar também um Bundle offline autocontido nomeado pelo diretório da ferramenta.
-- A publicação em `_site` deve otimizar HTML, CSS, JavaScript e JSON textuais para produção sem alterar a fonte canônica.
+- O build incremental usa manifestos em `.cache/build/` e locks de concorrência para proteger `_dist` e `_site`.
+- Cada ferramenta com `index.html` deve gerar também um Bundle offline autocontido nomeado pelo diretório da ferramenta dentro de `_dist` e `_site`.
+- A otimização de HTML, CSS, JavaScript e JSON textuais deve ocorrer na construção de `_dist`, sem alterar a fonte canônica nem os artefatos de desenvolvimento.
+- A publicação em `_site` deve partir de `_dist`, preservando a saída de produção já validada.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
 - O GitHub Actions deve restaurar cache incremental de build e publicar artefatos já contendo saídas Web e Bundle.
 

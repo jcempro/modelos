@@ -1,7 +1,152 @@
-"use strict";(()=>{(function(t){"use strict";let a=t.JCEMDocumentos;if(!a){t.alert("Infraestrutura documental indisponivel.");return}let e=a,i={bottom:1.5,left:1.4,right:.5,size:[21,29.7],top:1,unit:"cm"},s="TELEFONE da empresa INVALIDO!",r={emptyFieldMessage:"Campo '${0}' vazio ou invalido",fieldRules:[{hint:"Nome",pattern:"\\w(\\w{2,20} ){1,20}\\w{2,20}",required:!0,selector:'input[name="nome"]'},{hint:"CPF",required:!0,selector:"#cpf",validator:"cpf"},{hint:"e-mail",pattern:"[\\w\\d\\.\\-_]@[\\w\\d\\-_]{3,64}(\\.[\\w\\d\\-_]{2,64})+",required:!1,selector:'input[hint="e-mail"]'},{hint:"Celular",required:!0,selector:'input[hint="Celular"]',validator:"celular"},{hint:"Recado",required:!1,selector:'input[hint="Recado"]',validator:"celular"},{hint:"Logradouro",required:!0,selector:'input[hint="Logradouro"]'},{hint:"Bairro",required:!0,selector:'input[hint="Bairro"]'},{hint:"Munic\xEDpio",required:!0,selector:'input[hint="Munic\xEDpio"]'},{hint:"UF",pattern:"^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$",required:!0,selector:'input[hint="UF"]'},{hint:"CEP",required:!0,selector:"#cep",validator:"cep"},{hint:"Cargo/Fun\xE7\xE3o",required:!0,selector:'input[hint="Cargo/Fun\xE7\xE3o"]'},{hint:"Sal\xE1rio",required:!0,selector:'input[hint="Sal\xE1rio"]',validator:"moeda"},{message:"Nome da empresa invalido!",pattern:"\\w{1,20}(\\ \\w{1,20})",required:!0,selector:"#nome",uppercase:!0},{message:"CNPJ da empresa invalido",required:!0,selector:"#cnpj",validator:"cnpj"},{message:`${s}
+"use strict";
+(() => {
+  // src/oficios/admissional/admissional.ts
+  (function bootstrapAdmissional(w) {
+    "use strict";
+    const doc = w.JCEMDocumentos;
+    if (!doc) {
+      w.alert("Infraestrutura documental indisponivel.");
+      return;
+    }
+    const api = doc;
+    const pageConfig = {
+      bottom: 1.5,
+      left: 1.4,
+      right: 0.5,
+      size: [21, 29.7],
+      top: 1,
+      unit: "cm"
+    };
+    const phoneTitle = "TELEFONE da empresa INVALIDO!";
+    const validation = {
+      emptyFieldMessage: "Campo '${0}' vazio ou invalido",
+      fieldRules: [
+        { hint: "Nome", pattern: "\\w(\\w{2,20} ){1,20}\\w{2,20}", required: true, selector: 'input[name="nome"]' },
+        { hint: "CPF", required: true, selector: "#cpf", validator: "cpf" },
+        { hint: "e-mail", pattern: "[\\w\\d\\.\\-_]@[\\w\\d\\-_]{3,64}(\\.[\\w\\d\\-_]{2,64})+", required: false, selector: 'input[hint="e-mail"]' },
+        { hint: "Celular", required: true, selector: 'input[hint="Celular"]', validator: "celular" },
+        { hint: "Recado", required: false, selector: 'input[hint="Recado"]', validator: "celular" },
+        { hint: "Logradouro", required: true, selector: 'input[hint="Logradouro"]' },
+        { hint: "Bairro", required: true, selector: 'input[hint="Bairro"]' },
+        { hint: "Munic\xEDpio", required: true, selector: 'input[hint="Munic\xEDpio"]' },
+        { hint: "UF", pattern: "^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$", required: true, selector: 'input[hint="UF"]' },
+        { hint: "CEP", required: true, selector: "#cep", validator: "cep" },
+        { hint: "Cargo/Fun\xE7\xE3o", required: true, selector: 'input[hint="Cargo/Fun\xE7\xE3o"]' },
+        { hint: "Sal\xE1rio", required: true, selector: 'input[hint="Sal\xE1rio"]', validator: "moeda" },
+        { message: "Nome da empresa invalido!", pattern: "\\w{1,20}(\\ \\w{1,20})", required: true, selector: "#nome", uppercase: true },
+        { message: "CNPJ da empresa invalido", required: true, selector: "#cnpj", validator: "cnpj" },
+        { message: `${phoneTitle}
 
 	- Deve conter 10 digitos
-	- Um DDD valido`,required:!0,selector:"#fone",validator:"telefone"}],messages:{cnpj:"CNPJ da empresa invalido",fone:`${s}
+	- Um DDD valido`, required: true, selector: "#fone", validator: "telefone" }
+      ],
+      messages: {
+        cnpj: "CNPJ da empresa invalido",
+        fone: `${phoneTitle}
 
 	- Deve conter 10 digitos
-	- Um DDD valido`,nome:"Nome da empresa invalido!"}};function l(){let n=e.one("input[name=nome]");return`${n?.value?n.value:"Modelo Carta Admissional"}.pdf`}function p(){return e.validate.all({validation:r})}function u(){return e.validate.all({onlyAttribute:"empresa",validation:r})}function c(){p()&&e.print.pdf({filename:l,pageConfig:i})}function d(){u()&&(e.autosave.clearAutoFields({removeStorage:!1}),e.print.pdf({filename:l,pageConfig:i}))}function o(n){return e.one(n)?.value??""}function m(){return{bairro:o('input[hint="Bairro"]'),cargo:o('input[hint="Cargo/Fun\xE7\xE3o"]'),celular:o('input[hint="Celular"]'),cep:o("#cep"),cnpj:o("#cnpj"),cpf:o("#cpf"),email:o('input[hint="e-mail"]'),empresa:o("#nome"),logradouro:o('input[hint="Logradouro"]'),municipio:o('input[hint="Munic\xEDpio"]'),pessoaNome:o('input[name="nome"]'),recado:o('input[hint="Recado"]'),salario:o('input[hint="Sal\xE1rio"]'),telefone:o("#fone"),timbre:e.storage.getItem("timbre")||"",uf:o('input[hint="UF"]')}}function f(){e.query.apply({fields:[{jsonKeys:["pessoaNome","funcionarioNome","nomePessoa"],selector:'input[name="nome"]'},{jsonKeys:["cpf","pessoaCpf","funcionarioCpf"],selector:"#cpf"},{jsonKeys:["email","pessoaEmail"],selector:'input[hint="e-mail"]'},{jsonKeys:["celular","pessoaCelular"],selector:'input[hint="Celular"]'},{jsonKeys:["recado","telefoneRecado"],selector:'input[hint="Recado"]'},{jsonKeys:["logradouro","endereco"],selector:'input[hint="Logradouro"]'},{jsonKeys:["bairro"],selector:'input[hint="Bairro"]'},{jsonKeys:["municipio","cidade"],selector:'input[hint="Munic\xEDpio"]'},{jsonKeys:["uf","estado"],selector:'input[hint="UF"]'},{jsonKeys:["cep"],selector:"#cep"},{jsonKeys:["cargo","funcao","cargoFuncao"],selector:'input[hint="Cargo/Fun\xE7\xE3o"]'},{jsonKeys:["salario","renda"],selector:'input[hint="Sal\xE1rio"]'},{jsonKeys:["empresa","nomeEmpresa","razaoSocial"],params:["empresa","nome"],selector:"#nome"},{jsonKeys:["cnpj"],params:"cnpj",sanitizeRegex:/[^\d]/g,selector:"#cnpj"},{jsonKeys:["tel","fone","telefone"],params:["tel","fone","telefone"],sanitizeRegex:/[^\d]/g,selector:"#fone"}],storageMappings:[{afterSet:()=>{t.setTimeout(()=>e.image.load({key:"timbre",selector:"img.logo"}),100)},jsonKeys:["timbre","logo"],key:"timbre",params:["timbre","logo"]}]})}e.ready(()=>{e.autosave.indicator(".autosave"),e.image.load({key:"timbre",selector:"img.logo"}),e.print.createPageStyle(i),e.autosave.init({validation:r}),e.date.current("span.data"),e.image.bindUpload({inputSelector:"input[type=file]",key:"timbre",selector:"img.logo"}),e.toolbar.bind({".menu .clear":()=>e.autosave.clearAutoFields(),".menu .pdf.formulario":d,".menu .pdf.print":c}),e.share.bindToolbar(".menu .share",{beforeShare:n=>n.mode==="clean"||u(),messages:{copiedClean:"Endereco limpo do modelo copiado para a area de transferencia.",copiedFilled:"Endereco do modelo preenchido copiado para a area de transferencia."},payload:m}),f()})})(window);})();
+	- Um DDD valido`,
+        nome: "Nome da empresa invalido!"
+      }
+    };
+    function filename() {
+      const input = api.one("input[name=nome]");
+      return `${input?.value ? input.value : "Modelo Carta Admissional"}.pdf`;
+    }
+    function validateAll() {
+      return api.validate.all({ validation });
+    }
+    function validateCompany() {
+      return api.validate.all({ onlyAttribute: "empresa", validation });
+    }
+    function printPdf() {
+      if (!validateAll()) {
+        return;
+      }
+      api.print.pdf({ filename, pageConfig });
+    }
+    function printBlankPdf() {
+      if (!validateCompany()) {
+        return;
+      }
+      api.autosave.clearAutoFields({ removeStorage: false });
+      api.print.pdf({ filename, pageConfig });
+    }
+    function fieldValue(selector) {
+      return api.one(selector)?.value ?? "";
+    }
+    function sharePayload() {
+      return {
+        bairro: fieldValue('input[hint="Bairro"]'),
+        cargo: fieldValue('input[hint="Cargo/Fun\xE7\xE3o"]'),
+        celular: fieldValue('input[hint="Celular"]'),
+        cep: fieldValue("#cep"),
+        cnpj: fieldValue("#cnpj"),
+        cpf: fieldValue("#cpf"),
+        email: fieldValue('input[hint="e-mail"]'),
+        empresa: fieldValue("#nome"),
+        logradouro: fieldValue('input[hint="Logradouro"]'),
+        municipio: fieldValue('input[hint="Munic\xEDpio"]'),
+        pessoaNome: fieldValue('input[name="nome"]'),
+        recado: fieldValue('input[hint="Recado"]'),
+        salario: fieldValue('input[hint="Sal\xE1rio"]'),
+        telefone: fieldValue("#fone"),
+        timbre: api.storage.getItem("timbre") || "",
+        uf: fieldValue('input[hint="UF"]')
+      };
+    }
+    function applyParams() {
+      api.query.apply({
+        fields: [
+          { jsonKeys: ["pessoaNome", "funcionarioNome", "nomePessoa"], selector: 'input[name="nome"]' },
+          { jsonKeys: ["cpf", "pessoaCpf", "funcionarioCpf"], selector: "#cpf" },
+          { jsonKeys: ["email", "pessoaEmail"], selector: 'input[hint="e-mail"]' },
+          { jsonKeys: ["celular", "pessoaCelular"], selector: 'input[hint="Celular"]' },
+          { jsonKeys: ["recado", "telefoneRecado"], selector: 'input[hint="Recado"]' },
+          { jsonKeys: ["logradouro", "endereco"], selector: 'input[hint="Logradouro"]' },
+          { jsonKeys: ["bairro"], selector: 'input[hint="Bairro"]' },
+          { jsonKeys: ["municipio", "cidade"], selector: 'input[hint="Munic\xEDpio"]' },
+          { jsonKeys: ["uf", "estado"], selector: 'input[hint="UF"]' },
+          { jsonKeys: ["cep"], selector: "#cep" },
+          { jsonKeys: ["cargo", "funcao", "cargoFuncao"], selector: 'input[hint="Cargo/Fun\xE7\xE3o"]' },
+          { jsonKeys: ["salario", "renda"], selector: 'input[hint="Sal\xE1rio"]' },
+          { jsonKeys: ["empresa", "nomeEmpresa", "razaoSocial"], params: ["empresa", "nome"], selector: "#nome" },
+          { jsonKeys: ["cnpj"], params: "cnpj", sanitizeRegex: /[^\d]/g, selector: "#cnpj" },
+          { jsonKeys: ["tel", "fone", "telefone"], params: ["tel", "fone", "telefone"], sanitizeRegex: /[^\d]/g, selector: "#fone" }
+        ],
+        storageMappings: [
+          {
+            afterSet: () => {
+              w.setTimeout(() => api.image.load({ key: "timbre", selector: "img.logo" }), 100);
+            },
+            jsonKeys: ["timbre", "logo"],
+            key: "timbre",
+            params: ["timbre", "logo"]
+          }
+        ]
+      });
+    }
+    api.ready(() => {
+      api.autosave.indicator(".autosave");
+      api.image.load({ key: "timbre", selector: "img.logo" });
+      api.print.createPageStyle(pageConfig);
+      api.autosave.init({ validation });
+      api.date.current("span.data");
+      api.image.bindUpload({ inputSelector: "input[type=file]", key: "timbre", selector: "img.logo" });
+      api.toolbar.bind({
+        ".menu .clear": () => api.autosave.clearAutoFields(),
+        ".menu .pdf.formulario": printBlankPdf,
+        ".menu .pdf.print": printPdf
+      });
+      api.share.bindToolbar(".menu .share", {
+        beforeShare: (context) => context.mode === "clean" || validateCompany(),
+        messages: {
+          copiedClean: "Endereco limpo do modelo copiado para a area de transferencia.",
+          copiedFilled: "Endereco do modelo preenchido copiado para a area de transferencia."
+        },
+        payload: sharePayload
+      });
+      applyParams();
+    });
+  })(window);
+})();

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run compile && npm run bundle && npm run build:site",
+    "build": "npm run compile && npm run build:dist && npm run bundle && npm run build:site",
+    "build:dist": "node scripts/build-dist.mjs",
     "build:site": "node scripts/build-site.mjs",
     "bundle": "node scripts/build-bundles.mjs",
     "check": "npm run type-check && npm run lint && npm test && npm run build",

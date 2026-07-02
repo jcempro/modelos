@@ -3,20 +3,25 @@ import { constants as fsConstants } from "node:fs";
 import { mkdir, open, readFile, readdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { optimizeTextByPath } from "./asset-optimizer.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = path.join(root, "_dist");
-const siteDir = path.join(root, "_site");
 const cacheDir = path.join(root, ".cache", "build");
-const manifestPath = path.join(cacheDir, "site-manifest.json");
-const lockPath = path.join(cacheDir, "site.lock");
+const manifestPath = path.join(cacheDir, "dist-manifest.json");
+const lockPath = path.join(cacheDir, "dist.lock");
+
+const excludedTopLevel = new Set([".cache", ".git", ".github", "_dist", "_site", "node_modules", "scripts", "src", "tests"]);
+const excludedFiles = new Set([".gitignore", "eslint.config.mjs", "package.json", "package-lock.json", "tsconfig.json"]);
+const optimizerVersion = "dist-optimizer-v1";
+const textExtensions = new Set([".css", ".html", ".js", ".json"]);
 
 async function acquireLock() {
   await mkdir(cacheDir, { recursive: true });
   try {
     return await open(lockPath, fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_RDWR);
   } catch (error) {
-    throw new Error(`Publicacao em _site ja esta em execucao ou lock antigo presente em ${lockPath}. Erro: ${error.message}`);
+    throw new Error(`Build de _dist ja esta em execucao ou lock antigo presente em ${lockPath}. Erro: ${error.message}`);
   }
 }
 
@@ -43,12 +48,30 @@ function hashBuffer(data) {
   return createHash("sha256").update(data).digest("hex");
 }
 
-async function collectFiles(dir = distDir, prefix = "") {
+async function buildOutput(rel, src) {
+  const ext = path.extname(rel).toLowerCase();
+
+  if (!textExtensions.has(ext)) {
+    return await readFile(src);
+  }
+
+  const source = await readFile(src, "utf8");
+  const optimized = await optimizeTextByPath(rel, source);
+  return Buffer.from(optimized, "utf8");
+}
+
+async function collectFiles(dir = root, prefix = "") {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
     const rel = prefix ? path.join(prefix, entry.name) : entry.name;
+    const top = rel.split(path.sep)[0];
+
+    if (excludedTopLevel.has(top) || excludedFiles.has(rel) || rel.endsWith(".bundle.html")) {
+      continue;
+    }
+
     const full = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
@@ -61,16 +84,16 @@ async function collectFiles(dir = distDir, prefix = "") {
   return files;
 }
 
-async function publishChanged(files, oldManifest) {
+async function writeChanged(files, oldManifest) {
   const nextManifest = { files: {} };
-  await mkdir(siteDir, { recursive: true });
+  await mkdir(distDir, { recursive: true });
 
   for (const rel of files) {
-    const src = path.join(distDir, rel);
-    const dest = path.join(siteDir, rel);
+    const src = path.join(root, rel);
+    const dest = path.join(distDir, rel);
     await stat(src);
-    const output = await readFile(src);
-    const hash = hashBuffer(Buffer.concat([Buffer.from(`site-from-dist-v1\0${rel}\0`, "utf8"), output]));
+    const output = await buildOutput(rel, src);
+    const hash = hashBuffer(Buffer.concat([Buffer.from(`${optimizerVersion}\0${rel}\0`, "utf8"), output]));
     const old = oldManifest.files[rel];
     nextManifest.files[rel] = { hash, size: output.byteLength };
 
@@ -86,13 +109,7 @@ async function publishChanged(files, oldManifest) {
 
   for (const rel of Object.keys(oldManifest.files || {})) {
     if (!nextManifest.files[rel]) {
-      await rm(path.join(siteDir, rel), { force: true });
-    }
-  }
-
-  for (const rel of await collectFiles(siteDir)) {
-    if (!nextManifest.files[rel]) {
-      await rm(path.join(siteDir, rel), { force: true });
+      await rm(path.join(distDir, rel), { force: true });
     }
   }
 
@@ -101,19 +118,15 @@ async function publishChanged(files, oldManifest) {
 
 const lock = await acquireLock();
 try {
-  const distInfo = await stat(distDir).catch(() => undefined);
-  if (!distInfo?.isDirectory()) {
-    throw new Error("_dist ausente. Execute npm run build:dist antes de publicar _site.");
-  }
-
   const oldManifest = await readManifest();
   const files = await collectFiles();
-  const nextManifest = await publishChanged(files, oldManifest);
+  const nextManifest = await writeChanged(files, oldManifest);
   await writeManifest(nextManifest);
-  console.log(`_site atualizado a partir de _dist: ${Object.keys(nextManifest.files).length} arquivos rastreados.`);
+  console.log(`_dist atualizado: ${Object.keys(nextManifest.files).length} arquivos rastreados.`);
 } catch (error) {
   console.error(error);
   process.exitCode = 1;
 } finally {
   await releaseLock(lock);
 }
+

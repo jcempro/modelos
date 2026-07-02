@@ -6,10 +6,11 @@ import { fileURLToPath } from "node:url";
 import { minifyCssText, minifyHtmlText, minifyJsText } from "./asset-optimizer.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const distDir = path.join(root, "_dist");
 const cacheDir = path.join(root, ".cache", "build");
 const lockPath = path.join(cacheDir, "bundle.lock");
 
-const excludedTopLevel = new Set([".cache", ".git", ".github", "_site", "node_modules", "scripts", "src", "tests"]);
+const excludedTopLevel = new Set([".cache", ".git", ".github", "_dist", "_site", "node_modules", "scripts", "src", "tests"]);
 const externalResources = new Map([
   [
     "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.0/html2pdf.bundle.min.js",
@@ -225,7 +226,7 @@ async function buildBundle(rel) {
   const indexFile = path.join(root, rel);
   const dir = path.dirname(indexFile);
   const bundleName = `${path.basename(dir)}.bundle.html`;
-  const outputFile = path.join(dir, bundleName);
+  const outputFile = path.join(distDir, path.dirname(rel), bundleName);
 
   let html = await readFile(indexFile, "utf8");
   html = await inlineStyles(html, indexFile);
@@ -236,6 +237,7 @@ async function buildBundle(rel) {
 
   const body = `<!DOCTYPE html>${html.replace(/^<!DOCTYPE html>/i, "")}\n`;
   const hash = createHash("sha256").update(body).digest("hex").slice(0, 12);
+  await mkdir(path.dirname(outputFile), { recursive: true });
   const tmp = `${outputFile}.tmp-${process.pid}-${hash}`;
   await writeFile(tmp, body, "utf8");
   await rename(tmp, outputFile);

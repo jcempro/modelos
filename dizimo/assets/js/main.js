@@ -1,1 +1,64 @@
-"use strict";(()=>{(function(p,d){"use strict";function u(e){return e!==null&&typeof e<"u"&&e!==""&&!Number.isNaN(Number(e))&&Number.isFinite(Number(e))}function r(e,n){let t=document.querySelector(e);t&&(t.innerHTML=n)}function o(e){return e.toLocaleString("pt-BR",{currency:"BRL",style:"currency"})}function b(e){let n=e.replace(/[^\d,]/g,"").replace(/[,]/g,".");if(n.trim().length===0)return"";let t=Number.parseFloat(n);return Number.isNaN(t)?"":o(t)}function m(){let e=0,n=p("input.recebimentos");for(let s=0;s<n.length;s++){let a=n[s];e+=Number.parseFloat(a&&u(a.value)?a.value:"0")}r("div.input.rc > i",o(e));let t=document.querySelector('input[name="of"]'),c=Number.parseFloat(u(t?.value)?t?.value??"1":"1")/100*e;r("div.input.of > i",o(c));let i=e*.1,f=document.querySelector('input[name="cd"]'),l=Number.parseFloat(u(f?.value)?f?.value??"7":"7")/100*i;r("div.input.cd > i",o(l)),r("div.input.dz > i",o(i)),r("div.input.dc > i",o(i+l)),r("div.input.tt > i",o(i+l+c))}d.isNum=u,d.onload=()=>{let e=p("input");for(let n=0;n<e.length;n++){let t=e[n];t&&(t.addEventListener("keyup",m),t.addEventListener("focusout",m),t.addEventListener("blur",c=>{let i=c.target;i instanceof HTMLInputElement&&i.getAttribute("type")==="currency"&&(i.value=b(i.value))}))}}})(window.Zepto,window);})();
+"use strict";
+(() => {
+  // src/dizimo/assets/js/main.ts
+  (function bootstrapDizimo($, w) {
+    "use strict";
+    function isNum(value) {
+      return value !== null && typeof value !== "undefined" && value !== "" && !Number.isNaN(Number(value)) && Number.isFinite(Number(value));
+    }
+    function setHtml(selector, value) {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.innerHTML = value;
+      }
+    }
+    function brl(value) {
+      return value.toLocaleString("pt-BR", { currency: "BRL", style: "currency" });
+    }
+    function normalizeCurrency(value) {
+      const cleaned = value.replace(/[^\d,]/g, "").replace(/[,]/g, ".");
+      if (cleaned.trim().length === 0) {
+        return "";
+      }
+      const parsed = Number.parseFloat(cleaned);
+      return Number.isNaN(parsed) ? "" : brl(parsed);
+    }
+    function calcular() {
+      let total = 0;
+      const recebimentos = $("input.recebimentos");
+      for (let index = 0; index < recebimentos.length; index++) {
+        const input = recebimentos[index];
+        total += Number.parseFloat(input && isNum(input.value) ? input.value : "0");
+      }
+      setHtml("div.input.rc > i", brl(total));
+      const ofertaInput = document.querySelector('input[name="of"]');
+      const oferta = Number.parseFloat(isNum(ofertaInput?.value) ? ofertaInput?.value ?? "1" : "1") / 100 * total;
+      setHtml("div.input.of > i", brl(oferta));
+      const dizimo = total * 0.1;
+      const correcaoInput = document.querySelector('input[name="cd"]');
+      const correcao = Number.parseFloat(isNum(correcaoInput?.value) ? correcaoInput?.value ?? "7" : "7") / 100 * dizimo;
+      setHtml("div.input.cd > i", brl(correcao));
+      setHtml("div.input.dz > i", brl(dizimo));
+      setHtml("div.input.dc > i", brl(dizimo + correcao));
+      setHtml("div.input.tt > i", brl(dizimo + correcao + oferta));
+    }
+    w.isNum = isNum;
+    w.onload = () => {
+      const inputs = $("input");
+      for (let index = 0; index < inputs.length; index++) {
+        const input = inputs[index];
+        if (!input) {
+          continue;
+        }
+        input.addEventListener("keyup", calcular);
+        input.addEventListener("focusout", calcular);
+        input.addEventListener("blur", (event) => {
+          const target = event.target;
+          if (target instanceof HTMLInputElement && target.getAttribute("type") === "currency") {
+            target.value = normalizeCurrency(target.value);
+          }
+        });
+      }
+    };
+  })(window.Zepto, window);
+})();
