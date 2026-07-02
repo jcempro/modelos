@@ -46,6 +46,8 @@ Documentos devem separar conceitualmente:
 
 Elementos não imprimíveis devem ser visíveis apenas na interface Web e ocultados em `@media print` e em qualquer modo programático de geração de PDF.
 
+Páginas que exibam simultaneamente aviso de cookies e barra de ferramentas devem informar, na interface Web e fora da área imprimível, a versão canônica atualizada do modelo sob `https://modelos.jcem.pro/<path-do-modelo>`, sem incluir `index.html`, além da orientação para desabilitar cabeçalho e rodapé do navegador ao imprimir.
+
 ### RN004 - Fidelidade A4
 
 A área imprimível deve possuir layout preciso e previsível em A4 quando o documento declarar esse formato.
@@ -92,6 +94,7 @@ A barra poderá conter ações:
 - Específicas do tipo documental.
 - Específicas da categoria.
 - Específicas do documento individual.
+- Download do bundle offline equivalente, quando o arquivo `<nome-da-pasta>.bundle.html` existir no mesmo caminho publicado do `index.html`.
 
 A configuração deve permitir habilitar, ocultar, ordenar e parametrizar ações sem duplicar lógica em cada documento.
 
@@ -237,6 +240,8 @@ Toda ferramenta publicada pelo projeto deve possuir dois artefatos gerados autom
 A saída Bundle deve incorporar internamente todos os recursos necessários ao funcionamento da ferramenta, incluindo HTML, CSS, JavaScript, fontes, imagens, SVGs, JSON, ícones e dependências estáticas aplicáveis.
 
 O Bundle não deve depender de requisições externas para executar a ferramenta. Dependências externas usadas pela versão Web devem possuir cópia local versionada ou mapeamento de build capaz de incorporá-las ao Bundle.
+
+O Bundle deve ser publicado no mesmo diretório do `index.html` correspondente em `dist/`, permitindo download direto a partir da página Web publicada.
 
 Ambas as saídas devem ser produzidas em modo de produção, com minificação, eliminação de código morto, otimização de tamanho e priorização de carregamento rápido.
 
@@ -385,6 +390,7 @@ Decisões globais registradas:
 - Cada ferramenta com `index.html` deve gerar também um Bundle offline autocontido nomeado pelo diretório da ferramenta dentro de `dist/`.
 - A otimização de HTML, CSS, JavaScript e JSON textuais deve ocorrer na construção de `dist/`, sem alterar a fonte canônica nem os artefatos de desenvolvimento em `site/`.
 - A publicação estática deve usar `dist/`, preservando a saída de produção já validada.
+- O workflow de publicação deve enviar `dist/` ao GitHub Pages em push na branch de publicação configurada, mantendo pull requests restritos a validação, testes e geração de artefatos.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
 - O GitHub Actions deve evitar cache de build quando ele tornar o workflow mais lento que a recomputação e deve publicar artefatos já contendo saídas Web e Bundle.
 

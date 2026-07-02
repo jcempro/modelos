@@ -623,6 +623,53 @@
     }
   }
 
+  function bundleNameFromPath(): string {
+    const parts = w.location.pathname.split("/").filter(Boolean);
+    const last = parts[parts.length - 1] ?? "";
+    const folder = last.toLowerCase().endsWith(".html") ? parts[parts.length - 2] : last;
+    return `${folder || "index"}.bundle.html`;
+  }
+
+  function resolveBundleHref(element: HTMLAnchorElement): string {
+    const configured = element.dataset.bundleDownload || element.getAttribute("href") || "";
+    const href = configured.trim() || bundleNameFromPath();
+    return new URL(href, w.location.href).toString();
+  }
+
+  async function bundleExists(url: string): Promise<boolean> {
+    if (!/^https?:$/i.test(w.location.protocol)) {
+      return false;
+    }
+
+    try {
+      const response = await w.fetch(url, {
+        cache: "no-store",
+        credentials: "same-origin",
+        method: "HEAD"
+      });
+      return response.ok;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  function bindBundleDownload(selector = "[data-bundle-download]"): void {
+    for (const element of $<HTMLAnchorElement>(selector)) {
+      const href = resolveBundleHref(element);
+      element.hidden = true;
+      void bundleExists(href).then((exists) => {
+        if (!exists) {
+          element.hidden = true;
+          return;
+        }
+        const filename = href.split("/").pop() || bundleNameFromPath();
+        element.href = href;
+        element.setAttribute("download", filename);
+        element.hidden = false;
+      });
+    }
+  }
+
   function copyToClipboard(value: string): Promise<void> {
     if (w.navigator.clipboard?.writeText) {
       return w.navigator.clipboard.writeText(value);
@@ -786,6 +833,9 @@
     clipboard: {
       copy: copyToClipboard
     },
+    bundle: {
+      bindDownload: bindBundleDownload
+    },
     date: {
       current: formatCurrentDate
     },
@@ -834,4 +884,6 @@
       phone: formatPhone
     }
   };
+
+  ready(() => bindBundleDownload());
 })(window, document);

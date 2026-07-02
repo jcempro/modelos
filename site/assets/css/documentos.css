@@ -175,6 +175,10 @@ div.menu {
   content: "\232B";
 }
 
+.ico.bundle:before {
+  content: "\21E9";
+}
+
 .ico.save:before {
   content: "\25A3";
 }
@@ -279,4 +283,3 @@ body.imprimir input::placeholder {
   opacity: 0;
   display: none;
 }
-

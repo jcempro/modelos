@@ -67,6 +67,9 @@ declare global {
     clipboard: {
       copy: (value: string) => Promise<void>;
     };
+    bundle: {
+      bindDownload: (selector?: string) => void;
+    };
     share: {
       bindToolbar: (selector: string, options?: ShareOptions) => void;
       buildUrl: (mode: ShareMode, options?: ShareOptions, event?: Event) => ShareBuildResult;

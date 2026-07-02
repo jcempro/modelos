@@ -11,6 +11,8 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write
+  pages: write
 
 jobs:
   validate:
@@ -31,3 +33,21 @@ jobs:
           if-no-files-found: error
           compression-level: 1
           retention-days: 3
+      - uses: actions/configure-pages@v5
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        with:
+          path: dist
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
