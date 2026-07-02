@@ -205,7 +205,7 @@ import {
     }
 
     if (!input("prazo-medio").value) {
-      setValue("prazo-medio", "30");
+      setValue("prazo-medio", "45");
     }
 
     applyDefaultReceiptPercentages();
@@ -268,7 +268,7 @@ import {
       const mesAno = parseMesAno(monthText) ?? reference;
       const vista = parseCurrencyToCents(row.querySelector<HTMLInputElement>('[data-column="vista"]')?.value ?? "") ?? 0;
       const prazo = parseCurrencyToCents(row.querySelector<HTMLInputElement>('[data-column="prazo"]')?.value ?? "") ?? 0;
-      const prazoMedio = Number.parseInt(input("prazo-medio").value || "30", 10);
+      const prazoMedio = Number.parseInt(input("prazo-medio").value || "45", 10);
 
       return {
         mesAno,
@@ -313,7 +313,7 @@ import {
     text("print-cheques", input("percentual-cheques").value);
     text("print-titulos", input("percentual-titulos").value);
     text("print-regime", select("regime-tributacao").value);
-    text("print-prazo-medio", input("prazo-medio").value || "30");
+    text("print-prazo-medio", input("prazo-medio").value || "45");
     text("print-cidade-uf", `${city}-${uf}`);
     text("print-data", formatDatePtBr(input("data-assinatura").value));
     text("print-assinantes", joinedSignerValues(".signer-name"));

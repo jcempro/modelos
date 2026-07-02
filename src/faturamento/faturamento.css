@@ -255,6 +255,7 @@ select:focus {
   font-weight: 700;
 }
 
+
 .preview-wrap {
   overflow: auto;
   padding: 10px;
@@ -273,15 +274,15 @@ select:focus {
 .print-page,
 .print-page * {
   color: #000;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Noto-Sans", Arial, Helvetica, sans-serif;
   font-size: 10pt;
   line-height: 1.12;
 }
 
 .print-page h1 {
-  margin: 0 0 0.75cm;
-  margin-top: .5cm;
+  margin: 0 0 0.75cm;  
   font-size: 14pt;
+  font-weight: 800;
   letter-spacing: 0;
   text-align: center;
 }
@@ -289,7 +290,11 @@ select:focus {
 .print-page h2 {
   margin: 0.55cm 0 0.18cm;
   font-size: 10.5pt;
-  font-weight: 700;
+  font-weight: 800;
+}
+
+#print-razao-social{
+  text-transform: uppercase;
 }
 
 .company-table {
@@ -298,6 +303,8 @@ select:focus {
   table-layout: fixed;  
   margin-top: 4em;
   margin-bottom: 3em;
+  border-collapse: separate;
+  border-spacing: 0 1mm;
 }
 
 .company-table th,
@@ -305,10 +312,8 @@ select:focus {
   height: 0.45cm;
   padding: 0 3px;
   border-bottom: 1px solid var(--line);
-  vertical-align: bottom;
-  padding: .1mm;
-  padding-bottom: .1mm;
-  padding-top: .4em !important;
+  vertical-align: bottom;  
+  line-height: 1.5em !important;
 }
 
 .company-table th {
@@ -330,9 +335,9 @@ select:focus {
 }
 
 .summary-box {
-  min-height: 1.45cm;
+  min-height: 1.35cm;
   padding: 0.16cm 0.28cm;
-  border: 0.08cm solid #555;
+  border: 1.5mm solid #6f6f6f;
   text-align: center;
 }
 
@@ -340,11 +345,13 @@ select:focus {
   display: block;
   margin-bottom: 0.25cm;
   font-size: 10pt;
+  font-weight: bold;
 }
 
 .summary-box strong {
   display: block;
-  font-size: 14pt;
+  font-size: 15pt;
+  font-weight: bold;
 }
 
 .market-table,
@@ -380,8 +387,8 @@ select:focus {
 }
 
 .market-table th {
-  font-size: 7.8pt;
-  font-weight: 700;
+  font-size: 8pt;
+  font-weight: bold !important;
   text-align: center;
 }
 
@@ -402,11 +409,11 @@ select:focus {
 .market-table tfoot td {  
   font-weight: bold !important;
   background-color: #bbb !important;  
-  border-top: .5mm solid #333 !important;
+  border-top: 1mm solid #333 !important;
 }
 
 .market-table thead th{  
-  border-bottom: .2mm solid #333 !important;
+  border-bottom: 1mm solid #333 !important;
   font-weight: bold !important;
   background-color: #bbb !important;  
 }
@@ -416,12 +423,12 @@ select:focus {
 }
 
 .market-table th:first-child {
-  width: 1.9cm;
+  width: 1.85cm;
 }
 
 .market-table th:nth-child(2),
 .market-table th:nth-child(3) {
-  width: 3.45cm;
+  width: 3.35cm;
 }
 
 .market-table th:nth-child(4) {
@@ -568,4 +575,9 @@ body.imprimir .print-page {
   min-height: 29.7cm;
   margin: 0;
   box-shadow: none;
+}
+
+table th,
+table td {
+  padding: 1mm !important;  
 }
