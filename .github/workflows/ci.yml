@@ -28,24 +28,18 @@ jobs:
       - run: npm run check
       - name: Validate Pages artifact root
         run: |
-          test -f dist/CNAME
-          test -f dist/.nojekyll
-          test ! -e dist/src
+          test -f site/CNAME
+          test -f site/.nojekyll
           test ! -e site/src
-      - uses: actions/upload-artifact@v6
-        with:
-          name: dist
-          path: dist
-          include-hidden-files: true
-          if-no-files-found: error
-          compression-level: 1
-          retention-days: 3
+          test ! -f site/README.md
+          test -n "$(find site -name '*.bundle.zip' -print -quit)"
+          test -z "$(find site -name '*.bundle.html' -print -quit)"
       - uses: actions/configure-pages@v6
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       - uses: actions/upload-pages-artifact@v5
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         with:
-          path: dist
+          path: site
           include-hidden-files: true
 
   deploy:

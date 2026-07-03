@@ -24,7 +24,6 @@ const staticSourceExtensions = new Set([
   ".woff2"
 ]);
 const textOutputExtensions = new Set([".css", ".html", ".js", ".json", ".txt", ".xml"]);
-const distOnlyFiles = new Set(["CNAME", ".nojekyll"]);
 
 const compiledOutputs = new Map([
   ["assets/js/documentos.js", "assets/js/documentos.ts"],
@@ -69,6 +68,22 @@ async function collectFiles(dir, prefix = "") {
   return files.sort((a, b) => a.localeCompare(b));
 }
 
+async function collectDirectories(dir, prefix = "") {
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  const dirs = [];
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    const rel = prefix ? path.join(prefix, entry.name) : entry.name;
+    const full = path.join(dir, entry.name);
+    dirs.push(normalizeRel(rel), ...await collectDirectories(full, rel));
+  }
+
+  return dirs.sort((a, b) => a.localeCompare(b));
+}
+
 async function assertFile(file, message) {
   const info = await stat(file).catch(() => undefined);
   if (!info?.isFile()) {
@@ -100,13 +115,13 @@ function bundleHtmlNameForIndex(rel) {
   return `${path.basename(path.dirname(rel))}.bundle.html`;
 }
 
-async function assertBundleZip(rel, expectedInnerName) {
-  const data = await readFile(path.join(distDir, rel));
+async function assertBundleZip(label, dir, rel, expectedInnerName) {
+  const data = await readFile(path.join(dir, rel));
   if (data.length < 4 || data.readUInt32LE(0) !== 0x04034b50) {
-    throw new Error(`Bundle offline nao e ZIP valido: ${rel}`);
+    throw new Error(`Bundle offline nao e ZIP valido em ${label}/: ${rel}`);
   }
   if (!data.includes(Buffer.from(expectedInnerName, "utf8"))) {
-    throw new Error(`Bundle ZIP nao contem HTML autocontido esperado (${expectedInnerName}): ${rel}`);
+    throw new Error(`Bundle ZIP nao contem HTML autocontido esperado (${expectedInnerName}) em ${label}/: ${rel}`);
   }
 }
 
@@ -120,19 +135,56 @@ async function validatePublicText(label, dir, files) {
   }
 }
 
+function assertExactFiles(label, files, expectedFiles) {
+  const unexpected = files.filter((rel) => !expectedFiles.has(rel));
+  if (unexpected.length > 0) {
+    throw new Error(`${label}/ contem artefatos sem origem publica esperada: ${unexpected.join(", ")}`);
+  }
+}
+
+function assertNoEmptyDirectories(label, directories, files) {
+  const empty = directories.filter((dir) => !files.some((file) => file.startsWith(`${dir}/`)));
+  if (empty.length > 0) {
+    throw new Error(`${label}/ contem diretorios vazios ou obsoletos: ${empty.join(", ")}`);
+  }
+}
+
 async function main() {
   await assertFile(path.join(root, "CNAME"), "CNAME ausente na raiz do projeto.");
 
   const srcFiles = await collectFiles(srcDir);
   const siteFiles = await collectFiles(siteDir);
   const distFiles = await collectFiles(distDir);
+  const siteDirectories = await collectDirectories(siteDir);
+  const distDirectories = await collectDirectories(distDir);
   const siteSet = new Set(siteFiles);
   const distSet = new Set(distFiles);
   const sourceStaticFiles = srcFiles.filter(isStaticSource);
   const sourceIndexFiles = sourceStaticFiles.filter((file) => path.basename(file).toLowerCase() === "index.html");
+  const expectedFiles = new Set([
+    ...sourceStaticFiles,
+    ...compiledOutputs.keys(),
+    "CNAME",
+    ".nojekyll"
+  ]);
 
   assertNoSrcSegments("site", siteFiles);
   assertNoSrcSegments("dist", distFiles);
+
+  for (const rel of ["CNAME", ".nojekyll"]) {
+    if (!siteSet.has(rel)) {
+      throw new Error(`Artefato raiz obrigatorio ausente em site/: ${rel}`);
+    }
+    if (!distSet.has(rel)) {
+      throw new Error(`Artefato raiz obrigatorio ausente em dist/: ${rel}`);
+    }
+  }
+
+  for (const rel of ["README.md", "readme.md"]) {
+    if (siteSet.has(rel) || distSet.has(rel)) {
+      throw new Error(`README nao deve integrar o artefato publico Pages: ${rel}`);
+    }
+  }
 
   for (const rel of sourceStaticFiles) {
     if (!siteSet.has(rel)) {
@@ -161,13 +213,18 @@ async function main() {
       throw new Error(`URL publica invalida para src/${rel}: ${publicPath}`);
     }
     const bundle = bundleForIndex(rel);
-    if (!distSet.has(bundle)) {
-      throw new Error(`Bundle offline ausente para ${publicPath}: ${bundle}`);
+    expectedFiles.add(bundle);
+    if (!siteSet.has(bundle)) {
+      throw new Error(`Bundle offline ausente no cache publicavel para ${publicPath}: site/${bundle}`);
     }
-    await assertBundleZip(bundle, bundleHtmlNameForIndex(rel));
+    if (!distSet.has(bundle)) {
+      throw new Error(`Bundle offline ausente na saida local para ${publicPath}: dist/${bundle}`);
+    }
+    await assertBundleZip("site", siteDir, bundle, bundleHtmlNameForIndex(rel));
+    await assertBundleZip("dist", distDir, bundle, bundleHtmlNameForIndex(rel));
   }
 
-  for (const rel of distFiles) {
+  for (const rel of [...siteFiles, ...distFiles]) {
     if (rel.endsWith(".bundle.html")) {
       throw new Error(`Bundle HTML solto nao deve ser publicado; use ZIP: ${rel}`);
     }
@@ -180,7 +237,7 @@ async function main() {
   }
 
   for (const rel of distFiles) {
-    if (distOnlyFiles.has(rel) || rel.endsWith(".bundle.zip")) {
+    if (rel.endsWith(".bundle.zip")) {
       continue;
     }
     if (!siteSet.has(rel)) {
@@ -188,11 +245,10 @@ async function main() {
     }
   }
 
-  for (const rel of distOnlyFiles) {
-    if (!distSet.has(rel)) {
-      throw new Error(`Artefato raiz obrigatorio ausente em dist/: ${rel}`);
-    }
-  }
+  assertExactFiles("site", siteFiles, expectedFiles);
+  assertExactFiles("dist", distFiles, expectedFiles);
+  assertNoEmptyDirectories("site", siteDirectories, siteFiles);
+  assertNoEmptyDirectories("dist", distDirectories, distFiles);
 
   await validatePublicText("site", siteDir, siteFiles);
   await validatePublicText("dist", distDir, distFiles);

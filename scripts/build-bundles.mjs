@@ -314,8 +314,14 @@ async function buildBundle(rel) {
   const bundleBaseName = `${path.basename(dir)}.bundle`;
   const htmlName = `${bundleBaseName}.html`;
   const zipName = `${bundleBaseName}.zip`;
-  const outputFile = path.join(distDir, path.dirname(rel), zipName);
-  const legacyOutputFile = path.join(distDir, path.dirname(rel), htmlName);
+  const outputFiles = [
+    path.join(siteDir, path.dirname(rel), zipName),
+    path.join(distDir, path.dirname(rel), zipName)
+  ];
+  const legacyOutputFiles = [
+    path.join(siteDir, path.dirname(rel), htmlName),
+    path.join(distDir, path.dirname(rel), htmlName)
+  ];
 
   let html = await readFile(indexFile, "utf8");
   html = await inlineStyles(html, indexFile);
@@ -327,12 +333,19 @@ async function buildBundle(rel) {
   const body = `<!DOCTYPE html>${html.replace(/^<!DOCTYPE html>/i, "")}\n`;
   const zip = createZipSingleFile(htmlName, body);
   const hash = createHash("sha256").update(zip).digest("hex").slice(0, 12);
-  await mkdir(path.dirname(outputFile), { recursive: true });
-  const tmp = `${outputFile}.tmp-${process.pid}-${hash}`;
-  await writeFile(tmp, zip);
-  await rename(tmp, outputFile);
-  await rm(legacyOutputFile, { force: true });
-  return path.relative(root, outputFile);
+
+  for (const outputFile of outputFiles) {
+    await mkdir(path.dirname(outputFile), { recursive: true });
+    const tmp = `${outputFile}.tmp-${process.pid}-${hash}`;
+    await writeFile(tmp, zip);
+    await rename(tmp, outputFile);
+  }
+
+  for (const legacyOutputFile of legacyOutputFiles) {
+    await rm(legacyOutputFile, { force: true });
+  }
+
+  return path.relative(root, outputFiles[0]);
 }
 
 const lock = await acquireLock();

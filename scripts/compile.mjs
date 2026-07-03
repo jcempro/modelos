@@ -1,5 +1,5 @@
 import { watch as watchFs } from "node:fs";
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, rmdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
@@ -23,6 +23,8 @@ const bookmarklets = [
 ];
 
 const generatedFiles = new Set([...entries, ...bookmarklets].map(([, outfile]) => path.normalize(outfile.replace(/^site[\\/]/, ""))));
+const rootPassthroughFiles = ["CNAME"];
+const generatedRootFiles = new Map([[".nojekyll", ""]]);
 const staticSourceExtensions = new Set([
   ".avif",
   ".css",
@@ -104,6 +106,24 @@ async function copyStaticSources() {
     }
   }
 
+  for (const rel of rootPassthroughFiles) {
+    generatedFiles.add(path.normalize(rel));
+    if (await copyChanged(path.join(root, rel), path.join(siteRoot, rel))) {
+      changed += 1;
+    }
+  }
+
+  for (const [rel, content] of generatedRootFiles) {
+    generatedFiles.add(path.normalize(rel));
+    const dest = path.join(siteRoot, rel);
+    const current = await readFile(dest, "utf8").catch(() => undefined);
+    if (current !== content) {
+      await mkdir(path.dirname(dest), { recursive: true });
+      await writeFile(dest, content, "utf8");
+      changed += 1;
+    }
+  }
+
   return changed;
 }
 
@@ -115,6 +135,21 @@ async function pruneSite() {
       continue;
     }
     await rm(path.join(siteRoot, rel), { force: true });
+  }
+}
+
+async function pruneEmptyDirectories(dir = siteRoot) {
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    await pruneEmptyDirectories(path.join(dir, entry.name));
+  }
+
+  if (dir !== siteRoot) {
+    await rmdir(dir).catch(() => undefined);
   }
 }
 
@@ -165,6 +200,7 @@ async function buildAll() {
   await buildBrowserScripts();
   await buildBookmarklets();
   await pruneSite();
+  await pruneEmptyDirectories();
   return copied;
 }
 

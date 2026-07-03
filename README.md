@@ -27,6 +27,6 @@ npm run check
 npm run build
 ```
 
-O build materializa o cache intermediário em `site/` a partir de `src/` e prepara `dist/` com arquivos otimizados e bundles offline `*.bundle.zip`.
+O build materializa o cache publicável em `site/` a partir de `src/`, incluindo os bundles offline `*.bundle.zip`, e prepara `dist/` como saída local otimizada para validação.
 
-O código-fonte canônico fica em `src/`, incluindo TypeScript, TSX, HTML, CSS e RCFs específicos. `site/` é cache de construção e `dist/` é a saída final de produção.
+O código-fonte canônico fica em `src/`, incluindo TypeScript, TSX, HTML, CSS e RCFs específicos. `site/` é cache de construção e raiz publicada pelo GitHub Pages; `dist/` é saída local ignorada pelo Git.

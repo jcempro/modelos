@@ -226,7 +226,9 @@ O build deve reutilizar cache incremental sempre que possível, recompilando e c
 
 Operações críticas de build devem ser fail-safe: falhas de IO, cache corrompido, lock concorrente, erro de compilação ou inconsistência de tipos devem interromper a publicação antes de gerar saída inconsistente.
 
-O pipeline deve validar, antes de publicar, que nenhum caminho público em `site/` ou `dist/` contenha o segmento `src/`, que cada página funcional existente em `src/` seja materializada diretamente na raiz lógica correspondente do domínio, e que `site/` e `dist/` permaneçam estruturalmente consistentes.
+O pipeline deve validar, antes de publicar, que nenhum caminho público em `site/` ou `dist/` contenha o segmento `src/`, que cada página funcional existente em `src/` seja materializada diretamente na raiz lógica correspondente do domínio, e que `site/` e `dist/` permaneçam estruturalmente consistentes. Diretórios vazios, rotas antigas e artefatos sem origem pública esperada devem falhar a validação.
+
+O artefato efetivamente enviado ao GitHub Pages deve usar `site/` como raiz publicável. `dist/` é saída local ignorada pelo Git, usada para validação, otimização, comparação e proteção contra regressões sem alterar diretamente o cache publicável já funcional.
 
 Workflows de publicação devem usar versões de ações oficiais compatíveis com o runtime JavaScript vigente do GitHub Actions, sem recorrer a variáveis de escape para runtimes obsoletos como `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION`.
 
@@ -249,9 +251,9 @@ A saída Bundle deve conter internamente um HTML autocontido nomeado como `<nome
 
 O Bundle não deve depender de requisições externas para executar a ferramenta. Dependências externas usadas pela versão Web devem possuir cópia local versionada ou mapeamento de build capaz de incorporá-las ao Bundle.
 
-Somente o arquivo compactado deve ser publicado. O HTML autocontido solto não deve existir como artefato público em `dist/`, para evitar abertura direta pelo navegador no lugar de download.
+Somente o arquivo compactado deve ser publicado. O HTML autocontido solto não deve existir como artefato público em `site/` nem em `dist/`, para evitar abertura direta pelo navegador no lugar de download.
 
-O Bundle deve ser publicado no mesmo diretório do `index.html` correspondente em `dist/`, permitindo download direto a partir da página Web publicada. Seu basename deve permanecer idêntico ao padrão anterior, alterando apenas a extensão pública para `.zip`.
+O Bundle deve ser publicado no mesmo diretório do `index.html` correspondente em `site/`, permitindo download direto a partir da página Web publicada. Seu basename deve permanecer idêntico ao padrão anterior, alterando apenas a extensão pública para `.zip`.
 
 A compactação do Bundle deve usar o maior nível disponível na toolchain padrão do projeto. O formato ZIP com Deflate no nível máximo é a decisão vigente por ser gerável em Node.js sem dependência externa, compatível com GitHub Actions e amplamente suportado pelos usuários; formatos como `.7z` só devem substituir ZIP se puderem oferecer ganho real sem introduzir dependência operacional incompatível com a arquitetura estática e o CI.
 
@@ -262,6 +264,10 @@ Transpilação agressiva, minificação e otimização de produção devem ocorr
 Fora de `dist/`, os artefatos JavaScript públicos gerados no cache `site/` a partir de `src/` devem permanecer adequados a desenvolvimento local, rastreio de erros e depuração, sem minificação agressiva.
 
 O `dist/` deve ser construído a partir do cache `site/`, que por sua vez deve ser gerado exclusivamente a partir de `src/` e arquivos raiz explicitamente permitidos.
+
+O workflow de publicação não deve usar `dist/` como `path` do artefato Pages. Quando artefatos gerados, como bundles ZIP e arquivos raiz obrigatórios, forem necessários para publicação, eles devem existir em `site/` antes do upload do artefato `github-pages`.
+
+O workflow deve produzir exatamente um artefato Pages oficial por execução de publicação, usando `actions/upload-pages-artifact` sobre `site/`. Uploads genéricos ou duplicados do mesmo conteúdo não devem coexistir com o artefato `github-pages`.
 
 O build deve falhar de forma segura quando não conseguir gerar, otimizar, incorporar ou validar qualquer artefato obrigatório.
 
@@ -300,9 +306,9 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 
 `src/` nunca integra a URL pública. Sua estrutura lógica deve ser projetada para que `src/<modulo>/...` resulte em `https://modelos.jcem.pro/<modulo>/...`, sem prefixo `src/` ou equivalente.
 
-`site/` é exclusivamente cache de construção do site. Ele pode conter HTML, CSS e JavaScript intermediários gerados, legíveis para depuração local, mas deve ser tratado como reconstruível, não como fonte nem distribuição. Sua árvore deve espelhar a estrutura pública efetiva do site, preservando apenas artefatos intermediários necessários ao build incremental, sem reproduzir a organização interna do repositório quando ela diferir da URL publicada.
+`site/` é cache de construção e raiz publicável do site no GitHub Pages. Ele pode conter HTML, CSS, JavaScript intermediários gerados, arquivos raiz obrigatórios de publicação e bundles ZIP publicáveis, legíveis para depuração local quando aplicável, mas deve ser tratado como reconstruível, não como fonte canônica. Sua árvore deve espelhar a estrutura pública efetiva do site, preservando apenas artefatos intermediários ou publicáveis necessários ao build incremental e à publicação, sem reproduzir a organização interna do repositório quando ela diferir da URL publicada.
 
-`dist/` contém exclusivamente artefatos finais de build, com compilação completa, otimização máxima para produção, minificação e versões Web e Bundle.
+`dist/` contém exclusivamente artefatos finais locais de build, com compilação completa, otimização máxima para produção, minificação e versões Web e Bundle. Ele é ignorado pelo Git e não deve ser usado como raiz do artefato GitHub Pages enquanto `site/` já representar a estrutura pública validada.
 
 `scripts/` contém apenas ferramentas internas de automação, build, manutenção, importação, geração e suporte ao desenvolvimento. Seu conteúdo não integra artefatos publicados.
 
@@ -411,16 +417,17 @@ Decisões globais registradas:
 - Scripts Node.js de build permanecem em `.mjs` dentro de `scripts/` por serem bootstrap executável antes da compilação TypeScript.
 - O build incremental usa manifestos em `.cache/build/` e locks de concorrência para proteger `site/` e `dist/`.
 - O comando `dev-live` serve o cache `site/` com recarregamento automático para desenvolvimento local.
-- Cada ferramenta com `index.html` deve gerar também um Bundle offline compactado em ZIP, nomeado pelo diretório da ferramenta dentro de `dist/`, contendo internamente o HTML autocontido equivalente.
+- Cada ferramenta com `index.html` deve gerar também um Bundle offline compactado em ZIP, nomeado pelo diretório da ferramenta dentro de `site/` e espelhado em `dist/`, contendo internamente o HTML autocontido equivalente.
 - A otimização de HTML, CSS, JavaScript e JSON textuais deve ocorrer na construção de `dist/`, sem alterar a fonte canônica em `src/` nem os artefatos intermediários legíveis em `site/`.
-- A publicação estática deve usar `dist/`, preservando a saída de produção já validada.
-- O workflow de publicação deve enviar `dist/` ao GitHub Pages em push na branch de publicação configurada, mantendo pull requests restritos a validação, testes e geração de artefatos.
-- O artefato de publicação deve incluir `CNAME` e `.nojekyll`, publicar somente a raiz lógica de `dist/` e falhar se `src/` aparecer como diretório, segmento de caminho ou referência pública em `site/` ou `dist/`.
+- A publicação estática deve usar `site/`, preservando `dist/` como saída local ignorada para validação e otimização.
+- O workflow de publicação deve enviar `site/` ao GitHub Pages em push na branch de publicação configurada, mantendo pull requests restritos a validação, testes e geração de artefatos.
+- O artefato de publicação deve incluir `CNAME` e `.nojekyll`, publicar somente a raiz lógica de `site/` e falhar se `src/` aparecer como diretório, segmento de caminho ou referência pública em `site/` ou `dist/`.
+- `site/` e `dist/` devem ser podados pelo build para remover arquivos e diretórios obsoletos; a validação deve falhar diante de qualquer artefato ou diretório vazio que não corresponda à árvore pública esperada.
 - As ações oficiais de checkout, setup de Node, upload de artefatos, configuração de Pages, upload do artefato Pages e deploy Pages devem permanecer em versões compatíveis com Node 24 ou runtime posterior vigente no GitHub Actions.
-- Qualquer alteração futura no pipeline deve preservar a correspondência `src/<caminho-logico>` -> `site/<caminho-logico>` -> `dist/<caminho-logico>` -> `https://modelos.jcem.pro/<caminho-logico>`.
+- Qualquer alteração futura no pipeline deve preservar a correspondência `src/<caminho-logico>` -> `site/<caminho-logico>` -> `https://modelos.jcem.pro/<caminho-logico>`, mantendo `dist/<caminho-logico>` apenas como espelho local otimizado quando aplicável.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
 - URLs internas de assets e bundles em páginas publicadas devem ser estáveis com ou sem barra final, preferencialmente root-relative sob `https://modelos.jcem.pro/`.
-- O pipeline não deve publicar arquivos `*.bundle.html` soltos; a validação deve exigir `*.bundle.zip` e bloquear HTML de bundle fora do arquivo compactado.
+- O pipeline não deve publicar arquivos `*.bundle.html` soltos; a validação deve exigir `*.bundle.zip` em `site/` e bloquear HTML de bundle fora do arquivo compactado.
 - O GitHub Actions deve evitar cache de build quando ele tornar o workflow mais lento que a recomputação e deve publicar artefatos já contendo saídas Web e Bundle.
 
 ## Requisitos Não Funcionais

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
-import { mkdir, open, readFile, readdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, rm, rmdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { optimizeTextByPath } from "./asset-optimizer.mjs";
@@ -105,6 +105,21 @@ async function collectAllFiles(dir = distDir, prefix = "") {
   return files;
 }
 
+async function pruneEmptyDirectories(dir = distDir) {
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    await pruneEmptyDirectories(path.join(dir, entry.name));
+  }
+
+  if (dir !== distDir) {
+    await rmdir(dir).catch(() => undefined);
+  }
+}
+
 async function writeChanged(files, oldManifest) {
   const nextManifest = { files: {} };
   await mkdir(distDir, { recursive: true });
@@ -183,6 +198,8 @@ async function writeChanged(files, oldManifest) {
       await rm(path.join(distDir, rel), { force: true });
     }
   }
+
+  await pruneEmptyDirectories();
 
   return nextManifest;
 }
