@@ -315,6 +315,7 @@ Arquivos relacionados ao mesmo componente ou módulo devem ficar próximos sempr
 A camada `src/assets/` concentra infraestrutura reutilizável:
 
 - `src/assets/js/documentos.ts`: utilitários e serviços compartilhados para documentos.
+- `src/assets/js/tabular.ts`: utilitários compartilhados para leitura, escrita, preservação e transformação determinística de dados tabulares em ferramentas não documentais.
 - `src/assets/css/documentos.css`: estilos documentais e componentes visuais reutilizáveis.
 
 Documentos devem consumir essa camada e manter localmente apenas inicialização, configuração, mapeamentos e estilos exclusivos.
@@ -387,6 +388,7 @@ Decisões globais registradas:
 - Todo conteúdo fonte real do site deve ficar em `src/`.
 - `site/` é cache intermediário reconstruível e não deve conter fonte canônica.
 - Infraestrutura com potencial de reuso fica em `src/assets/` ou `src/components/`, conforme a natureza do recurso.
+- Núcleos reutilizáveis de ferramentas não documentais, como transformação tabular client-side, pertencem a `src/assets/js/` quando puderem servir a múltiplos módulos.
 - Documentos consomem APIs compartilhadas e mantêm localmente apenas configuração e regras específicas.
 - Validações comuns pertencem ao catálogo global, mas sua aplicação é declarada por campo em cada documento.
 - A prioridade permanente dos documentos imprimíveis é impressão A4 fiel quando esse formato for declarado.

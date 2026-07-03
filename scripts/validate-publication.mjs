@@ -31,6 +31,7 @@ const compiledOutputs = new Map([
   ["oficios/admissional/admissional.js", "oficios/admissional/admissional.ts"],
   ["faturamento/faturamento.js", "faturamento/faturamento.ts"],
   ["dizimo/assets/js/main.js", "dizimo/assets/js/main.ts"],
+  ["tools/bd/bd.js", "tools/bd/bd.ts"],
   ["favoritos/remover.paywall.js", "favoritos/remover.paywall.ts"],
   ["favoritos/dark.discourse.js", "favoritos/dark.discourse.ts"]
 ]);

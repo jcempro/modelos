@@ -346,3 +346,41 @@ Toda decisão arquitetural deverá privilegiar:
 - compatibilidade futura.
 
 Nenhuma implementação deverá assumir conhecimento fixo da estrutura dos modelos além das regras normatizadas neste documento.
+
+---
+
+## Arquitetura Local
+
+### ARQ001 - Arquivos do Módulo
+
+```text
+src/tools/bd/
+├── RCF.md
+├── bd.css
+├── bd.ts
+└── index.html
+```
+
+O arquivo `src/tools/bd/RCF.md` é o RCF específico vigente deste módulo, seguindo a organização normativa global por diretório de módulo.
+
+### ARQ002 - Consumo da Camada Compartilhada
+
+O módulo deve consumir o núcleo tabular compartilhado em `src/assets/js/tabular.ts` para:
+
+- detecção e leitura de CSV;
+- serialização CSV em UTF-8 com BOM;
+- modelo interno canônico;
+- conversão determinística entre modelos;
+- preservação de colunas desconhecidas;
+- rastreamento de inconsistências e decisões pendentes.
+
+O arquivo `src/tools/bd/bd.ts` deve conter apenas a integração da interface, fluxo operacional, logs, decisões do usuário e acionamento do núcleo compartilhado.
+
+### ARQ003 - Decisões Arquiteturais Locais
+
+- O módulo permanece estático, offline e executado integralmente no navegador.
+- O módulo não é documento imprimível e não consome regras A4, PDF ou toolbar documental.
+- O núcleo de transformação tabular foi promovido para a camada compartilhada por possuir potencial de reuso em futuras ferramentas.
+- A saída CSV deve ser produzida em UTF-8 com BOM.
+- Conflitos de consolidação de nomes devem permanecer rastreáveis e expostos ao usuário antes da exportação final.
+- Arquivos gerados em `site/tools/bd/` e `dist/tools/bd/` são artefatos de build; a fonte canônica permanece em `src/tools/bd/`.
