@@ -1,6 +1,5 @@
 "use strict";
 (() => {
-  // src/oficios/admissional/admissional.ts
   (function bootstrapAdmissional(w) {
     "use strict";
     const doc = w.JCEMDocumentos;

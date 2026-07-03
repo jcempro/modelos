@@ -8,7 +8,7 @@
     "build:dist": "node scripts/build-dist.mjs",
     "build:site": "npm run compile",
     "bundle": "node scripts/build-bundles.mjs",
-    "check": "npm run type-check && npm run lint && npm test && npm run build",
+    "check": "npm run type-check && npm run lint && npm test && npm run build && npm run validate:publication",
     "compile": "node scripts/compile.mjs",
     "compile:watch": "node scripts/compile.mjs --watch",
     "dev": "node scripts/dev.mjs",
@@ -16,7 +16,8 @@
     "lint": "eslint . --cache --cache-location .cache/eslint/",
     "test": "tsx --test tests/**/*.test.ts",
     "type-check": "tsc --noEmit",
-    "validate": "npm run check"
+    "validate": "npm run check",
+    "validate:publication": "node scripts/validate-publication.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

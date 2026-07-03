@@ -1,6 +1,5 @@
 "use strict";
 (() => {
-  // src/dizimo/assets/js/main.ts
   (function bootstrapDizimo($, w) {
     "use strict";
     function isNum(value) {

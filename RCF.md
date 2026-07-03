@@ -224,6 +224,8 @@ O build deve reutilizar cache incremental sempre que possível, recompilando e c
 
 Operações críticas de build devem ser fail-safe: falhas de IO, cache corrompido, lock concorrente, erro de compilação ou inconsistência de tipos devem interromper a publicação antes de gerar saída inconsistente.
 
+O pipeline deve validar, antes de publicar, que nenhum caminho público em `site/` ou `dist/` contenha o segmento `src/`, que cada página funcional existente em `src/` seja materializada diretamente na raiz lógica correspondente do domínio, e que `site/` e `dist/` permaneçam estruturalmente consistentes.
+
 Workflows de CI devem ter limite máximo de 10 minutos por execução. Caches no GitHub Actions só devem ser usados quando o ganho esperado superar o custo de restauração e gravação para o tamanho real do projeto.
 
 ### RN023 - Robustez Permanente
@@ -288,7 +290,9 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 
 `src/` contém exclusivamente o código-fonte do projeto, incluindo `.ts`, `.tsx`, `.html`, `.css`, `.scss` ou Sass quando adotado, RCFs específicos e demais arquivos-fonte necessários ao desenvolvimento. Nenhum artefato gerado deve ser armazenado em `src/`.
 
-`site/` é exclusivamente cache de construção do site. Ele pode conter HTML, CSS e JavaScript intermediários gerados, legíveis para depuração local, mas deve ser tratado como reconstruível, não como fonte nem distribuição.
+`src/` nunca integra a URL pública. Sua estrutura lógica deve ser projetada para que `src/<modulo>/...` resulte em `https://modelos.jcem.pro/<modulo>/...`, sem prefixo `src/` ou equivalente.
+
+`site/` é exclusivamente cache de construção do site. Ele pode conter HTML, CSS e JavaScript intermediários gerados, legíveis para depuração local, mas deve ser tratado como reconstruível, não como fonte nem distribuição. Sua árvore deve espelhar a estrutura pública efetiva do site, preservando apenas artefatos intermediários necessários ao build incremental, sem reproduzir a organização interna do repositório quando ela diferir da URL publicada.
 
 `dist/` contém exclusivamente artefatos finais de build, com compilação completa, otimização máxima para produção, minificação e versões Web e Bundle.
 
@@ -401,6 +405,8 @@ Decisões globais registradas:
 - A otimização de HTML, CSS, JavaScript e JSON textuais deve ocorrer na construção de `dist/`, sem alterar a fonte canônica em `src/` nem os artefatos intermediários legíveis em `site/`.
 - A publicação estática deve usar `dist/`, preservando a saída de produção já validada.
 - O workflow de publicação deve enviar `dist/` ao GitHub Pages em push na branch de publicação configurada, mantendo pull requests restritos a validação, testes e geração de artefatos.
+- O artefato de publicação deve incluir `CNAME` e `.nojekyll`, publicar somente a raiz lógica de `dist/` e falhar se `src/` aparecer como diretório, segmento de caminho ou referência pública em `site/` ou `dist/`.
+- Qualquer alteração futura no pipeline deve preservar a correspondência `src/<caminho-logico>` -> `site/<caminho-logico>` -> `dist/<caminho-logico>` -> `https://modelos.jcem.pro/<caminho-logico>`.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
 - URLs internas de assets e bundles em páginas publicadas devem ser estáveis com ou sem barra final, preferencialmente root-relative sob `https://modelos.jcem.pro/`.
 - O GitHub Actions deve evitar cache de build quando ele tornar o workflow mais lento que a recomputação e deve publicar artefatos já contendo saídas Web e Bundle.

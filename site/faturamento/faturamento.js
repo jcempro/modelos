@@ -1,6 +1,5 @@
 "use strict";
 (() => {
-  // src/faturamento/regras.ts
   var MEI_LIMIT_CENTS = 81e5;
   var SIMPLES_NACIONAL_LIMIT_CENTS = 48e7;
   var currencyFormatter = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
@@ -156,8 +155,6 @@
       vista: Math.round(totals.vista)
     };
   }
-
-  // src/faturamento/faturamento.ts
   (function bootstrapFaturamento(w) {
     "use strict";
     const documentos = w.JCEMDocumentos;

@@ -15,6 +15,7 @@ const lockPath = path.join(cacheDir, "dist.lock");
 const optimizerVersion = "dist-optimizer-v1";
 const textExtensions = new Set([".css", ".html", ".js", ".json"]);
 const rootPassthroughFiles = ["CNAME"];
+const generatedRootFiles = new Map([[".nojekyll", ""]]);
 
 async function acquireLock() {
   await mkdir(cacheDir, { recursive: true });
@@ -134,6 +135,24 @@ async function writeChanged(files, oldManifest) {
 
     const dest = path.join(distDir, rel);
     const output = await readFile(src);
+    const hash = hashBuffer(Buffer.concat([Buffer.from(`${optimizerVersion}\0${rel}\0`, "utf8"), output]));
+    const old = oldManifest.files[rel];
+    nextManifest.files[rel] = { hash, size: output.byteLength };
+    const currentDest = await stat(dest).catch(() => undefined);
+
+    if (old && old.hash === hash && old.size === output.byteLength && currentDest?.isFile()) {
+      continue;
+    }
+
+    await mkdir(path.dirname(dest), { recursive: true });
+    const tmp = `${dest}.tmp-${process.pid}`;
+    await writeFile(tmp, output);
+    await rename(tmp, dest);
+  }
+
+  for (const [rel, content] of generatedRootFiles) {
+    const dest = path.join(distDir, rel);
+    const output = Buffer.from(content, "utf8");
     const hash = hashBuffer(Buffer.concat([Buffer.from(`${optimizerVersion}\0${rel}\0`, "utf8"), output]));
     const old = oldManifest.files[rel];
     nextManifest.files[rel] = { hash, size: output.byteLength };

@@ -43,6 +43,10 @@ async function ensureParent(file) {
   await mkdir(path.dirname(path.join(root, file)), { recursive: true });
 }
 
+function stripInternalSourcePathComments(code) {
+  return code.replace(/^\s*\/\/\s*src[\\/][^\r\n]*(?:\r?\n)?/gm, "");
+}
+
 function normalizeRel(file) {
   return file.replace(/\\/g, "/");
 }
@@ -116,17 +120,22 @@ async function pruneSite() {
 async function buildBrowserScripts() {
   for (const [entry, outfile] of entries) {
     await ensureParent(outfile);
-    await esbuild.build({
+    const result = await esbuild.build({
       entryPoints: [path.join(root, entry)],
-      outfile: path.join(root, outfile),
       bundle: true,
       format: "iife",
       legalComments: "none",
       logLevel: "silent",
       minify: false,
       sourcemap: false,
-      target: "es2020"
+      target: "es2020",
+      write: false
     });
+    const code = result.outputFiles?.[0]?.text;
+    if (!code) {
+      throw new Error(`Falha ao compilar script: ${entry}`);
+    }
+    await writeFile(path.join(root, outfile), stripInternalSourcePathComments(code), "utf8");
   }
 }
 

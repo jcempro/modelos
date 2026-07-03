@@ -1,6 +1,5 @@
 "use strict";
 (() => {
-  // src/assets/js/documentos.ts
   (function bootstrapDocumentos(w, d) {
     "use strict";
     const storage = w.localStorage;

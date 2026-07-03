@@ -24,7 +24,7 @@ test("package exposes the full development lifecycle", async () => {
     scripts: Record<string, string>;
   };
 
-  for (const script of ["build", "build:dist", "build:site", "bundle", "check", "compile", "dev", "dev-live", "lint", "test", "type-check", "validate"]) {
+  for (const script of ["build", "build:dist", "build:site", "bundle", "check", "compile", "dev", "dev-live", "lint", "test", "type-check", "validate", "validate:publication"]) {
     assert.ok(pkg.scripts[script], `missing npm script: ${script}`);
   }
 });
