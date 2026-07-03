@@ -1,11 +1,13 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadBuildConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const srcDir = path.join(root, "src");
 const siteDir = path.join(root, "site");
 const distDir = path.join(root, "dist");
+const buildConfig = await loadBuildConfig();
 
 const staticSourceExtensions = new Set([
   ".avif",
@@ -26,14 +28,9 @@ const staticSourceExtensions = new Set([
 const textOutputExtensions = new Set([".css", ".html", ".js", ".json", ".txt", ".xml"]);
 
 const compiledOutputs = new Map([
-  ["assets/js/documentos.js", "assets/js/documentos.ts"],
-  ["oficios/admissional/admissional.js", "oficios/admissional/admissional.ts"],
-  ["faturamento/faturamento.js", "faturamento/faturamento.ts"],
-  ["dizimo/assets/js/main.js", "dizimo/assets/js/main.ts"],
-  ["csv-bd/bd.js", "csv-bd/bd.ts"],
-  ["favoritos/remover.paywall.js", "favoritos/remover.paywall.ts"],
-  ["favoritos/dark.discourse.js", "favoritos/dark.discourse.ts"]
-]);
+  ...buildConfig.browserScripts,
+  ...buildConfig.bookmarklets
+].map(({ output, source }) => [output, source.replace(/^src\//, "")]));
 
 function normalizeRel(file) {
   return file.split(path.sep).join("/");
@@ -125,6 +122,19 @@ async function assertBundleZip(label, dir, rel, expectedInnerName) {
   }
 }
 
+async function assertBundleLink(label, dir, rel, bundle) {
+  const content = await readFile(path.join(dir, rel), "utf8");
+  if (!content.includes("data-bundle-download")) {
+    return;
+  }
+
+  const expectedHref = `/${bundle}`;
+  const expectedPattern = new RegExp(`\\bhref\\s*=\\s*(["'])${expectedHref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\1`, "i");
+  if (!expectedPattern.test(content)) {
+    throw new Error(`${label}/${rel} declara download de bundle, mas nao aponta para ${expectedHref}`);
+  }
+}
+
 async function validatePublicText(label, dir, files) {
   for (const rel of files) {
     if (!textOutputExtensions.has(path.extname(rel).toLowerCase())) {
@@ -164,14 +174,14 @@ async function main() {
   const expectedFiles = new Set([
     ...sourceStaticFiles,
     ...compiledOutputs.keys(),
-    "CNAME",
-    ".nojekyll"
+    ...buildConfig.rootPassthroughFiles,
+    ...buildConfig.generatedRootFiles.map(({ output }) => output)
   ]);
 
   assertNoSrcSegments("site", siteFiles);
   assertNoSrcSegments("dist", distFiles);
 
-  for (const rel of ["CNAME", ".nojekyll"]) {
+  for (const rel of [...buildConfig.rootPassthroughFiles, ...buildConfig.generatedRootFiles.map(({ output }) => output)]) {
     if (!siteSet.has(rel)) {
       throw new Error(`Artefato raiz obrigatorio ausente em site/: ${rel}`);
     }
@@ -222,6 +232,8 @@ async function main() {
     }
     await assertBundleZip("site", siteDir, bundle, bundleHtmlNameForIndex(rel));
     await assertBundleZip("dist", distDir, bundle, bundleHtmlNameForIndex(rel));
+    await assertBundleLink("site", siteDir, rel, bundle);
+    await assertBundleLink("dist", distDir, rel, bundle);
   }
 
   for (const rel of [...siteFiles, ...distFiles]) {

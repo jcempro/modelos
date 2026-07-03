@@ -4,6 +4,7 @@ import { mkdir, open, readFile, readdir, rename, rm, rmdir, stat, unlink, writeF
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { optimizeTextByPath } from "./asset-optimizer.mjs";
+import { loadBuildConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const siteDir = path.join(root, "site");
@@ -11,11 +12,10 @@ const distDir = path.join(root, "dist");
 const cacheDir = path.join(root, ".cache", "build");
 const manifestPath = path.join(cacheDir, "dist-manifest.json");
 const lockPath = path.join(cacheDir, "dist.lock");
+const buildConfig = await loadBuildConfig();
 
 const optimizerVersion = "dist-optimizer-v1";
 const textExtensions = new Set([".css", ".html", ".js", ".json"]);
-const rootPassthroughFiles = ["CNAME"];
-const generatedRootFiles = new Map([[".nojekyll", ""]]);
 
 function isBundleArtifact(rel) {
   return /\.bundle\.(?:html|zip)$/i.test(rel);
@@ -144,7 +144,7 @@ async function writeChanged(files, oldManifest) {
     await rename(tmp, dest);
   }
 
-  for (const rel of rootPassthroughFiles) {
+  for (const rel of buildConfig.rootPassthroughFiles) {
     const src = path.join(root, rel);
     const exists = await stat(src).catch(() => undefined);
 
@@ -169,7 +169,7 @@ async function writeChanged(files, oldManifest) {
     await rename(tmp, dest);
   }
 
-  for (const [rel, content] of generatedRootFiles) {
+  for (const { output: rel, content } of buildConfig.generatedRootFiles) {
     const dest = path.join(distDir, rel);
     const output = Buffer.from(content, "utf8");
     const hash = hashBuffer(Buffer.concat([Buffer.from(`${optimizerVersion}\0${rel}\0`, "utf8"), output]));

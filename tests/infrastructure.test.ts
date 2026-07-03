@@ -54,3 +54,24 @@ test("source index pages use stable local asset paths", async () => {
 
   assert.deepEqual(relativeLocalReferences, []);
 });
+
+test("build config keeps source and public paths explicit", async () => {
+  const config = JSON.parse(await readFile("scripts/config.json", "utf8")) as {
+    build: {
+      browserScripts: Array<{ source: string; output: string }>;
+      bookmarklets: Array<{ source: string; output: string }>;
+      rootPassthroughFiles: string[];
+      generatedRootFiles: Record<string, string>;
+    };
+  };
+  const entries = [...config.build.browserScripts, ...config.build.bookmarklets];
+
+  for (const entry of entries) {
+    assert.match(entry.source, /^src\/.+\.ts$/);
+    assert.doesNotMatch(entry.output, /^(?:src|site|dist)\//);
+    assert.doesNotMatch(entry.output, /(?:^|\/)\.\.(?:\/|$)/);
+  }
+
+  assert.ok(config.build.rootPassthroughFiles.includes("CNAME"));
+  assert.equal(config.build.generatedRootFiles[".nojekyll"], "");
+});

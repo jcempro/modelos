@@ -8,7 +8,7 @@ import {
   type NameDecision,
   type TabularDataset,
   type TabularModelKind
-} from "../../assets/js/tabular";
+} from "../assets/js/tabular";
 
 (function bootstrapBd(w: Window, d: Document): void {
   "use strict";

@@ -230,6 +230,8 @@ O pipeline deve validar, antes de publicar, que nenhum caminho público em `site
 
 O artefato efetivamente enviado ao GitHub Pages deve usar `site/` como raiz publicável. `dist/` é saída local ignorada pelo Git, usada para validação, otimização, comparação e proteção contra regressões sem alterar diretamente o cache publicável já funcional.
 
+Mapeamentos de inclusão de scripts, bookmarklets, arquivos raiz obrigatórios e demais entradas explícitas de build devem ser declarados em `scripts/config.json`. Scripts de build, validação e publicação devem consumir essa configuração compartilhada, evitando caminhos de submódulos duplicados, arbitrários ou travados em código.
+
 Workflows de publicação devem usar versões de ações oficiais compatíveis com o runtime JavaScript vigente do GitHub Actions, sem recorrer a variáveis de escape para runtimes obsoletos como `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION`.
 
 Workflows de CI devem ter limite máximo de 10 minutos por execução. Caches no GitHub Actions só devem ser usados quando o ganho esperado superar o custo de restauração e gravação para o tamanho real do projeto.
@@ -286,6 +288,7 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 │   │   ├── css/
 │   │   └── js/
 │   ├── components/
+│   ├── csv-bd/
 │   ├── dizimo/
 │   ├── faturamento/
 │   ├── favoritos/
@@ -311,6 +314,8 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 `dist/` contém exclusivamente artefatos finais locais de build, com compilação completa, otimização máxima para produção, minificação e versões Web e Bundle. Ele é ignorado pelo Git e não deve ser usado como raiz do artefato GitHub Pages enquanto `site/` já representar a estrutura pública validada.
 
 `scripts/` contém apenas ferramentas internas de automação, build, manutenção, importação, geração e suporte ao desenvolvimento. Seu conteúdo não integra artefatos publicados.
+
+`scripts/config.json` centraliza os mapeamentos explícitos de build, incluindo entradas TypeScript, saídas públicas relativas, bookmarklets e arquivos raiz obrigatórios do artefato publicável. Alterações futuras de caminho lógico de módulos devem ser feitas nessa configuração e nos RCFs específicos correspondentes, mantendo os scripts genéricos.
 
 Não deve haver sobreposição funcional entre `src/`, `site/`, `dist/` e `scripts/`.
 
@@ -416,6 +421,7 @@ Decisões globais registradas:
 - JavaScript gerado em `site/` deve permanecer legível para desenvolvimento, suporte e rastreio de problemas.
 - Scripts Node.js de build permanecem em `.mjs` dentro de `scripts/` por serem bootstrap executável antes da compilação TypeScript.
 - O build incremental usa manifestos em `.cache/build/` e locks de concorrência para proteger `site/` e `dist/`.
+- Entradas explícitas de build devem ser configuradas em `scripts/config.json` e consumidas pelos scripts, sem duplicação manual de caminhos de submódulos em `compile`, `dist` ou validação.
 - O comando `dev-live` serve o cache `site/` com recarregamento automático para desenvolvimento local.
 - Cada ferramenta com `index.html` deve gerar também um Bundle offline compactado em ZIP, nomeado pelo diretório da ferramenta dentro de `site/` e espelhado em `dist/`, contendo internamente o HTML autocontido equivalente.
 - A otimização de HTML, CSS, JavaScript e JSON textuais deve ocorrer na construção de `dist/`, sem alterar a fonte canônica em `src/` nem os artefatos intermediários legíveis em `site/`.

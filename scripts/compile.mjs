@@ -3,28 +3,17 @@ import { mkdir, readFile, readdir, rm, rmdir, writeFile } from "node:fs/promises
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
+import { loadBuildConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const srcRoot = path.join(root, "src");
 const siteRoot = path.join(root, "site");
 const watch = process.argv.includes("--watch");
-
-const entries = [
-  ["src/assets/js/documentos.ts", "site/assets/js/documentos.js"],
-  ["src/oficios/admissional/admissional.ts", "site/oficios/admissional/admissional.js"],
-  ["src/faturamento/faturamento.ts", "site/faturamento/faturamento.js"],
-  ["src/dizimo/assets/js/main.ts", "site/dizimo/assets/js/main.js"],
-  ["csv-bd/bd.ts", "site/tools/bd/bd.js"]
-];
-
-const bookmarklets = [
-  ["src/favoritos/remover.paywall.ts", "site/favoritos/remover.paywall.js"],
-  ["src/favoritos/dark.discourse.ts", "site/favoritos/dark.discourse.js"]
-];
-
-const generatedFiles = new Set([...entries, ...bookmarklets].map(([, outfile]) => path.normalize(outfile.replace(/^site[\\/]/, ""))));
-const rootPassthroughFiles = ["CNAME"];
-const generatedRootFiles = new Map([[".nojekyll", ""]]);
+const buildConfig = await loadBuildConfig();
+const generatedFiles = new Set([
+  ...buildConfig.browserScripts,
+  ...buildConfig.bookmarklets
+].map(({ output }) => normalizeRel(output)));
 const staticSourceExtensions = new Set([
   ".avif",
   ".css",
@@ -100,22 +89,22 @@ async function copyStaticSources() {
       continue;
     }
 
-    generatedFiles.add(path.normalize(rel));
+    generatedFiles.add(normalizeRel(rel));
     if (await copyChanged(path.join(srcRoot, rel), path.join(siteRoot, rel))) {
       changed += 1;
     }
   }
 
-  for (const rel of rootPassthroughFiles) {
-    generatedFiles.add(path.normalize(rel));
+  for (const rel of buildConfig.rootPassthroughFiles) {
+    generatedFiles.add(normalizeRel(rel));
     if (await copyChanged(path.join(root, rel), path.join(siteRoot, rel))) {
       changed += 1;
     }
   }
 
-  for (const [rel, content] of generatedRootFiles) {
-    generatedFiles.add(path.normalize(rel));
-    const dest = path.join(siteRoot, rel);
+  for (const { output, content } of buildConfig.generatedRootFiles) {
+    generatedFiles.add(normalizeRel(output));
+    const dest = path.join(siteRoot, output);
     const current = await readFile(dest, "utf8").catch(() => undefined);
     if (current !== content) {
       await mkdir(path.dirname(dest), { recursive: true });
@@ -154,10 +143,11 @@ async function pruneEmptyDirectories(dir = siteRoot) {
 }
 
 async function buildBrowserScripts() {
-  for (const [entry, outfile] of entries) {
+  for (const { source, output } of buildConfig.browserScripts) {
+    const outfile = path.join("site", output);
     await ensureParent(outfile);
     const result = await esbuild.build({
-      entryPoints: [path.join(root, entry)],
+      entryPoints: [path.join(root, source)],
       bundle: true,
       format: "iife",
       legalComments: "none",
@@ -169,18 +159,19 @@ async function buildBrowserScripts() {
     });
     const code = result.outputFiles?.[0]?.text;
     if (!code) {
-      throw new Error(`Falha ao compilar script: ${entry}`);
+      throw new Error(`Falha ao compilar script: ${source}`);
     }
     await writeFile(path.join(root, outfile), stripInternalSourcePathComments(code), "utf8");
   }
 }
 
 async function buildBookmarklets() {
-  for (const [entry, outfile] of bookmarklets) {
+  for (const { source, output } of buildConfig.bookmarklets) {
+    const outfile = path.join("site", output);
     await ensureParent(outfile);
     const result = await esbuild.build({
       bundle: true,
-      entryPoints: [path.join(root, entry)],
+      entryPoints: [path.join(root, source)],
       format: "iife",
       legalComments: "none",
       minify: true,
@@ -189,7 +180,7 @@ async function buildBookmarklets() {
     });
     const code = result.outputFiles?.[0]?.text?.trim();
     if (!code) {
-      throw new Error(`Falha ao compilar bookmarklet: ${entry}`);
+      throw new Error(`Falha ao compilar bookmarklet: ${source}`);
     }
     await writeFile(path.join(root, outfile), `javascript:${code}\n`, "utf8");
   }
@@ -221,7 +212,7 @@ if (watch) {
   });
 } else {
   await buildAll();
-  for (const [, outfile] of entries) {
-    await readFile(path.join(root, outfile), "utf8");
+  for (const { output } of buildConfig.browserScripts) {
+    await readFile(path.join(siteRoot, output), "utf8");
   }
 }

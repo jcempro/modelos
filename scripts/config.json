@@ -1,0 +1,42 @@
+{
+  "build": {
+    "browserScripts": [
+      {
+        "source": "src/assets/js/documentos.ts",
+        "output": "assets/js/documentos.js"
+      },
+      {
+        "source": "src/oficios/admissional/admissional.ts",
+        "output": "oficios/admissional/admissional.js"
+      },
+      {
+        "source": "src/faturamento/faturamento.ts",
+        "output": "faturamento/faturamento.js"
+      },
+      {
+        "source": "src/dizimo/assets/js/main.ts",
+        "output": "dizimo/assets/js/main.js"
+      },
+      {
+        "source": "src/csv-bd/bd.ts",
+        "output": "csv-bd/bd.js"
+      }
+    ],
+    "bookmarklets": [
+      {
+        "source": "src/favoritos/remover.paywall.ts",
+        "output": "favoritos/remover.paywall.js"
+      },
+      {
+        "source": "src/favoritos/dark.discourse.ts",
+        "output": "favoritos/dark.discourse.js"
+      }
+    ],
+    "rootPassthroughFiles": [
+      "CNAME"
+    ],
+    "generatedRootFiles": {
+      ".nojekyll": ""
+    }
+  }
+}
