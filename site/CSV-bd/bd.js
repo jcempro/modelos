@@ -51,10 +51,16 @@
   }
   function convertDataset(dataset, from, to, options = {}) {
     if (from === to) {
+      const result = from === "modelo2" ? normalizeModel2Dataset(dataset, options) : normalizeModel1Dataset(dataset);
+      result.issues.unshift({
+        code: "same-model",
+        message: "Origem e destino sao iguais; estrutura validada e telefones normalizados conforme o modelo.",
+        severity: "info"
+      });
       return {
-        dataset: cloneDataset(dataset),
-        issues: [{ code: "same-model", message: "Origem e destino sao iguais; dados preservados sem transformacao.", severity: "info" }],
-        pendingNameDecisions: []
+        dataset: result.dataset,
+        issues: result.issues,
+        pendingNameDecisions: result.pendingNameDecisions
       };
     }
     return from === "modelo1" ? convertModel1ToModel2(dataset, options) : convertModel2ToModel1(dataset, options);
@@ -195,13 +201,13 @@
   }
   function convertModel1ToModel2(dataset, options) {
     const issues = [];
-    const pendingNameDecisions = [];
     const identifiers = options.identifierColumns ?? defaultIdentifierColumns;
     const knownPhoneColumns = collectIndexedColumns(dataset.columns, "fone");
     const knownNameColumns = collectIndexedColumns(dataset.columns, "nome");
     if (knownPhoneColumns.length === 0) {
       return failure(dataset, "missing-phone", "Modelo 1 sem coluna Fone identificavel.");
     }
+    const pendingNameDecisions = [];
     const aggregates = /* @__PURE__ */ new Map();
     dataset.rows.forEach((row, rowIndex) => {
       const record = rowToRecord(dataset.columns, row);
@@ -214,31 +220,38 @@
         customerAttributes.set(column, record.get(column) ?? "");
       }
       for (const phoneColumn of knownPhoneColumns) {
-        const phone = (record.get(phoneColumn.column) ?? "").trim();
+        const rawPhone = (record.get(phoneColumn.column) ?? "").trim();
+        const phone = normalizePhone(rawPhone);
         if (!phone) {
+          if (rawPhone) {
+            issues.push({
+              code: "invalid-phone",
+              message: `Linha ${rowIndex + 2}: coluna ${phoneColumn.column} nao contem identificador numerico de telefone.`,
+              severity: "warning"
+            });
+          }
           continue;
         }
         const nameColumn = knownNameColumns.find((item) => item.index === phoneColumn.index)?.column ?? (phoneColumn.index === 1 ? findColumn(dataset.columns, "Nome") : findColumn(dataset.columns, `Nome ${phoneColumn.index}`));
         const name = nameColumn ? (record.get(nameColumn) ?? "").trim() : "";
-        const phoneKey = normalizePhoneKey(phone);
-        const aggregate = aggregates.get(phoneKey) ?? { occurrences: [], originalPhone: phone, names: [] };
+        const aggregate = aggregates.get(phone) ?? { names: [], occurrences: [], phone };
         aggregate.names = appendUnique(aggregate.names, name);
-        aggregate.occurrences.push({
+        addCustomerOccurrence(aggregate.occurrences, {
           attributes: customerAttributes,
-          index: aggregate.occurrences.length + 1,
+          index: 0,
           key: customerKey
         });
-        aggregates.set(phoneKey, aggregate);
+        aggregates.set(phone, aggregate);
       }
     });
     const occurrenceCount = Math.max(1, ...Array.from(aggregates.values()).map((aggregate) => aggregate.occurrences.length));
     const attributeColumns = dataset.columns.filter((column) => !isPairColumn(column));
     const columns = ["Fone", "Nome", ...expandOccurrenceColumns(attributeColumns, occurrenceCount)];
     const rows = [];
-    for (const [phoneKey, aggregate] of sortAggregates(aggregates)) {
-      const chosenName = chooseName(phoneKey, aggregate.names, options.nameDecisions, pendingNameDecisions, issues);
+    for (const aggregate of sortPhoneAggregates(aggregates)) {
+      const chosenName = chooseName(aggregate.phone, aggregate.names, options.nameDecisions, pendingNameDecisions, issues);
       const output = emptyRecord(columns);
-      output.set("Fone", aggregate.originalPhone);
+      output.set("Fone", aggregate.phone);
       output.set("Nome", chosenName);
       aggregate.occurrences.forEach((occurrence, index) => {
         for (const column of attributeColumns) {
@@ -256,37 +269,37 @@
   }
   function convertModel2ToModel1(dataset, options) {
     const identifiers = options.identifierColumns ?? defaultIdentifierColumns;
-    const issues = [];
-    const phoneColumn = findColumn(dataset.columns, "Fone");
-    const nameColumn = findColumn(dataset.columns, "Nome");
+    const normalized = normalizeModel2Dataset(dataset, options);
+    const issues = [...normalized.issues];
+    const phoneColumn = findColumn(normalized.dataset.columns, "Fone");
+    const nameColumn = findColumn(normalized.dataset.columns, "Nome");
     if (!phoneColumn) {
       return failure(dataset, "missing-phone", "Modelo 2 sem coluna Fone identificavel.");
     }
-    const customerColumns = Array.from(new Set(dataset.columns.filter((column) => !isBase(column, "fone") && !isBase(column, "nome")).map((column) => indexedColumn(column).base)));
+    const customerColumns = Array.from(new Set(normalized.dataset.columns.filter((column) => !isBase(column, "fone") && !isBase(column, "nome")).map((column) => indexedColumn(column).base)));
     const customers = /* @__PURE__ */ new Map();
-    dataset.rows.forEach((row, rowIndex) => {
-      const record = rowToRecord(dataset.columns, row);
-      const phone = record.get(phoneColumn)?.trim() ?? "";
+    normalized.dataset.rows.forEach((row, rowIndex) => {
+      const record = rowToRecord(normalized.dataset.columns, row);
+      const phone = normalizePhone(record.get(phoneColumn)?.trim() ?? "");
       const name = nameColumn ? record.get(nameColumn)?.trim() ?? "" : "";
-      const maxOccurrence = maxIndexedOccurrence(dataset.columns);
+      const maxOccurrence = maxIndexedOccurrenceForColumns(normalized.dataset.columns.filter((column) => !isPairColumn(column)));
       for (let occurrence = 1; occurrence <= maxOccurrence; occurrence += 1) {
         const attributes = /* @__PURE__ */ new Map();
         for (const column of customerColumns) {
           const value = record.get(occurrence === 1 ? column : `${column} ${occurrence}`) ?? "";
           attributes.set(column, value);
         }
-        const key = resolveCustomerKey(attributes, identifiers, rowIndex);
+        const key = resolveCustomerKey(attributes, identifiers, rowIndex, occurrence);
         if (key.startsWith("__row_") && !hasAnyValue(attributes)) {
           continue;
         }
-        const customer = customers.get(key) ?? { attributes, names: [], phones: [] };
+        const customer = customers.get(key) ?? { attributes, links: [] };
         mergeMissing(customer.attributes, attributes);
-        customer.phones = appendUnique(customer.phones, phone);
-        customer.names = appendUnique(customer.names, name);
+        customer.links = appendUniqueLink(customer.links, { phone, name });
         customers.set(key, customer);
       }
     });
-    const maxPhones = Math.max(1, ...Array.from(customers.values()).map((customer) => customer.phones.length));
+    const maxPhones = Math.max(1, ...Array.from(customers.values()).map((customer) => customer.links.length));
     const columns = [...customerColumns, ...expandPhoneNameColumns(maxPhones)];
     const rows = [];
     for (const [, customer] of Array.from(customers.entries()).sort(([left], [right]) => left.localeCompare(right))) {
@@ -294,9 +307,9 @@
       for (const column of customerColumns) {
         output.set(column, customer.attributes.get(column) ?? "");
       }
-      customer.phones.forEach((phone, index) => {
-        output.set(index === 0 ? "Fone" : `Fone ${index + 1}`, phone);
-        output.set(index === 0 ? "Nome" : `Nome ${index + 1}`, customer.names[index] ?? customer.names[0] ?? "");
+      customer.links.forEach((link, index) => {
+        output.set(index === 0 ? "Fone" : `Fone ${index + 1}`, link.phone);
+        output.set(index === 0 ? "Nome" : `Nome ${index + 1}`, link.name);
       });
       rows.push(columns.map((column) => output.get(column) ?? ""));
     }
@@ -306,7 +319,103 @@
     return {
       dataset: { columns, dialect: generatedDialect, rows },
       issues,
+      pendingNameDecisions: normalized.pendingNameDecisions
+    };
+  }
+  function normalizeModel1Dataset(dataset) {
+    const issues = [];
+    return {
+      dataset: {
+        columns: [...dataset.columns],
+        dialect: { ...dataset.dialect },
+        rows: dataset.rows.map((row, rowIndex) => dataset.columns.map((column, columnIndex) => {
+          const value = row[columnIndex] ?? "";
+          if (!isBase(column, "fone")) {
+            return value;
+          }
+          const phone = normalizePhone(value);
+          if (!phone && value.trim()) {
+            issues.push({
+              code: "invalid-phone",
+              message: `Linha ${rowIndex + 2}: coluna ${column} nao contem identificador numerico de telefone.`,
+              severity: "warning"
+            });
+          }
+          return phone;
+        }))
+      },
+      issues,
       pendingNameDecisions: []
+    };
+  }
+  function normalizeModel2Dataset(dataset, options) {
+    const identifiers = options.identifierColumns ?? defaultIdentifierColumns;
+    const issues = [];
+    const knownPhoneColumns = collectIndexedColumns(dataset.columns, "fone");
+    const knownNameColumns = collectIndexedColumns(dataset.columns, "nome");
+    const phoneColumn = knownPhoneColumns[0]?.column;
+    if (!phoneColumn) {
+      return failure(dataset, "missing-phone", "Modelo 2 sem coluna Fone identificavel.");
+    }
+    if (knownPhoneColumns.length > 1 || knownNameColumns.length > 1) {
+      issues.push({
+        code: "model2-denormalized-pairs",
+        message: "Modelo 2 continha multiplas colunas Fone/Nome; os telefones foram consolidados em linhas canonicas.",
+        severity: "warning"
+      });
+    }
+    const customerColumns = Array.from(new Set(dataset.columns.filter((column) => !isPairColumn(column)).map((column) => indexedColumn(column).base)));
+    const maxCustomerOccurrence = maxIndexedOccurrenceForColumns(dataset.columns.filter((column) => !isPairColumn(column)));
+    const pendingNameDecisions = [];
+    const aggregates = /* @__PURE__ */ new Map();
+    dataset.rows.forEach((row, rowIndex) => {
+      const record = rowToRecord(dataset.columns, row);
+      const occurrences = collectCustomerOccurrences(record, customerColumns, identifiers, rowIndex, maxCustomerOccurrence);
+      for (const phoneItem of knownPhoneColumns) {
+        const rawPhone = (record.get(phoneItem.column) ?? "").trim();
+        const phone = normalizePhone(rawPhone);
+        if (!phone) {
+          if (rawPhone) {
+            issues.push({
+              code: "invalid-phone",
+              message: `Linha ${rowIndex + 2}: coluna ${phoneItem.column} nao contem identificador numerico de telefone.`,
+              severity: "warning"
+            });
+          }
+          continue;
+        }
+        const nameColumn = knownNameColumns.find((item) => item.index === phoneItem.index)?.column ?? (phoneItem.index === 1 ? findColumn(dataset.columns, "Nome") : findColumn(dataset.columns, `Nome ${phoneItem.index}`));
+        const name = nameColumn ? (record.get(nameColumn) ?? "").trim() : "";
+        const aggregate = aggregates.get(phone) ?? { names: [], occurrences: [], phone };
+        aggregate.names = appendUnique(aggregate.names, name);
+        for (const occurrence of occurrences) {
+          addCustomerOccurrence(aggregate.occurrences, occurrence);
+        }
+        aggregates.set(phone, aggregate);
+      }
+    });
+    const occurrenceCount = Math.max(1, ...Array.from(aggregates.values()).map((aggregate) => aggregate.occurrences.length));
+    const columns = ["Fone", "Nome", ...expandOccurrenceColumns(customerColumns, occurrenceCount)];
+    const rows = sortPhoneAggregates(aggregates).map((aggregate) => {
+      const chosenName = chooseName(aggregate.phone, aggregate.names, options.nameDecisions, pendingNameDecisions, issues);
+      const output = emptyRecord(columns);
+      output.set("Fone", aggregate.phone);
+      output.set("Nome", chosenName);
+      aggregate.occurrences.forEach((occurrence, index) => {
+        for (const column of customerColumns) {
+          const outputColumn = index === 0 ? column : `${column} ${index + 1}`;
+          output.set(outputColumn, occurrence.attributes.get(column) ?? "");
+        }
+      });
+      return columns.map((column) => output.get(column) ?? "");
+    });
+    if (rows.length === 0) {
+      issues.push({ code: "empty-output", message: "Nenhum telefone identificado no Modelo 2.", severity: "warning" });
+    }
+    return {
+      dataset: { columns, dialect: generatedDialect, rows },
+      issues,
+      pendingNameDecisions
     };
   }
   function failure(source, code, message) {
@@ -327,9 +436,8 @@
   function normalizeKey(value) {
     return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
   }
-  function normalizePhoneKey(value) {
-    const digits = value.replace(/[^\d]/g, "");
-    return digits || normalizeKey(value);
+  function normalizePhone(value) {
+    return value.replace(/\D/g, "");
   }
   function findColumn(columns, expected) {
     const normalized = normalizeKey(expected);
@@ -350,7 +458,7 @@
   function collectIndexedColumns(columns, base) {
     return columns.map((column) => ({ column, ...indexedColumn(column) })).filter((item) => normalizeKey(item.base) === normalizeKey(base)).sort((left, right) => left.index - right.index);
   }
-  function resolveCustomerKey(record, identifiers, rowIndex) {
+  function resolveCustomerKey(record, identifiers, rowIndex, occurrence = 1) {
     for (const identifier of identifiers) {
       const column = findColumn([...record.keys()], identifier);
       const value = column ? record.get(column)?.trim() : "";
@@ -358,13 +466,46 @@
         return `${normalizeKey(identifier)}:${value}`;
       }
     }
-    return `__row_${rowIndex + 1}`;
+    return `__row_${rowIndex + 1}_${occurrence}`;
+  }
+  function appendUniqueLink(values, value) {
+    return values.some((item) => normalizePhone(item.phone) === normalizePhone(value.phone)) ? values : [...values, value];
   }
   function appendUnique(values, value) {
     if (!value.trim()) {
       return values;
     }
     return values.some((item) => normalizeKey(item) === normalizeKey(value)) ? values : [...values, value];
+  }
+  function collectCustomerOccurrences(record, customerColumns, identifiers, rowIndex, maxOccurrence) {
+    const occurrences = [];
+    for (let occurrence = 1; occurrence <= maxOccurrence; occurrence += 1) {
+      const attributes = /* @__PURE__ */ new Map();
+      for (const column of customerColumns) {
+        attributes.set(column, record.get(occurrence === 1 ? column : `${column} ${occurrence}`) ?? "");
+      }
+      if (!hasAnyValue(attributes)) {
+        continue;
+      }
+      occurrences.push({
+        attributes,
+        index: occurrence,
+        key: resolveCustomerKey(attributes, identifiers, rowIndex, occurrence)
+      });
+    }
+    return occurrences;
+  }
+  function addCustomerOccurrence(occurrences, occurrence) {
+    const existing = occurrences.find((item) => item.key === occurrence.key);
+    if (existing) {
+      mergeMissing(existing.attributes, occurrence.attributes);
+      return;
+    }
+    occurrences.push({
+      attributes: new Map(occurrence.attributes),
+      index: occurrences.length + 1,
+      key: occurrence.key
+    });
   }
   function expandOccurrenceColumns(columns, count) {
     const expanded = [];
@@ -383,15 +524,16 @@
     }
     return columns;
   }
-  function sortAggregates(aggregates) {
-    return Array.from(aggregates.entries()).sort((left, right) => left[1].originalPhone.localeCompare(right[1].originalPhone));
+  function sortPhoneAggregates(aggregates) {
+    return Array.from(aggregates.values()).sort((left, right) => left.phone.localeCompare(right.phone));
   }
-  function chooseName(phoneKey, names, decisions, pending, issues) {
+  function chooseName(phone, names, decisions, pending, issues) {
     if (names.length === 0) {
       return "";
     }
-    if (decisions?.[phoneKey]) {
-      return decisions[phoneKey] ?? "";
+    const decided = decisions?.[phone]?.trim();
+    if (decided) {
+      return decided;
     }
     const normalized = new Map(names.map((name) => [normalizeKey(name), name]));
     if (normalized.size === 1) {
@@ -399,19 +541,23 @@
     }
     const ordered = [...names].sort((left, right) => right.length - left.length || left.localeCompare(right));
     const longest = ordered[0] ?? "";
-    const allContained = names.every((name) => normalizeKey(longest).includes(normalizeKey(name)) || normalizeKey(name).includes(normalizeKey(longest)));
+    const longestKey = normalizeKey(longest);
+    const allContained = names.every((name) => {
+      const key = normalizeKey(name);
+      return longestKey.includes(key) || key.includes(longestKey);
+    });
     if (allContained) {
       return longest;
     }
-    pending.push({ candidates: names, chosenName: names[0] ?? "", phone: phoneKey });
+    pending.push({ candidates: names, chosenName: names[0] ?? "", phone });
     issues.push({
       code: "name-decision",
-      message: `Telefone ${phoneKey} possui nomes divergentes e requer decisao do usuario.`,
+      message: `Telefone ${phone} possui nomes divergentes e requer decisao do usuario.`,
       severity: "decision"
     });
     return names[0] ?? "";
   }
-  function maxIndexedOccurrence(columns) {
+  function maxIndexedOccurrenceForColumns(columns) {
     return Math.max(1, ...columns.map((column) => indexedColumn(column).index));
   }
   function hasAnyValue(record) {
@@ -539,6 +685,10 @@
       if (currentResult.pendingNameDecisions.length > 0) {
         renderDecisions(currentResult.pendingNameDecisions);
         log("Existem divergencias de nome aguardando revisao do usuario.", "decision");
+        setOutput("");
+        updateSummary(from, to, null);
+        log("Confirme os nomes canonicos antes de gerar o CSV final.", "decision");
+        return;
       }
       const csv = serializeCsv(currentResult.dataset);
       setOutput(csv);
@@ -561,20 +711,35 @@
         const label = d.createElement("strong");
         label.textContent = decision.phone;
         const chooser = d.createElement("select");
+        chooser.dataset.phone = decision.phone;
         decision.candidates.forEach((candidate) => {
           const option = d.createElement("option");
           option.value = candidate;
           option.textContent = candidate;
-          option.selected = candidate === decision.chosenName;
+          option.selected = candidate === (nameDecisions[decision.phone] ?? decision.chosenName);
           chooser.appendChild(option);
-        });
-        chooser.addEventListener("change", () => {
-          nameDecisions[decision.phone] = chooser.value;
-          convert();
         });
         row.append(label, chooser);
         container.appendChild(row);
       });
+      const actions = d.createElement("div");
+      actions.className = "decision-actions";
+      const apply = d.createElement("button");
+      apply.type = "button";
+      apply.textContent = "Confirmar nomes";
+      apply.addEventListener("click", () => {
+        const choices = Array.from(container.querySelectorAll("select[data-phone]"));
+        choices.forEach((choice) => {
+          const phone = choice.dataset.phone ?? "";
+          if (phone && choice.value.trim()) {
+            nameDecisions[phone] = choice.value;
+          }
+        });
+        log("Escolhas de nomes aplicadas.");
+        convert();
+      });
+      actions.appendChild(apply);
+      container.appendChild(actions);
     }
     function hideDecisions() {
       const container = one("#decisions");

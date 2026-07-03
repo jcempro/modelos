@@ -103,6 +103,16 @@ Colunas desconhecidas jamais deverão ser descartadas.
 
 Toda coluna desconhecida deverá ser automaticamente incorporada ao modelo interno e preservada durante todas as conversões.
 
+## Normalização do Campo Fone
+
+O campo Fone, em qualquer modelo, representa exclusivamente o identificador numérico do telefone.
+
+Antes de qualquer indexação, comparação, agregação, reconstrução, serialização ou persistência, o valor deverá ser normalizado para conter apenas dígitos.
+
+Caracteres de apresentação, como parênteses, espaços, hífens, sinal de mais, separadores e equivalentes, deverão ser removidos pelo núcleo de transformação.
+
+Qualquer formatação amigável de telefone pertence exclusivamente à camada de apresentação e não poderá ser gravada no CSV exportado nem usada como chave lógica.
+
 ---
 
 # Modelo 1
@@ -153,6 +163,12 @@ Cada linha representa um telefone.
 
 O telefone torna-se a entidade principal.
 
+O campo Fone normalizado é o único indexador e a única chave lógica do registro.
+
+O campo Nome representa o nome canônico consolidado para o telefone naquela linha e não compõe chave lógica.
+
+O Modelo 2 não poderá conter múltiplos pares Fone/Nome na mesma linha nem múltiplas linhas para o mesmo Fone normalizado apenas por variação de Nome.
+
 Deverá conter:
 
 Fone
@@ -169,13 +185,21 @@ MCI n
 
 bem como futuras colunas múltiplas equivalentes.
 
+Colunas múltiplas no Modelo 2 são permitidas apenas para associações de clientes ou atributos equivalentes, nunca para novos telefones ou novos pares Fone/Nome.
+
 Outras colunas adicionais deverão ser preservadas automaticamente.
+
+Caso uma entrada declarada como Modelo 2 contenha colunas como Fone 2, Nome 2 ou equivalentes, a importação deverá canonicalizar esses telefones em registros independentes, consolidando por Fone normalizado antes de converter, serializar ou persistir a saída.
 
 ---
 
 ## Conversão Modelo 1 → Modelo 2
 
-Cada par Nome/Fone deverá originar um registro individual.
+Cada par Nome/Fone deverá alimentar o registro individual identificado pelo Fone normalizado.
+
+Ocorrências com o mesmo Fone normalizado deverão ser consolidadas em um único registro do Modelo 2, agregando os clientes associados sem duplicidade.
+
+Variações de Nome para o mesmo Fone deverão ser tratadas como problema de consolidação de dados, não como registros independentes nem como chave composta.
 
 Os atributos pertencentes ao cliente deverão acompanhar o telefone exclusivamente para preservação da informação e reconstrução futura.
 
@@ -282,6 +306,12 @@ O sistema deverá tentar consolidar automaticamente esses nomes utilizando crit�
 Caso não seja possível determinar uma representação confiável, deverá solicitar decisão do usuário.
 
 A escolha realizada deverá ser aplicada de forma consistente durante toda a operação.
+
+A existência de múltiplos nomes para o mesmo Fone não autoriza criar múltiplas linhas no Modelo 2.
+
+Enquanto não houver decisão de consolidação confiável ou explícita, a exportação final deverá permanecer pendente e a interface deverá preservar todas as alternativas identificadas para confirmação manual.
+
+A interface de resolução manual deverá oferecer mecanismo explícito de confirmação das escolhas antes de liberar a saída CSV final.
 
 ---
 

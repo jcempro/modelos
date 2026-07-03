@@ -218,6 +218,17 @@ button:focus {
   font-size: 12px;
 }
 
+.decision-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.decision-actions button {
+  width: auto;
+  padding: 6px 12px;
+}
+
 #csv-output {
   min-height: 444px;
 }

@@ -148,6 +148,10 @@ import {
     if (currentResult.pendingNameDecisions.length > 0) {
       renderDecisions(currentResult.pendingNameDecisions);
       log("Existem divergencias de nome aguardando revisao do usuario.", "decision");
+      setOutput("");
+      updateSummary(from, to, null);
+      log("Confirme os nomes canonicos antes de gerar o CSV final.", "decision");
+      return;
     }
 
     const csv = serializeCsv(currentResult.dataset);
@@ -174,20 +178,36 @@ import {
       const label = d.createElement("strong");
       label.textContent = decision.phone;
       const chooser = d.createElement("select");
+      chooser.dataset.phone = decision.phone;
       decision.candidates.forEach((candidate) => {
         const option = d.createElement("option");
         option.value = candidate;
         option.textContent = candidate;
-        option.selected = candidate === decision.chosenName;
+        option.selected = candidate === (nameDecisions[decision.phone] ?? decision.chosenName);
         chooser.appendChild(option);
-      });
-      chooser.addEventListener("change", () => {
-        nameDecisions[decision.phone] = chooser.value;
-        convert();
       });
       row.append(label, chooser);
       container.appendChild(row);
     });
+
+    const actions = d.createElement("div");
+    actions.className = "decision-actions";
+    const apply = d.createElement("button");
+    apply.type = "button";
+    apply.textContent = "Confirmar nomes";
+    apply.addEventListener("click", () => {
+      const choices = Array.from(container.querySelectorAll<HTMLSelectElement>("select[data-phone]"));
+      choices.forEach((choice) => {
+        const phone = choice.dataset.phone ?? "";
+        if (phone && choice.value.trim()) {
+          nameDecisions[phone] = choice.value;
+        }
+      });
+      log("Escolhas de nomes aplicadas.");
+      convert();
+    });
+    actions.appendChild(apply);
+    container.appendChild(actions);
   }
 
   function hideDecisions(): void {
