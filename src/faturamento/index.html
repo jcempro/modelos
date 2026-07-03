@@ -289,8 +289,8 @@
                 <thead>
                   <tr>
                     <th>MÊS/ANO:</th>
-                    <th>VENDAS À VISTA</th>
-                    <th>VENDAS A PRAZO</th>
+                    <th>VENDAS À VISTA<br />(R$)</th>
+                    <th>VENDAS A PRAZO<br />(R$)</th>
                     <th>PREVISTO / REALIZADO</th>
                   </tr>
                 </thead>
@@ -298,8 +298,8 @@
                 <tfoot>
                   <tr>
                     <th>TOTAIS:</th>
-                    <td id="print-total-vista">R$ 0,00</td>
-                    <td id="print-total-prazo">R$ 0,00</td>
+                    <td id="print-total-vista">0,00</td>
+                    <td id="print-total-prazo">0,00</td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -325,11 +325,15 @@
 
               <table class="tax-table">
                 <tr>
-                  <th>REGIME DE<br />TRIBUTAÇÃO:</th>
+                  <th>REGIME DE TRIBUTAÇÃO:</th>
+                </tr>
+                <tr>
                   <td id="print-regime"></td>
                 </tr>
                 <tr>
-                  <th>PRAZO MÉDIO<br />DE RECEBIMENTO:</th>
+                  <th>PRAZO MÉDIO DE RECEBIMENTO:</th>
+                </tr>
+                <tr>
                   <td><span id="print-prazo-medio">45</span> dias</td>
                 </tr>
               </table>

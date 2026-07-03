@@ -263,8 +263,8 @@ import {
       const printRow = document.createElement("tr");
       printRow.innerHTML = `
         <td data-print-month="${index}">${label}</td>
-        <td data-print-vista="${index}">R$ 0,00</td>
-        <td data-print-prazo="${index}">R$ 0,00</td>
+        <td data-print-vista="${index}">0,00</td>
+        <td data-print-prazo="${index}">0,00</td>
         <td data-print-status="${index}">${status}</td>
       `;
       print.appendChild(printRow);
@@ -307,6 +307,22 @@ import {
     return "PROPRIETÁRIO/SÓCIO/MANDATÁRIO";
   }
 
+  function formatMarketCurrency(value: number): string {
+    return formatCurrencyFromCents(value).replace(/^R\$\s?/, "");
+  }
+
+  function abbreviatedRegime(value: string): string {
+    const regimes: Record<string, string> = {
+      "Lucro Presumido": "Lucro Pres.",
+      "Lucro Real": "Lucro Real",
+      "MEI": "MEI",
+      "Simples": "Simples",
+      "Simples Nacional": "Simples Nac."
+    };
+
+    return regimes[value] ?? value;
+  }
+
   function renderPreview(): void {
     const rows = monthRows();
     const totals = sumRows(rows);
@@ -318,12 +334,12 @@ import {
     text("print-cnpj", input("cnpj").value);
     text("print-faturamento-anual", formatCurrencyFromCents(totals.brutoAnual));
     text("print-mes-referencia", formatMesAno(reference));
-    text("print-total-vista", formatCurrencyFromCents(totals.vista));
-    text("print-total-prazo", formatCurrencyFromCents(totals.prazo));
+    text("print-total-vista", formatMarketCurrency(totals.vista));
+    text("print-total-prazo", formatMarketCurrency(totals.prazo));
     text("print-cartoes", input("percentual-cartoes").value);
     text("print-cheques", input("percentual-cheques").value);
     text("print-titulos", input("percentual-titulos").value);
-    text("print-regime", select("regime-tributacao").value);
+    text("print-regime", abbreviatedRegime(select("regime-tributacao").value));
     text("print-prazo-medio", input("prazo-medio").value || "45");
     text("print-cidade-uf", `${city}-${uf}`);
     text("print-data", formatDatePtBr(input("data-assinatura").value));
@@ -333,8 +349,8 @@ import {
 
     rows.forEach((row, index) => {
       textBySelector(`[data-print-month="${index}"]`, formatMesAno(row.mesAno));
-      textBySelector(`[data-print-vista="${index}"]`, formatCurrencyFromCents(row.vendasVista));
-      textBySelector(`[data-print-prazo="${index}"]`, formatCurrencyFromCents(row.vendasPrazo));
+      textBySelector(`[data-print-vista="${index}"]`, formatMarketCurrency(row.vendasVista));
+      textBySelector(`[data-print-prazo="${index}"]`, formatMarketCurrency(row.vendasPrazo));
       textBySelector(`[data-print-status="${index}"]`, row.situacao);
     });
     updateRegimeOptions();

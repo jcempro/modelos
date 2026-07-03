@@ -50,7 +50,9 @@ Total de Vendas a Vista + Total de Vendas a Prazo
 
 Totais exibidos devem corresponder exatamente a soma dos doze meses de cada coluna.
 
-Na impressao, a tabela deve usar largura proporcional para Mes/Ano, Vendas a Vista, Vendas a Prazo e Situacao, comportando valores em milhoes. A largura reduzida pela ausencia do prazo medio repetido deve liberar area lateral direita para Percentual de Recebimento, Regime de Tributacao e Prazo Medio, alinhados ao topo da tabela.
+Na impressao, a tabela deve usar largura proporcional para Mes/Ano, Vendas a Vista, Vendas a Prazo e Situacao, comportando valores ate R$ 99.999.999,99 nas colunas monetarias. Para preservar largura, as linhas mensais e totais podem omitir o prefixo `R$` quando o cabecalho das colunas indicar `(R$)`.
+
+A largura reduzida pela ausencia do prazo medio repetido deve liberar area lateral direita para Percentual de Recebimento, Regime de Tributacao e Prazo Medio, alinhados ao topo da tabela. Regime de Tributacao e Prazo Medio podem ser apresentados como blocos verticais chave/valor, em linhas, para evitar estouro horizontal. Valores de regime podem usar abreviacoes inequívocas, como `Simples Nac.` e `Lucro Pres.`.
 
 ## 6. Distribuicao, Edicao e Previsao
 

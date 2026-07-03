@@ -388,8 +388,8 @@ input:disabled {
 
 .market-block {
   display: grid;
-  grid-template-columns: 11.7cm 5.85cm;
-  gap: 0.65cm;
+  grid-template-columns: 11.55cm 5.55cm;
+  gap: 0.32cm;
   align-items: start;
 }
 
@@ -411,13 +411,15 @@ input:disabled {
 }
 
 .market-table th {
-  font-size: 8pt;
+  font-size: 7.6pt;
   font-weight: bold !important;
+  line-height: 1.05;
   text-align: center;
 }
 
 .market-table td {
   text-align: right;
+  white-space: nowrap;
 }
 
 .market-table td:first-child,
@@ -447,16 +449,16 @@ input:disabled {
 }
 
 .market-table th:first-child {
-  width: 1.85cm;
+  width: 1.65cm;
 }
 
 .market-table th:nth-child(2),
 .market-table th:nth-child(3) {
-  width: 3.35cm;
+  width: 2.95cm;
 }
 
 .market-table th:nth-child(4) {
-  width: 2.25cm;
+  width: 2.15cm;
 }
 
 .percent-table th,
@@ -469,8 +471,12 @@ input:disabled {
 }
 
 .percent-table th,
-.tax-table th {
-  width: 2.7cm;
+.percent-table td {
+  font-size: 9.2pt;
+}
+
+.percent-table th {
+  width: 2.18cm;
   text-align: left;
   font-weight: 400;
 }
@@ -482,6 +488,27 @@ input:disabled {
 
 .tax-table {
   margin-top: 0.32cm;
+}
+
+.tax-table th,
+.tax-table td {
+  width: auto;
+  text-align: left;
+}
+
+.tax-table th {
+  height: auto;
+  padding: 0.05cm 0.08cm;
+  background: #fff;
+  font-size: 7.8pt;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.tax-table td {
+  height: 0.5cm;
+  font-size: 9pt;
+  font-weight: 700;
 }
 
 .signature-date {
