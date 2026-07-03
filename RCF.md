@@ -226,6 +226,8 @@ Operações críticas de build devem ser fail-safe: falhas de IO, cache corrompi
 
 O pipeline deve validar, antes de publicar, que nenhum caminho público em `site/` ou `dist/` contenha o segmento `src/`, que cada página funcional existente em `src/` seja materializada diretamente na raiz lógica correspondente do domínio, e que `site/` e `dist/` permaneçam estruturalmente consistentes.
 
+Workflows de publicação devem usar versões de ações oficiais compatíveis com o runtime JavaScript vigente do GitHub Actions, sem recorrer a variáveis de escape para runtimes obsoletos como `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION`.
+
 Workflows de CI devem ter limite máximo de 10 minutos por execução. Caches no GitHub Actions só devem ser usados quando o ganho esperado superar o custo de restauração e gravação para o tamanho real do projeto.
 
 ### RN023 - Robustez Permanente
@@ -408,6 +410,7 @@ Decisões globais registradas:
 - A publicação estática deve usar `dist/`, preservando a saída de produção já validada.
 - O workflow de publicação deve enviar `dist/` ao GitHub Pages em push na branch de publicação configurada, mantendo pull requests restritos a validação, testes e geração de artefatos.
 - O artefato de publicação deve incluir `CNAME` e `.nojekyll`, publicar somente a raiz lógica de `dist/` e falhar se `src/` aparecer como diretório, segmento de caminho ou referência pública em `site/` ou `dist/`.
+- As ações oficiais de checkout, setup de Node, upload de artefatos, configuração de Pages, upload do artefato Pages e deploy Pages devem permanecer em versões compatíveis com Node 24 ou runtime posterior vigente no GitHub Actions.
 - Qualquer alteração futura no pipeline deve preservar a correspondência `src/<caminho-logico>` -> `site/<caminho-logico>` -> `dist/<caminho-logico>` -> `https://modelos.jcem.pro/<caminho-logico>`.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
 - URLs internas de assets e bundles em páginas publicadas devem ser estáveis com ou sem barra final, preferencialmente root-relative sob `https://modelos.jcem.pro/`.
