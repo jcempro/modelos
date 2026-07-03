@@ -70,6 +70,9 @@ declare global {
     bundle: {
       bindDownload: (selector?: string) => void;
     };
+    chrome: {
+      render: (options?: ChromeOptions) => void;
+    };
     share: {
       bindToolbar: (selector: string, options?: ShareOptions) => void;
       buildUrl: (mode: ShareMode, options?: ShareOptions, event?: Event) => ShareBuildResult;
@@ -159,6 +162,15 @@ declare global {
     pageConfig: PageConfig;
     scale?: number;
     source?: Element;
+  }
+
+  interface ChromeOptions {
+    actionsSelector?: string;
+    author?: string;
+    domain?: string;
+    licenseName?: string;
+    licenseUrl?: string;
+    mountBefore?: Element | string | null;
   }
 
   interface PdfOptions {

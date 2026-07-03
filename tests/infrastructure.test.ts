@@ -75,3 +75,27 @@ test("build config keeps source and public paths explicit", async () => {
   assert.ok(config.build.rootPassthroughFiles.includes("CNAME"));
   assert.equal(config.build.generatedRootFiles[".nojekyll"], "");
 });
+
+test("modules use shared institutional chrome except dizimo", async () => {
+  const violations: string[] = [];
+
+  for (const file of await collectIndexFiles()) {
+    const normalized = file.split(path.sep).join("/");
+    if (normalized === "src/dizimo/index.html") {
+      continue;
+    }
+
+    const html = await readFile(file, "utf8");
+    if (!html.includes('/assets/js/documentos.js')) {
+      violations.push(`${normalized}: missing shared documentos.js`);
+    }
+    if (!html.includes("data-jcem-actions")) {
+      violations.push(`${normalized}: missing shared chrome action slot`);
+    }
+    if (/<\s*(?:header|footer)\b/i.test(html)) {
+      violations.push(`${normalized}: declares local header/footer`);
+    }
+  }
+
+  assert.deepEqual(violations, []);
+});

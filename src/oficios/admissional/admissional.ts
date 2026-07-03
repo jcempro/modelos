@@ -132,6 +132,7 @@
   }
 
   api.ready(() => {
+    api.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".versao" });
     api.autosave.indicator(".autosave");
     api.image.load({ key: "timbre", selector: "img.logo" });
     api.print.createPageStyle(pageConfig);

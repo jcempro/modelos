@@ -818,6 +818,75 @@
     }
   }
 
+  const chromeDefaults = {
+    author: "JCEM",
+    domain: "tools.jcem.pro",
+    licenseName: "Mozilla Public License 2.0",
+    licenseUrl: "https://www.mozilla.org/MPL/2.0/"
+  };
+
+  function removeExistingChrome(): void {
+    for (const element of $(".jcem-chrome-header,.jcem-chrome-footer")) {
+      element.remove();
+    }
+  }
+
+  function moveActionSlot(actions: HTMLElement, selector?: string): void {
+    const source = selector ? one<HTMLElement>(selector) : null;
+    if (!source) {
+      return;
+    }
+
+    while (source.firstChild) {
+      actions.appendChild(source.firstChild);
+    }
+    source.remove();
+  }
+
+  function renderChrome(options: ChromeOptions = {}): void {
+    removeExistingChrome();
+
+    const domain = options.domain ?? chromeDefaults.domain;
+    const licenseName = options.licenseName ?? chromeDefaults.licenseName;
+    const licenseUrl = options.licenseUrl ?? chromeDefaults.licenseUrl;
+    const author = options.author ?? chromeDefaults.author;
+    const mount = typeof options.mountBefore === "string"
+      ? one(options.mountBefore)
+      : options.mountBefore ?? d.body.firstElementChild;
+
+    const header = d.createElement("header");
+    header.className = "jcem-chrome jcem-chrome-header no-print";
+    header.innerHTML = `
+      <div class="jcem-chrome-identity">
+        <a class="jcem-chrome-brand" href="https://${domain}/">Tools JCEM</a>
+        <p>Ferramentas e modelos Web estáticos publicados em <strong>${domain}</strong>.</p>
+        <p>Licença: <a href="${licenseUrl}" rel="license noopener" target="_blank">${licenseName}</a>.</p>
+      </div>
+      <div class="jcem-chrome-meta">
+        <span class="jcem-chrome-domain">${domain}</span>
+        <span class="ico autosave jcem-autosave">Execução local no navegador; salvamento local quando aplicável.</span>
+      </div>
+      <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
+    `;
+
+    const actions = one<HTMLElement>(".jcem-chrome-actions", header);
+    if (actions) {
+      moveActionSlot(actions, options.actionsSelector);
+    }
+
+    const footer = d.createElement("footer");
+    footer.className = "jcem-chrome jcem-chrome-footer no-print";
+    footer.innerHTML = `
+      <p><strong>Disclaimer:</strong> modelos e ferramentas são recursos auxiliares e não substituem conferência técnica, jurídica, contábil, regulatória ou profissional adequada ao caso concreto.</p>
+      <p><strong>Licença:</strong> código disponibilizado sob <a href="${licenseUrl}" rel="license noopener" target="_blank">${licenseName}</a>; preserve avisos e consulte o texto integral para direitos e obrigações.</p>
+      <p><strong>Autor:</strong> ${author}.</p>
+      <p><strong>Isenção de responsabilidade e garantia:</strong> o software é fornecido "no estado em que se encontra", sem garantias de qualquer natureza, expressas, implícitas ou legais, inclusive quanto à conformidade legal, regulatória, ausência de defeitos, adequação a finalidades específicas ou não violação de direitos.</p>
+    `;
+
+    d.body.insertBefore(header, mount ?? null);
+    d.body.appendChild(footer);
+  }
+
   w.JCEMDocumentos = {
     $,
     attr,
@@ -835,6 +904,9 @@
     },
     bundle: {
       bindDownload: bindBundleDownload
+    },
+    chrome: {
+      render: renderChrome
     },
     date: {
       current: formatCurrentDate

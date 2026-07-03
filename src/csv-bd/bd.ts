@@ -258,21 +258,11 @@ import {
     }
   }
 
-  async function bindBundleLink(): Promise<void> {
-    const link = d.querySelector<HTMLAnchorElement>("[data-bundle-download]");
-    if (!link || !/^https?:$/i.test(w.location.protocol)) {
-      return;
-    }
-
-    try {
-      const response = await w.fetch(link.href, { cache: "no-store", method: "HEAD" });
-      link.hidden = !response.ok;
-    } catch (_error) {
-      link.hidden = true;
-    }
-  }
-
   ready(() => {
+    const shared = w.JCEMDocumentos;
+    shared?.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".bd-app" });
+    shared?.bundle.bindDownload();
+
     input("#csv-file").addEventListener("change", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || !target.files?.[0]) {
@@ -285,7 +275,6 @@ import {
     button("#clear").addEventListener("click", clearAll);
     button("#download").addEventListener("click", downloadCsv);
     button("#copy-log").addEventListener("click", () => void copyLog());
-    void bindBundleLink();
     log("Ferramenta pronta para conversao local.");
   });
 })(window, document);

@@ -379,7 +379,7 @@ O arquivo `src/csv-bd/bd.ts` deve conter apenas a integração da interface, flu
 ### ARQ003 - Decisões Arquiteturais Locais
 
 - O módulo permanece estático, offline e executado integralmente no navegador.
-- O módulo não é documento imprimível e não consome regras A4, PDF ou toolbar documental.
+- O módulo não é documento imprimível e não consome regras A4 ou PDF, mas deve consumir o cabeçalho, a barra de ações extensível e o rodapé institucionais da infraestrutura compartilhada global.
 - O núcleo de transformação tabular foi promovido para a camada compartilhada por possuir potencial de reuso em futuras ferramentas.
 - A saída CSV deve ser produzida em UTF-8 com BOM.
 - Conflitos de consolidação de nomes devem permanecer rastreáveis e expostos ao usuário antes da exportação final.

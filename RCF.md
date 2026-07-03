@@ -19,7 +19,7 @@ Disponibilizar modelos e utilitários Web estáticos, com infraestrutura compart
 - Persistência local no navegador por `localStorage`.
 - Geração de PDF no cliente quando houver botão dedicado.
 - Preenchimento parametrizado por query string.
-- Publicação estática sob o domínio `modelos.jcem.pro`.
+- Publicação estática sob o domínio `tools.jcem.pro`.
 
 ## Regras de Negócio Globais
 
@@ -46,7 +46,7 @@ Documentos devem separar conceitualmente:
 
 Elementos não imprimíveis devem ser visíveis apenas na interface Web e ocultados em `@media print` e em qualquer modo programático de geração de PDF.
 
-Páginas que exibam simultaneamente aviso de cookies e barra de ferramentas devem informar, na interface Web e fora da área imprimível, a versão canônica atualizada do modelo sob `https://modelos.jcem.pro/<path-do-modelo>`, sem incluir `index.html`, além da orientação para desabilitar cabeçalho e rodapé do navegador ao imprimir.
+Páginas que exibam simultaneamente aviso de cookies e barra de ferramentas devem informar, na interface Web e fora da área imprimível, a versão canônica atualizada do modelo sob `https://tools.jcem.pro/<path-do-modelo>`, sem incluir `index.html`, além da orientação para desabilitar cabeçalho e rodapé do navegador ao imprimir.
 
 ### RN004 - Fidelidade A4
 
@@ -72,7 +72,9 @@ Tudo que possuir potencial de reutilização entre documentos deve ficar em cama
 
 Devem ser centralizados, quando aplicável:
 
+- Cabeçalho institucional.
 - Barra de ferramentas.
+- Rodapé institucional.
 - Sistema de impressão e exportação PDF.
 - Estilos documentais comuns.
 - Componentes de formulário.
@@ -99,6 +101,20 @@ A barra poderá conter ações:
 A configuração deve permitir habilitar, ocultar, ordenar e parametrizar ações sem duplicar lógica em cada documento.
 
 Controles de download de bundle devem usar um ícone ou símbolo visual comum de download, preservando texto acessível ou rótulo compreensível para o usuário.
+
+Cabeçalho institucional, barra de ferramentas e rodapé institucional são componentes globais obrigatórios para todos os módulos publicados, com exceção explícita do módulo `dizimo`, preservado por compatibilidade visual e histórica.
+
+O cabeçalho e o rodapé globais devem ser únicos, reutilizáveis e compartilhados, implementados na infraestrutura comum do projeto. Módulos não podem duplicar cabeçalhos ou rodapés próprios nem alterar a estrutura base desses componentes.
+
+O cabeçalho global deve informar o domínio `tools.jcem.pro` e a licença do projeto como `Mozilla Public License 2.0`, com link para a página oficial do texto integral em `https://www.mozilla.org/MPL/2.0/`.
+
+O rodapé global deve conter disclaimer, versão resumida da licença, nome do autor, isenção de responsabilidade, isenção de garantia e observação explícita de que o software é fornecido "no estado em que se encontra", sem garantias de qualquer natureza, inclusive quanto à conformidade legal, regulatória ou adequação a finalidades específicas.
+
+A barra de ferramentas global deve ser extensível por mecanismos formais de extensão, como slots, hooks ou configuração equivalente. Módulos podem fornecer ações específicas nesses pontos de extensão sem modificar a estrutura base do cabeçalho, da barra ou do rodapé.
+
+Exceções aos componentes globais só podem existir quando previstas explicitamente neste RCF ou no RCF específico aplicável, sem inferência por conveniência local.
+
+Módulos imprimíveis devem ocultar automaticamente cabeçalho, barra de ferramentas, rodapé e demais elementos exclusivamente de interface durante impressão nativa, PDF dedicado e qualquer modo programático equivalente.
 
 ### RN009 - Salvamento Automático
 
@@ -307,7 +323,7 @@ O build deve falhar de forma segura quando não conseguir gerar, otimizar, incor
 
 `src/` contém exclusivamente o código-fonte do projeto, incluindo `.ts`, `.tsx`, `.html`, `.css`, `.scss` ou Sass quando adotado, RCFs específicos e demais arquivos-fonte necessários ao desenvolvimento. Nenhum artefato gerado deve ser armazenado em `src/`.
 
-`src/` nunca integra a URL pública. Sua estrutura lógica deve ser projetada para que `src/<modulo>/...` resulte em `https://modelos.jcem.pro/<modulo>/...`, sem prefixo `src/` ou equivalente.
+`src/` nunca integra a URL pública. Sua estrutura lógica deve ser projetada para que `src/<modulo>/...` resulte em `https://tools.jcem.pro/<modulo>/...`, sem prefixo `src/` ou equivalente.
 
 `site/` é cache de construção e raiz publicável do site no GitHub Pages. Ele pode conter HTML, CSS, JavaScript intermediários gerados, arquivos raiz obrigatórios de publicação e bundles ZIP publicáveis, legíveis para depuração local quando aplicável, mas deve ser tratado como reconstruível, não como fonte canônica. Sua árvore deve espelhar a estrutura pública efetiva do site, preservando apenas artefatos intermediários ou publicáveis necessários ao build incremental e à publicação, sem reproduzir a organização interna do repositório quando ela diferir da URL publicada.
 
@@ -393,7 +409,7 @@ Mudanças em CSS, fontes, escalas, margens, tabelas, inputs, placeholders, timbr
 
 Interface Web deve usar classes ou atributos claros para indicar elementos não imprimíveis.
 
-O padrão compartilhado deve suportar classes como `.menu`, `.nota`, `.cookie`, `.autosave` e `.no-print`, ocultando-as em impressão e no modo programático de PDF.
+O padrão compartilhado deve suportar classes como `.menu`, `.nota`, `.cookie`, `.autosave`, `.jcem-chrome` e `.no-print`, ocultando-as em impressão e no modo programático de PDF.
 
 ### ARQ010 - Decisões Arquiteturais
 
@@ -407,6 +423,7 @@ Decisões globais registradas:
 - Todo conteúdo fonte real do site deve ficar em `src/`.
 - `site/` é cache intermediário reconstruível e não deve conter fonte canônica.
 - Infraestrutura com potencial de reuso fica em `src/assets/` ou `src/components/`, conforme a natureza do recurso.
+- Cabeçalho, barra de ferramentas e rodapé institucionais pertencem à infraestrutura compartilhada em `src/assets/` e devem ser reutilizados por todos os módulos publicados, exceto `dizimo`.
 - Núcleos reutilizáveis de ferramentas não documentais, como transformação tabular client-side, pertencem a `src/assets/js/` quando puderem servir a múltiplos módulos.
 - Documentos consomem APIs compartilhadas e mantêm localmente apenas configuração e regras específicas.
 - Validações comuns pertencem ao catálogo global, mas sua aplicação é declarada por campo em cada documento.
@@ -430,9 +447,9 @@ Decisões globais registradas:
 - O artefato de publicação deve incluir `CNAME` e `.nojekyll`, publicar somente a raiz lógica de `site/` e falhar se `src/` aparecer como diretório, segmento de caminho ou referência pública em `site/` ou `dist/`.
 - `site/` e `dist/` devem ser podados pelo build para remover arquivos e diretórios obsoletos; a validação deve falhar diante de qualquer artefato ou diretório vazio que não corresponda à árvore pública esperada.
 - As ações oficiais de checkout, setup de Node, upload de artefatos, configuração de Pages, upload do artefato Pages e deploy Pages devem permanecer em versões compatíveis com Node 24 ou runtime posterior vigente no GitHub Actions.
-- Qualquer alteração futura no pipeline deve preservar a correspondência `src/<caminho-logico>` -> `site/<caminho-logico>` -> `https://modelos.jcem.pro/<caminho-logico>`, mantendo `dist/<caminho-logico>` apenas como espelho local otimizado quando aplicável.
+- Qualquer alteração futura no pipeline deve preservar a correspondência `src/<caminho-logico>` -> `site/<caminho-logico>` -> `https://tools.jcem.pro/<caminho-logico>`, mantendo `dist/<caminho-logico>` apenas como espelho local otimizado quando aplicável.
 - Recursos externos necessários ao funcionamento offline devem ser resolvidos por dependências locais versionadas e incorporados pelo pipeline de Bundle.
-- URLs internas de assets e bundles em páginas publicadas devem ser estáveis com ou sem barra final, preferencialmente root-relative sob `https://modelos.jcem.pro/`.
+- URLs internas de assets e bundles em páginas publicadas devem ser estáveis com ou sem barra final, preferencialmente root-relative sob `https://tools.jcem.pro/`.
 - O pipeline não deve publicar arquivos `*.bundle.html` soltos; a validação deve exigir `*.bundle.zip` em `site/` e bloquear HTML de bundle fora do arquivo compactado.
 - O GitHub Actions deve evitar cache de build quando ele tornar o workflow mais lento que a recomputação e deve publicar artefatos já contendo saídas Web e Bundle.
 

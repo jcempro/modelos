@@ -4,29 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Conversor Universal de Modelos de Dados CSV</title>
+    <link rel="stylesheet" href="/assets/css/documentos.css" />
     <link rel="stylesheet" href="/csv-bd/bd.css" />
+    <script src="/assets/js/documentos.js"></script>
     <script src="/csv-bd/bd.js"></script>
   </head>
 
   <body>
+    <div data-jcem-actions hidden>
+      <a
+        class="ico bundle"
+        href="/csv-bd/csv-bd.bundle.zip"
+        download
+        hidden
+        data-bundle-download
+        >Bundle offline</a
+      >
+    </div>
+
     <main class="bd-app" aria-labelledby="bd-title">
-      <header class="bd-header">
-        <div>
-          <h1 id="bd-title">Conversor de modelos CSV</h1>
-          <p>
-            Transformação local, offline e rastreável entre linhas por cliente e
-            linhas por telefone.
-          </p>
-        </div>
-        <a
-          class="bundle-link bundle"
-          href="/csv-bd/csv-bd.bundle.zip"
-          download
-          hidden
-          data-bundle-download
-          >Bundle offline</a
-        >
-      </header>
+      <section class="module-intro" aria-labelledby="bd-title">
+        <h1 id="bd-title">Conversor de modelos CSV</h1>
+        <p>
+          Transformação local, offline e rastreável entre linhas por cliente e
+          linhas por telefone.
+        </p>
+      </section>
 
       <section class="workspace" aria-label="Conversor">
         <form class="panel controls" id="bd-form">
