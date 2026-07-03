@@ -583,8 +583,12 @@
   }
   (function bootstrapBd(w, d) {
     "use strict";
+    const inferenceDelayMs = 350;
+    const maxHeaderScanChars = 128 * 1024;
     let sourceDataset = null;
     let currentResult = null;
+    let inferenceTimer = 0;
+    let inferenceRun = 0;
     const nameDecisions = {};
     function one(selector) {
       const element = d.querySelector(selector);
@@ -642,6 +646,10 @@
         cell.textContent = values[index] ?? "-";
       });
     }
+    function updateDirection(from, to = oppositeModel(from)) {
+      select("#source-model").value = from;
+      select("#target-model").value = to;
+    }
     function readSourceText() {
       return textarea("#csv-text").value.trim();
     }
@@ -665,6 +673,7 @@
       }
     }
     function convert() {
+      cancelPendingInference();
       clearLogs();
       setOutput("");
       hideDecisions();
@@ -676,8 +685,7 @@
       }
       const from = inferModelKind(sourceDataset);
       const to = oppositeModel(from);
-      select("#source-model").value = from;
-      select("#target-model").value = to;
+      updateDirection(from, to);
       log(`Modelo de origem inferido: ${modelLabel(from)}. Saida definida automaticamente: ${modelLabel(to)}.`);
       currentResult = convertDataset(sourceDataset, from, to, {
         identifierColumns: identifiers(),
@@ -713,6 +721,79 @@
     }
     function modelLabel(value) {
       return value === "modelo1" ? "Modelo 1" : "Modelo 2";
+    }
+    function cancelPendingInference() {
+      inferenceRun += 1;
+      if (inferenceTimer) {
+        w.clearTimeout(inferenceTimer);
+        inferenceTimer = 0;
+      }
+    }
+    function scheduleInference(reason) {
+      cancelPendingInference();
+      const run = inferenceRun;
+      inferenceTimer = w.setTimeout(() => {
+        inferenceTimer = 0;
+        void inferDirectionPreview(run, reason);
+      }, inferenceDelayMs);
+    }
+    async function inferDirectionPreview(run, reason) {
+      const text = textarea("#csv-text").value;
+      if (!text.trim()) {
+        updateDirection("modelo1");
+        updateSummary("-", "-", null);
+        return;
+      }
+      await yieldToBrowser();
+      if (run !== inferenceRun) {
+        return;
+      }
+      const preview = csvHeaderPreview(text);
+      if (!preview) {
+        return;
+      }
+      try {
+        const dataset = parseCsv(preview);
+        if (run !== inferenceRun || dataset.columns.length === 0) {
+          return;
+        }
+        const from = inferModelKind(dataset);
+        const to = oppositeModel(from);
+        updateDirection(from, to);
+        updateSummary(from, to, null);
+        if (reason === "arquivo") {
+          log(`Modelo de origem inferido apos leitura do arquivo: ${modelLabel(from)}.`);
+        }
+      } catch (_error) {
+      }
+    }
+    function yieldToBrowser() {
+      return new Promise((resolve) => {
+        w.setTimeout(resolve, 0);
+      });
+    }
+    function csvHeaderPreview(text) {
+      const limit = Math.min(text.length, maxHeaderScanChars);
+      let quote = null;
+      for (let index = 0; index < limit; index += 1) {
+        const char = text[index] ?? "";
+        const next = text[index + 1] ?? "";
+        if ((char === '"' || char === "'") && (!quote || quote === char)) {
+          if (quote === char && next === char) {
+            index += 1;
+            continue;
+          }
+          quote = quote ? null : char;
+          continue;
+        }
+        if (!quote && (char === "\n" || char === "\r")) {
+          const end = char === "\r" && next === "\n" ? index + 2 : index + 1;
+          return `${text.slice(0, end)}
+`;
+        }
+      }
+      return `${text.slice(0, limit)}
+`;
     }
     function renderDecisions(decisions) {
       const container = one("#decisions");
@@ -767,6 +848,7 @@
       const decoded = decodeTextBuffer(await file.arrayBuffer());
       textarea("#csv-text").value = decoded.text;
       log(`Codificacao detectada: ${decoded.dialect.encoding}.`);
+      scheduleInference("arquivo");
     }
     function clearAll() {
       sourceDataset = null;
@@ -819,6 +901,13 @@
           return;
         }
         void loadFile(target.files[0]);
+      });
+      textarea("#csv-text").addEventListener("input", () => {
+        sourceDataset = null;
+        currentResult = null;
+        setOutput("");
+        hideDecisions();
+        scheduleInference("texto");
       });
       button("#convert").addEventListener("click", convert);
       button("#clear").addEventListener("click", clearAll);

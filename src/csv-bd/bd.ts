@@ -15,8 +15,12 @@ import {
 (function bootstrapBd(w: Window, d: Document): void {
   "use strict";
 
+  const inferenceDelayMs = 350;
+  const maxHeaderScanChars = 128 * 1024;
   let sourceDataset: TabularDataset | null = null;
   let currentResult: ConversionResult | null = null;
+  let inferenceTimer = 0;
+  let inferenceRun = 0;
   const nameDecisions: Record<string, string> = {};
 
   function one<T extends Element = Element>(selector: string): T {
@@ -87,6 +91,11 @@ import {
     });
   }
 
+  function updateDirection(from: TabularModelKind, to = oppositeModel(from)): void {
+    select("#source-model").value = from;
+    select("#target-model").value = to;
+  }
+
   function readSourceText(): string {
     return textarea("#csv-text").value.trim();
   }
@@ -113,6 +122,7 @@ import {
   }
 
   function convert(): void {
+    cancelPendingInference();
     clearLogs();
     setOutput("");
     hideDecisions();
@@ -126,8 +136,7 @@ import {
 
     const from = inferModelKind(sourceDataset);
     const to = oppositeModel(from);
-    select("#source-model").value = from;
-    select("#target-model").value = to;
+    updateDirection(from, to);
     log(`Modelo de origem inferido: ${modelLabel(from)}. Saida definida automaticamente: ${modelLabel(to)}.`);
     currentResult = convertDataset(sourceDataset, from, to, {
       identifierColumns: identifiers(),
@@ -169,6 +178,90 @@ import {
 
   function modelLabel(value: TabularModelKind): string {
     return value === "modelo1" ? "Modelo 1" : "Modelo 2";
+  }
+
+  function cancelPendingInference(): void {
+    inferenceRun += 1;
+    if (inferenceTimer) {
+      w.clearTimeout(inferenceTimer);
+      inferenceTimer = 0;
+    }
+  }
+
+  function scheduleInference(reason: "arquivo" | "texto"): void {
+    cancelPendingInference();
+    const run = inferenceRun;
+    inferenceTimer = w.setTimeout(() => {
+      inferenceTimer = 0;
+      void inferDirectionPreview(run, reason);
+    }, inferenceDelayMs);
+  }
+
+  async function inferDirectionPreview(run: number, reason: "arquivo" | "texto"): Promise<void> {
+    const text = textarea("#csv-text").value;
+    if (!text.trim()) {
+      updateDirection("modelo1");
+      updateSummary("-", "-", null);
+      return;
+    }
+
+    await yieldToBrowser();
+    if (run !== inferenceRun) {
+      return;
+    }
+
+    const preview = csvHeaderPreview(text);
+    if (!preview) {
+      return;
+    }
+
+    try {
+      const dataset = parseCsv(preview);
+      if (run !== inferenceRun || dataset.columns.length === 0) {
+        return;
+      }
+      const from = inferModelKind(dataset);
+      const to = oppositeModel(from);
+      updateDirection(from, to);
+      updateSummary(from, to, null);
+      if (reason === "arquivo") {
+        log(`Modelo de origem inferido apos leitura do arquivo: ${modelLabel(from)}.`);
+      }
+    } catch (_error) {
+      // Conteudo ainda incompleto durante digitacao; a conversao final emitira erro se persistir.
+    }
+  }
+
+  function yieldToBrowser(): Promise<void> {
+    return new Promise((resolve) => {
+      w.setTimeout(resolve, 0);
+    });
+  }
+
+  function csvHeaderPreview(text: string): string {
+    const limit = Math.min(text.length, maxHeaderScanChars);
+    let quote: string | null = null;
+
+    for (let index = 0; index < limit; index += 1) {
+      const char = text[index] ?? "";
+      const next = text[index + 1] ?? "";
+
+      if ((char === "\"" || char === "'") && (!quote || quote === char)) {
+        if (quote === char && next === char) {
+          index += 1;
+          continue;
+        }
+        quote = quote ? null : char;
+        continue;
+      }
+
+      if (!quote && (char === "\n" || char === "\r")) {
+        const end = char === "\r" && next === "\n" ? index + 2 : index + 1;
+        return `${text.slice(0, end)}\n`;
+      }
+    }
+
+    return `${text.slice(0, limit)}\n`;
   }
 
   function renderDecisions(decisions: NameDecision[]): void {
@@ -228,6 +321,7 @@ import {
     const decoded = decodeTextBuffer(await file.arrayBuffer());
     textarea("#csv-text").value = decoded.text;
     log(`Codificacao detectada: ${decoded.dialect.encoding}.`);
+    scheduleInference("arquivo");
   }
 
   function clearAll(): void {
@@ -286,6 +380,13 @@ import {
         return;
       }
       void loadFile(target.files[0]);
+    });
+    textarea("#csv-text").addEventListener("input", () => {
+      sourceDataset = null;
+      currentResult = null;
+      setOutput("");
+      hideDecisions();
+      scheduleInference("texto");
     });
     button("#convert").addEventListener("click", convert);
     button("#clear").addEventListener("click", clearAll);

@@ -255,6 +255,10 @@ A reconstrução deverá ser totalmente determinística.
 
 O conversor deverá inferir automaticamente o modelo da origem a partir da estrutura de colunas recebida.
 
+A inferência deverá ocorrer de forma antecipada ao selecionar um arquivo e ao inserir, colar ou digitar conteúdo CSV válido no campo de texto, atualizando a indicação de origem e destino antes da conversão final.
+
+Inferências antecipadas deverão ser assíncronas, canceláveis e limitadas ao necessário para identificar a estrutura, evitando travamentos da interface durante digitação, colagem ou arquivos grandes.
+
 Como existem apenas dois modelos vigentes, o destino deverá ser sempre o outro modelo.
 
 A interface não deverá permitir conversão com origem e destino iguais.
