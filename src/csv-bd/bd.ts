@@ -1,6 +1,8 @@
 import {
   convertDataset,
   decodeTextBuffer,
+  inferModelKind,
+  oppositeModel,
   parseCsv,
   serializeCsv,
   type ConversionIssue,
@@ -47,11 +49,6 @@ import {
 
   function button(selector: string): HTMLButtonElement {
     return one<HTMLButtonElement>(selector);
-  }
-
-  function model(selector: string): TabularModelKind {
-    const value = select(selector).value;
-    return value === "modelo1" ? "modelo1" : "modelo2";
   }
 
   function identifiers(): string[] {
@@ -127,8 +124,11 @@ import {
       return;
     }
 
-    const from = model("#source-model");
-    const to = model("#target-model");
+    const from = inferModelKind(sourceDataset);
+    const to = oppositeModel(from);
+    select("#source-model").value = from;
+    select("#target-model").value = to;
+    log(`Modelo de origem inferido: ${modelLabel(from)}. Saida definida automaticamente: ${modelLabel(to)}.`);
     currentResult = convertDataset(sourceDataset, from, to, {
       identifierColumns: identifiers(),
       nameDecisions
@@ -165,6 +165,10 @@ import {
       return "TAB";
     }
     return value;
+  }
+
+  function modelLabel(value: TabularModelKind): string {
+    return value === "modelo1" ? "Modelo 1" : "Modelo 2";
   }
 
   function renderDecisions(decisions: NameDecision[]): void {
@@ -226,15 +230,6 @@ import {
     log(`Codificacao detectada: ${decoded.dialect.encoding}.`);
   }
 
-  function swapModels(): void {
-    const source = select("#source-model");
-    const target = select("#target-model");
-    const previous = source.value;
-    source.value = target.value;
-    target.value = previous;
-    log(`Direcao alterada para ${source.options[source.selectedIndex]?.text ?? source.value} -> ${target.options[target.selectedIndex]?.text ?? target.value}.`);
-  }
-
   function clearAll(): void {
     sourceDataset = null;
     currentResult = null;
@@ -243,6 +238,8 @@ import {
     }
     textarea("#csv-text").value = "";
     setOutput("");
+    select("#source-model").value = "modelo1";
+    select("#target-model").value = "modelo2";
     updateSummary("-", "-", null);
     hideDecisions();
     clearLogs();
@@ -291,7 +288,6 @@ import {
       void loadFile(target.files[0]);
     });
     button("#convert").addEventListener("click", convert);
-    button("#swap").addEventListener("click", swapModels);
     button("#clear").addEventListener("click", clearAll);
     button("#download").addEventListener("click", downloadCsv);
     button("#copy-log").addEventListener("click", () => void copyLog());

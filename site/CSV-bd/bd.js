@@ -7,6 +7,7 @@
     hasBom: true,
     quote: '"'
   };
+  var localIdColumn = "id";
   function decodeTextBuffer(buffer) {
     const bytes = new Uint8Array(buffer);
     const hasBom = bytes.length >= 3 && bytes[0] === 239 && bytes[1] === 187 && bytes[2] === 191;
@@ -49,18 +50,32 @@
     return `\uFEFF${lines.join("\r\n")}\r
 `;
   }
+  function oppositeModel(model) {
+    return model === "modelo1" ? "modelo2" : "modelo1";
+  }
+  function inferModelKind(dataset) {
+    const phoneColumns = collectIndexedColumns(dataset.columns, "fone");
+    const nameColumns = collectIndexedColumns(dataset.columns, "nome");
+    const hasIndexedPhonePairs = phoneColumns.some((column) => column.index > 1) || nameColumns.some((column) => column.index > 1);
+    if (hasIndexedPhonePairs) {
+      return "modelo1";
+    }
+    const hasReplicatedCustomerColumns = dataset.columns.filter((column) => !isPairColumn(column) && !isLocalIdColumn(column)).some((column) => indexedColumn(column).index > 1);
+    if (hasReplicatedCustomerColumns) {
+      return "modelo2";
+    }
+    return "modelo1";
+  }
   function convertDataset(dataset, from, to, options = {}) {
     if (from === to) {
-      const result = from === "modelo2" ? normalizeModel2Dataset(dataset, options) : normalizeModel1Dataset(dataset);
-      result.issues.unshift({
-        code: "same-model",
-        message: "Origem e destino sao iguais; estrutura validada e telefones normalizados conforme o modelo.",
-        severity: "info"
-      });
       return {
-        dataset: result.dataset,
-        issues: result.issues,
-        pendingNameDecisions: result.pendingNameDecisions
+        dataset: cloneDataset(dataset),
+        issues: [{
+          code: "same-model",
+          message: "Origem e destino nao podem ser iguais; escolha o modelo oposto para conversao.",
+          severity: "error"
+        }],
+        pendingNameDecisions: []
       };
     }
     return from === "modelo1" ? convertModel1ToModel2(dataset, options) : convertModel2ToModel1(dataset, options);
@@ -202,6 +217,7 @@
   function convertModel1ToModel2(dataset, options) {
     const issues = [];
     const identifiers = options.identifierColumns ?? defaultIdentifierColumns;
+    const preserveLocalId = shouldPreserveLocalId(identifiers);
     const knownPhoneColumns = collectIndexedColumns(dataset.columns, "fone");
     const knownNameColumns = collectIndexedColumns(dataset.columns, "nome");
     if (knownPhoneColumns.length === 0) {
@@ -214,7 +230,7 @@
       const customerKey = resolveCustomerKey(record, identifiers, rowIndex);
       const customerAttributes = /* @__PURE__ */ new Map();
       for (const column of dataset.columns) {
-        if (isPairColumn(column)) {
+        if (isPairColumn(column) || !preserveLocalId && isLocalIdColumn(column)) {
           continue;
         }
         customerAttributes.set(column, record.get(column) ?? "");
@@ -245,7 +261,7 @@
       }
     });
     const occurrenceCount = Math.max(1, ...Array.from(aggregates.values()).map((aggregate) => aggregate.occurrences.length));
-    const attributeColumns = dataset.columns.filter((column) => !isPairColumn(column));
+    const attributeColumns = dataset.columns.filter((column) => !isPairColumn(column) && (preserveLocalId || !isLocalIdColumn(column)));
     const columns = ["Fone", "Nome", ...expandOccurrenceColumns(attributeColumns, occurrenceCount)];
     const rows = [];
     for (const aggregate of sortPhoneAggregates(aggregates)) {
@@ -322,34 +338,9 @@
       pendingNameDecisions: normalized.pendingNameDecisions
     };
   }
-  function normalizeModel1Dataset(dataset) {
-    const issues = [];
-    return {
-      dataset: {
-        columns: [...dataset.columns],
-        dialect: { ...dataset.dialect },
-        rows: dataset.rows.map((row, rowIndex) => dataset.columns.map((column, columnIndex) => {
-          const value = row[columnIndex] ?? "";
-          if (!isBase(column, "fone")) {
-            return value;
-          }
-          const phone = normalizePhone(value);
-          if (!phone && value.trim()) {
-            issues.push({
-              code: "invalid-phone",
-              message: `Linha ${rowIndex + 2}: coluna ${column} nao contem identificador numerico de telefone.`,
-              severity: "warning"
-            });
-          }
-          return phone;
-        }))
-      },
-      issues,
-      pendingNameDecisions: []
-    };
-  }
   function normalizeModel2Dataset(dataset, options) {
     const identifiers = options.identifierColumns ?? defaultIdentifierColumns;
+    const preserveLocalId = shouldPreserveLocalId(identifiers);
     const issues = [];
     const knownPhoneColumns = collectIndexedColumns(dataset.columns, "fone");
     const knownNameColumns = collectIndexedColumns(dataset.columns, "nome");
@@ -364,7 +355,7 @@
         severity: "warning"
       });
     }
-    const customerColumns = Array.from(new Set(dataset.columns.filter((column) => !isPairColumn(column)).map((column) => indexedColumn(column).base)));
+    const customerColumns = Array.from(new Set(dataset.columns.filter((column) => !isPairColumn(column) && (preserveLocalId || !isLocalIdColumn(column))).map((column) => indexedColumn(column).base)));
     const maxCustomerOccurrence = maxIndexedOccurrenceForColumns(dataset.columns.filter((column) => !isPairColumn(column)));
     const pendingNameDecisions = [];
     const aggregates = /* @__PURE__ */ new Map();
@@ -448,6 +439,12 @@
   }
   function isPairColumn(column) {
     return isBase(column, "fone") || isBase(column, "nome");
+  }
+  function isLocalIdColumn(column) {
+    return normalizeKey(indexedColumn(column).base) === localIdColumn;
+  }
+  function shouldPreserveLocalId(identifiers) {
+    return identifiers.some((identifier) => normalizeKey(identifier) === localIdColumn);
   }
   function indexedColumn(column) {
     const match = /^(.*?)(?:\s+(\d+))?$/.exec(column.trim());
@@ -615,10 +612,6 @@
     function button(selector) {
       return one(selector);
     }
-    function model(selector) {
-      const value = select(selector).value;
-      return value === "modelo1" ? "modelo1" : "modelo2";
-    }
     function identifiers() {
       const values = input("#identifier-columns").value.split(",").map((value) => value.trim()).filter(Boolean);
       return values.length > 0 ? values : ["MCI", "CID", "MGI"];
@@ -681,8 +674,11 @@
         updateSummary("-", "-", null);
         return;
       }
-      const from = model("#source-model");
-      const to = model("#target-model");
+      const from = inferModelKind(sourceDataset);
+      const to = oppositeModel(from);
+      select("#source-model").value = from;
+      select("#target-model").value = to;
+      log(`Modelo de origem inferido: ${modelLabel(from)}. Saida definida automaticamente: ${modelLabel(to)}.`);
       currentResult = convertDataset(sourceDataset, from, to, {
         identifierColumns: identifiers(),
         nameDecisions
@@ -714,6 +710,9 @@
         return "TAB";
       }
       return value;
+    }
+    function modelLabel(value) {
+      return value === "modelo1" ? "Modelo 1" : "Modelo 2";
     }
     function renderDecisions(decisions) {
       const container = one("#decisions");
@@ -769,14 +768,6 @@
       textarea("#csv-text").value = decoded.text;
       log(`Codificacao detectada: ${decoded.dialect.encoding}.`);
     }
-    function swapModels() {
-      const source = select("#source-model");
-      const target = select("#target-model");
-      const previous = source.value;
-      source.value = target.value;
-      target.value = previous;
-      log(`Direcao alterada para ${source.options[source.selectedIndex]?.text ?? source.value} -> ${target.options[target.selectedIndex]?.text ?? target.value}.`);
-    }
     function clearAll() {
       sourceDataset = null;
       currentResult = null;
@@ -785,6 +776,8 @@
       }
       textarea("#csv-text").value = "";
       setOutput("");
+      select("#source-model").value = "modelo1";
+      select("#target-model").value = "modelo2";
       updateSummary("-", "-", null);
       hideDecisions();
       clearLogs();
@@ -828,7 +821,6 @@
         void loadFile(target.files[0]);
       });
       button("#convert").addEventListener("click", convert);
-      button("#swap").addEventListener("click", swapModels);
       button("#clear").addEventListener("click", clearAll);
       button("#download").addEventListener("click", downloadCsv);
       button("#copy-log").addEventListener("click", () => void copyLog());

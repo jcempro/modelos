@@ -105,6 +105,8 @@ Colunas desconhecidas jamais deverão ser descartadas.
 
 Toda coluna desconhecida deverá ser automaticamente incorporada ao modelo interno e preservada durante todas as conversões.
 
+A coluna local `id`, quando presente, deverá ser tratada como identificador operacional da origem e não como dado de domínio. Ela deverá ser ignorada e não preservada nas conversões, exceto quando o usuário a marcar expressamente no conversor como identificador a ser usado e preservado.
+
 ## Normalização do Campo Fone
 
 O campo Fone, em qualquer modelo, representa exclusivamente o identificador numérico do telefone.
@@ -246,6 +248,16 @@ Fone n
 Nome n
 
 A reconstrução deverá ser totalmente determinística.
+
+---
+
+## Inferência de Direção
+
+O conversor deverá inferir automaticamente o modelo da origem a partir da estrutura de colunas recebida.
+
+Como existem apenas dois modelos vigentes, o destino deverá ser sempre o outro modelo.
+
+A interface não deverá permitir conversão com origem e destino iguais.
 
 ---
 

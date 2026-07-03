@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   convertDataset,
+  inferModelKind,
+  oppositeModel,
   parseCsv,
   serializeCsv
 } from "../src/assets/js/tabular";
@@ -47,6 +49,46 @@ test("bd recognizes compact indexed phone/name columns in modelo 1", () => {
     ["2222", "Ana Casa", "100", "A"],
     ["3333", "Ana Trabalho", "100", "A"]
   ]);
+});
+
+test("bd ignores local id column unless explicitly marked as identifier", () => {
+  const source = parseCsv([
+    "id;MCI;Nome;Fone;Segmento",
+    "local-1;100;Ana;1111;A"
+  ].join("\n"));
+
+  const defaultResult = convertDataset(source, "modelo1", "modelo2");
+  assert.deepEqual(defaultResult.dataset.columns, ["Fone", "Nome", "MCI", "Segmento"]);
+  assert.deepEqual(defaultResult.dataset.rows, [["1111", "Ana", "100", "A"]]);
+
+  const explicitResult = convertDataset(source, "modelo1", "modelo2", {
+    identifierColumns: ["id", "MCI"]
+  });
+  assert.deepEqual(explicitResult.dataset.columns, ["Fone", "Nome", "id", "MCI", "Segmento"]);
+  assert.deepEqual(explicitResult.dataset.rows, [["1111", "Ana", "local-1", "100", "A"]]);
+});
+
+test("bd infers source model and uses the opposite model as target", () => {
+  const modelo1 = parseCsv([
+    "MCI;Nome;Fone;Nome2;Fone2",
+    "100;Ana;1111;Ana Casa;2222"
+  ].join("\n"));
+  const modelo2 = parseCsv([
+    "Fone;Nome;MCI;MCI 2",
+    "1111;Ana;100;200"
+  ].join("\n"));
+
+  assert.equal(inferModelKind(modelo1), "modelo1");
+  assert.equal(oppositeModel(inferModelKind(modelo1)), "modelo2");
+  assert.equal(inferModelKind(modelo2), "modelo2");
+  assert.equal(oppositeModel(inferModelKind(modelo2)), "modelo1");
+});
+
+test("bd rejects conversion with equal source and target models", () => {
+  const source = parseCsv("MCI;Nome;Fone\n100;Ana;1111\n");
+  const result = convertDataset(source, "modelo1", "modelo1");
+
+  assert.equal(result.issues.some((issue) => issue.code === "same-model" && issue.severity === "error"), true);
 });
 
 test("bd asks for name decision when the same phone has divergent names", () => {
@@ -99,49 +141,6 @@ test("bd infers the longest contained name variation automatically", () => {
   assert.deepEqual(result.dataset.rows, [
     ["1111110000", "Ana Silva", "100", "200"]
   ]);
-});
-
-test("bd canonicalizes denormalized modelo 2 phone/name columns", () => {
-  const source = parseCsv([
-    "Fone;Nome;Fone 2;Nome 2;MCI;Segmento",
-    "(11) 1111-0000;Ana;2222;Ana Casa;100;A"
-  ].join("\n"));
-
-  const result = convertDataset(source, "modelo2", "modelo2");
-
-  assert.equal(result.issues.some((issue) => issue.code === "model2-denormalized-pairs"), true);
-  assert.deepEqual(result.dataset.columns, ["Fone", "Nome", "MCI", "Segmento"]);
-  assert.deepEqual(result.dataset.rows, [
-    ["1111110000", "Ana", "100", "A"],
-    ["2222", "Ana Casa", "100", "A"]
-  ]);
-});
-
-test("bd consolidates denormalized modelo 2 rows by phone before export", () => {
-  const source = parseCsv([
-    "Fone;Nome;Fone 2;Nome 2;MCI;Segmento",
-    "(11) 1111-0000;Ana Silva;11 1111-0000;Maria Souza;100;A"
-  ].join("\n"));
-
-  const result = convertDataset(source, "modelo2", "modelo2");
-
-  assert.equal(result.pendingNameDecisions.length, 1);
-  assert.deepEqual(result.dataset.columns, ["Fone", "Nome", "MCI", "Segmento"]);
-  assert.deepEqual(result.dataset.rows, [
-    ["1111110000", "Ana Silva", "100", "A"]
-  ]);
-});
-
-test("bd propagates modelo 2 name decisions when reconstructing modelo 1", () => {
-  const source = parseCsv([
-    "Fone;Nome;Fone 2;Nome 2;MCI;Segmento",
-    "(11) 1111-0000;Ana Silva;11 1111-0000;Maria Souza;100;A"
-  ].join("\n"));
-
-  const result = convertDataset(source, "modelo2", "modelo1");
-
-  assert.equal(result.pendingNameDecisions.length, 1);
-  assert.deepEqual(result.pendingNameDecisions[0]?.phone, "1111110000");
 });
 
 test("bd reconstructs modelo 1 from modelo 2 many-to-many data", () => {

@@ -60,6 +60,7 @@ const generatedDialect: CsvDialect = {
   hasBom: true,
   quote: "\""
 };
+const localIdColumn = "id";
 
 export function decodeTextBuffer(buffer: ArrayBuffer): { dialect: Pick<CsvDialect, "encoding" | "hasBom">; text: string } {
   const bytes = new Uint8Array(buffer);
@@ -107,18 +108,38 @@ export function serializeCsv(dataset: TabularDataset): string {
   return `\uFEFF${lines.join("\r\n")}\r\n`;
 }
 
+export function oppositeModel(model: TabularModelKind): TabularModelKind {
+  return model === "modelo1" ? "modelo2" : "modelo1";
+}
+
+export function inferModelKind(dataset: TabularDataset): TabularModelKind {
+  const phoneColumns = collectIndexedColumns(dataset.columns, "fone");
+  const nameColumns = collectIndexedColumns(dataset.columns, "nome");
+  const hasIndexedPhonePairs = phoneColumns.some((column) => column.index > 1) || nameColumns.some((column) => column.index > 1);
+  if (hasIndexedPhonePairs) {
+    return "modelo1";
+  }
+
+  const hasReplicatedCustomerColumns = dataset.columns
+    .filter((column) => !isPairColumn(column) && !isLocalIdColumn(column))
+    .some((column) => indexedColumn(column).index > 1);
+  if (hasReplicatedCustomerColumns) {
+    return "modelo2";
+  }
+
+  return "modelo1";
+}
+
 export function convertDataset(dataset: TabularDataset, from: TabularModelKind, to: TabularModelKind, options: ConverterOptions = {}): ConversionResult {
   if (from === to) {
-    const result = from === "modelo2" ? normalizeModel2Dataset(dataset, options) : normalizeModel1Dataset(dataset);
-    result.issues.unshift({
-      code: "same-model",
-      message: "Origem e destino sao iguais; estrutura validada e telefones normalizados conforme o modelo.",
-      severity: "info"
-    });
     return {
-      dataset: result.dataset,
-      issues: result.issues,
-      pendingNameDecisions: result.pendingNameDecisions
+      dataset: cloneDataset(dataset),
+      issues: [{
+      code: "same-model",
+        message: "Origem e destino nao podem ser iguais; escolha o modelo oposto para conversao.",
+        severity: "error"
+      }],
+      pendingNameDecisions: []
     };
   }
 
@@ -288,6 +309,7 @@ function cloneDataset(dataset: TabularDataset): TabularDataset {
 function convertModel1ToModel2(dataset: TabularDataset, options: ConverterOptions): ConversionResult {
   const issues: ConversionIssue[] = [];
   const identifiers = options.identifierColumns ?? defaultIdentifierColumns;
+  const preserveLocalId = shouldPreserveLocalId(identifiers);
   const knownPhoneColumns = collectIndexedColumns(dataset.columns, "fone");
   const knownNameColumns = collectIndexedColumns(dataset.columns, "nome");
 
@@ -304,7 +326,7 @@ function convertModel1ToModel2(dataset: TabularDataset, options: ConverterOption
     const customerAttributes = new Map<string, string>();
 
     for (const column of dataset.columns) {
-      if (isPairColumn(column)) {
+      if (isPairColumn(column) || (!preserveLocalId && isLocalIdColumn(column))) {
         continue;
       }
       customerAttributes.set(column, record.get(column) ?? "");
@@ -340,7 +362,7 @@ function convertModel1ToModel2(dataset: TabularDataset, options: ConverterOption
   });
 
   const occurrenceCount = Math.max(1, ...Array.from(aggregates.values()).map((aggregate) => aggregate.occurrences.length));
-  const attributeColumns = dataset.columns.filter((column) => !isPairColumn(column));
+  const attributeColumns = dataset.columns.filter((column) => !isPairColumn(column) && (preserveLocalId || !isLocalIdColumn(column)));
   const columns = ["Fone", "Nome", ...expandOccurrenceColumns(attributeColumns, occurrenceCount)];
   const rows: string[][] = [];
 
@@ -437,35 +459,9 @@ function convertModel2ToModel1(dataset: TabularDataset, options: ConverterOption
   };
 }
 
-function normalizeModel1Dataset(dataset: TabularDataset): ConversionResult {
-  const issues: ConversionIssue[] = [];
-  return {
-    dataset: {
-      columns: [...dataset.columns],
-      dialect: { ...dataset.dialect },
-      rows: dataset.rows.map((row, rowIndex) => dataset.columns.map((column, columnIndex) => {
-        const value = row[columnIndex] ?? "";
-        if (!isBase(column, "fone")) {
-          return value;
-        }
-        const phone = normalizePhone(value);
-        if (!phone && value.trim()) {
-          issues.push({
-            code: "invalid-phone",
-            message: `Linha ${rowIndex + 2}: coluna ${column} nao contem identificador numerico de telefone.`,
-            severity: "warning"
-          });
-        }
-        return phone;
-      }))
-    },
-    issues,
-    pendingNameDecisions: []
-  };
-}
-
 function normalizeModel2Dataset(dataset: TabularDataset, options: ConverterOptions): ConversionResult {
   const identifiers = options.identifierColumns ?? defaultIdentifierColumns;
+  const preserveLocalId = shouldPreserveLocalId(identifiers);
   const issues: ConversionIssue[] = [];
   const knownPhoneColumns = collectIndexedColumns(dataset.columns, "fone");
   const knownNameColumns = collectIndexedColumns(dataset.columns, "nome");
@@ -484,7 +480,7 @@ function normalizeModel2Dataset(dataset: TabularDataset, options: ConverterOptio
   }
 
   const customerColumns = Array.from(new Set(dataset.columns
-    .filter((column) => !isPairColumn(column))
+    .filter((column) => !isPairColumn(column) && (preserveLocalId || !isLocalIdColumn(column)))
     .map((column) => indexedColumn(column).base)));
   const maxCustomerOccurrence = maxIndexedOccurrenceForColumns(dataset.columns.filter((column) => !isPairColumn(column)));
   const pendingNameDecisions: NameDecision[] = [];
@@ -584,6 +580,14 @@ function isBase(column: string, base: string): boolean {
 
 function isPairColumn(column: string): boolean {
   return isBase(column, "fone") || isBase(column, "nome");
+}
+
+function isLocalIdColumn(column: string): boolean {
+  return normalizeKey(indexedColumn(column).base) === localIdColumn;
+}
+
+function shouldPreserveLocalId(identifiers: string[]): boolean {
+  return identifiers.some((identifier) => normalizeKey(identifier) === localIdColumn);
 }
 
 function indexedColumn(column: string): { base: string; index: number } {

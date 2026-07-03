@@ -55,7 +55,7 @@
             <div class="direction-grid">
               <label>
                 <span>Origem</span>
-                <select id="source-model">
+                <select id="source-model" disabled>
                   <option value="modelo1">Modelo 1: cliente por linha</option>
                   <option value="modelo2">Modelo 2: telefone por linha</option>
                 </select>
@@ -63,7 +63,7 @@
 
               <label>
                 <span>Destino</span>
-                <select id="target-model">
+                <select id="target-model" disabled>
                   <option value="modelo2">Modelo 2: telefone por linha</option>
                   <option value="modelo1">Modelo 1: cliente por linha</option>
                 </select>
@@ -71,14 +71,13 @@
             </div>
 
             <label for="identifier-columns"
-              >Identificadores por prioridade</label
+              >Identificadores por prioridade; inclua id apenas para preserva-lo</label
             >
             <input id="identifier-columns" type="text" value="MCI, CID, MGI" />
           </fieldset>
 
           <div class="actions">
             <button type="button" id="convert">Converter</button>
-            <button type="button" id="swap">Inverter</button>
             <button type="button" id="clear">Limpar</button>
             <button type="button" id="download" disabled>Baixar CSV</button>
           </div>
