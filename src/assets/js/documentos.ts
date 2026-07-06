@@ -456,8 +456,22 @@
     });
   }
 
+  function resolveHtml2Pdf(): Html2PdfFactory | null {
+    const candidate = w.html2pdf;
+
+    if (typeof candidate === "function") {
+      return candidate;
+    }
+
+    if (candidate && typeof candidate.default === "function") {
+      return candidate.default;
+    }
+
+    return null;
+  }
+
   function printPdf(options: PrintPdfOptions): void {
-    const html2pdf = w.html2pdf;
+    const html2pdf = resolveHtml2Pdf();
 
     if (!html2pdf) {
       w.alert("Gerador de PDF indisponivel.");

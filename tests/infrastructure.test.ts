@@ -99,3 +99,11 @@ test("modules use shared institutional chrome except dizimo", async () => {
 
   assert.deepEqual(violations, []);
 });
+
+test("shared printable surface stays light under forced dark modes", async () => {
+  const css = await readFile("src/assets/css/documentos.css", "utf8");
+
+  assert.match(css, /\.print-page,\s*div\.main\s*{/);
+  assert.match(css, /color-scheme:\s*only light;/);
+  assert.match(css, /forced-color-adjust:\s*none;/);
+});

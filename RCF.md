@@ -60,6 +60,8 @@ Elementos de interface devem ser identificaveis por classes/atributos como `.men
 
 A responsividade pode melhorar a edicao Web, mas nao pode alterar medidas, margens, proporcoes, alinhamentos, timbre, paginacao ou hierarquia da area imprimivel. Mudancas em CSS, fontes, escalas, placeholders, tabelas, assinatura, toolbar ou PDF exigem revisao contra impressao/PDF.
 
+Toda area imprimivel que simule a pagina fisica deve manter aparencia de papel independentemente do tema do sistema operacional, tema do navegador, modo escuro forcado ou recurso equivalente. A superficie imprimivel deve declarar fundo branco, cores compativeis com impressao, contraste adequado, `color-scheme` claro e protecao contra ajuste forcado de cores. Apenas a interface Web externa a folha pode adaptar-se a tema claro/escuro.
+
 Impressao deve funcionar por Ctrl+P ou equivalente e por botao dedicado quando existente. A acao dedicada deve preparar o documento, ocultar placeholders/interface, aplicar configuracao de pagina e restaurar o estado visual.
 
 ## 5. Infraestrutura Compartilhada
@@ -125,7 +127,7 @@ Toda ferramenta com `index.html` deve gerar automaticamente:
 - **Saida Web:** `index.html` otimizado para hospedagem estatica online.
 - **Saida Bundle:** ZIP `<nome-da-pasta>.bundle.zip` no mesmo diretorio, contendo internamente `<nome-da-pasta>.bundle.html` autocontido.
 
-O Bundle deve incorporar todos os recursos necessarios ao funcionamento offline, incluindo HTML, CSS, JavaScript, fontes, imagens, SVGs, JSON, icones e dependencias estaticas aplicaveis. Ele nao pode depender de requisicoes externas. Apenas o ZIP deve ser publicado; HTML autocontido solto e proibido. ZIP com Deflate no maior nivel disponivel e o formato vigente por ser compativel com Node.js, GitHub Actions e usuarios; outro formato exige ganho real sem dependencia operacional incompativel.
+O Bundle deve incorporar todos os recursos necessarios ao funcionamento offline, incluindo HTML, CSS, JavaScript, fontes, imagens, SVGs, JSON, icones e dependencias estaticas aplicaveis. Bibliotecas indispensaveis ao funcionamento de acoes documentais, inclusive geracao de PDF client-side e suas dependencias estaticas, devem ser incorporadas ao HTML interno do ZIP sem depender de CDN, importacao dinamica remota ou caminho local externo ao bundle. Ele nao pode depender de requisicoes externas. Apenas o ZIP deve ser publicado; HTML autocontido solto e proibido. ZIP com Deflate no maior nivel disponivel e o formato vigente por ser compativel com Node.js, GitHub Actions e usuarios; outro formato exige ganho real sem dependencia operacional incompativel.
 
 Saidas Web e Bundle devem ser produzidas em modo de producao, com minificacao, eliminacao de codigo morto, otimizacao de tamanho e carregamento rapido, sem alterar `src/`. Falha ao gerar, otimizar, incorporar ou validar qualquer artefato obrigatorio deve interromper o build.
 

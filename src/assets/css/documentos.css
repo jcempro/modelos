@@ -9,6 +9,24 @@ body {
   background: #fff;
 }
 
+.print-page,
+div.main {
+  background: #fff !important;
+  color: #000;
+  color-scheme: only light;
+  forced-color-adjust: none;
+}
+
+.print-page *,
+.print-page *:after,
+.print-page *:before,
+div.main *,
+div.main *:after,
+div.main *:before {
+  color-scheme: only light;
+  forced-color-adjust: none;
+}
+
 * {
   line-height: 1.15em;
 }

@@ -199,7 +199,10 @@ async function inlineScripts(html, indexFile) {
       return match[0];
     }
 
-    const js = await minifyJsText(await readFile(file, "utf8"), path.relative(root, file));
+    const source = await readFile(file, "utf8");
+    const js = externalResources.has(src)
+      ? source.trim()
+      : await minifyJsText(source, path.relative(root, file));
     return `<script>${escapeInlineScript(js)}</script>`;
   });
 }

@@ -1,6 +1,7 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { inflateRawSync } from "node:zlib";
 import { loadBuildConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -117,6 +118,56 @@ async function assertBundleZip(rel, expectedInnerName) {
   }
   if (!data.includes(Buffer.from(expectedInnerName, "utf8"))) {
     throw new Error(`Bundle ZIP nao contem HTML autocontido esperado (${expectedInnerName}) em dist/: ${rel}`);
+  }
+  const html = extractSingleFileZipText(data, expectedInnerName, rel);
+  assertAutonomousBundleHtml(rel, html);
+}
+
+function extractSingleFileZipText(data, expectedInnerName, rel) {
+  const method = data.readUInt16LE(8);
+  const compressedSize = data.readUInt32LE(18);
+  const filenameLength = data.readUInt16LE(26);
+  const extraLength = data.readUInt16LE(28);
+  const nameStart = 30;
+  const nameEnd = nameStart + filenameLength;
+  const name = data.subarray(nameStart, nameEnd).toString("utf8");
+
+  if (name !== expectedInnerName) {
+    throw new Error(`Bundle ZIP contem nome interno inesperado em dist/: ${rel}: ${name}`);
+  }
+
+  const contentStart = nameEnd + extraLength;
+  const compressed = data.subarray(contentStart, contentStart + compressedSize);
+
+  if (method === 0) {
+    return compressed.toString("utf8");
+  }
+
+  if (method === 8) {
+    return inflateRawSync(compressed).toString("utf8");
+  }
+
+  throw new Error(`Bundle ZIP usa metodo de compressao nao suportado em dist/: ${rel}: ${method}`);
+}
+
+function assertAutonomousBundleHtml(rel, html) {
+  const scriptBlocks = [...html.matchAll(/<script\b([^>]*)>[\s\S]*?<\/script>/gi)];
+  const externalScript = scriptBlocks.find((match) => /\bsrc\s*=/i.test(match[1] ?? ""));
+
+  if (externalScript) {
+    throw new Error(`Bundle offline contem script externo ou dependente de arquivo em dist/: ${rel}`);
+  }
+
+  const withoutScripts = html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
+  const stylesheetLink = /<link\b[^>]*\brel\s*=\s*(["'])[^"']*\bstylesheet\b[^"']*\1[^>]*>/i;
+  if (stylesheetLink.test(withoutScripts)) {
+    throw new Error(`Bundle offline contem stylesheet externo ou dependente de arquivo em dist/: ${rel}`);
+  }
+
+  const externalResource = /<(?:img|source|audio|video|iframe|object|embed)\b[^>]*(?:src|data)\s*=\s*(["'])https?:\/\//i;
+  const cssExternal = /<(?:style|[^>]+\bstyle=)[\s\S]*?url\(\s*(["']?)https?:\/\//i;
+  if (externalResource.test(withoutScripts) || cssExternal.test(withoutScripts)) {
+    throw new Error(`Bundle offline contem recurso externo automatico em dist/: ${rel}`);
   }
 }
 

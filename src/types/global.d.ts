@@ -18,7 +18,7 @@ declare global {
   interface Window {
     JCEMDocumentos?: JCEMDocumentosApi;
     $?: ZeptoStatic;
-    html2pdf?: (source: Element, options: PdfOptions) => void;
+    html2pdf?: Html2PdfFactory | { default?: Html2PdfFactory };
     Zepto?: ZeptoStatic;
     isNum?: (value: unknown) => boolean;
   }
@@ -180,6 +180,8 @@ declare global {
     jsPDF: { format: [number, number]; orientation: "portrait" | "landscape"; unit: string };
     margin: [number, number, number, number];
   }
+
+  type Html2PdfFactory = (source: Element, options: PdfOptions) => void;
 
   interface StoredImageOptions {
     key?: string;
