@@ -427,9 +427,11 @@
     const style = d.createElement("style");
     const [width, height] = pageConfig.size;
     const unit = pageConfig.unit;
+    const contentWidth = width - pageConfig.left - pageConfig.right;
 
     style.textContent = `@page{size:${width}${unit} ${height}${unit};margin-left:${pageConfig.left}${unit};margin-right:${pageConfig.right}${unit};margin-top:${pageConfig.top}${unit};margin-bottom:${pageConfig.bottom}${unit};}`;
-    style.textContent += `*{max-width:calc(${width}${unit} - ${pageConfig.left + pageConfig.right}${unit});}`;
+    style.textContent += `@media screen{body:not(.imprimir) div.main{width:${width}${unit};min-height:${height}${unit};max-width:none;padding:${pageConfig.top}${unit} ${pageConfig.right}${unit} ${pageConfig.bottom}${unit} ${pageConfig.left}${unit};}}`;
+    style.textContent += `@media print{div.main{max-width:${contentWidth}${unit};}}body.imprimir div.main{max-width:${contentWidth}${unit};}`;
     d.head.appendChild(style);
   }
 

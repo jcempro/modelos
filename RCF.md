@@ -58,6 +58,8 @@ Cada documento deve separar:
 
 Elementos de interface devem ser identificaveis por classes/atributos como `.menu`, `.nota`, `.cookie`, `.autosave`, `.jcem-chrome` ou `.no-print`, e ocultos em `@media print`, PDF dedicado e modos programaticos equivalentes. Quando aviso de cookies e toolbar aparecerem juntos, a interface deve informar a URL canonica `https://tools.jcem.pro/<path-do-modelo>` sem `index.html` e orientar a desativar cabecalho/rodape do navegador.
 
+A Area imprimivel e a unica regiao que pode ser limitada artificialmente pelas dimensoes da folha. A Area de aplicacao, incluindo cabecalho global, rodape global, toolbar, paineis auxiliares, alertas, notificacoes, navegacao e apoios de edicao, deve permanecer responsiva e usar a largura disponivel da viewport sem herdar limites de A4. Modulos imprimiveis devem apresentar a regiao externa a folha com fundo diferenciado, de modo semelhante a editores de documentos e visualizadores de PDF, tornando evidente onde a pagina fisica comeca e termina.
+
 A responsividade pode melhorar a edicao Web, mas nao pode alterar medidas, margens, proporcoes, alinhamentos, timbre, paginacao ou hierarquia da area imprimivel. Mudancas em CSS, fontes, escalas, placeholders, tabelas, assinatura, toolbar ou PDF exigem revisao contra impressao/PDF.
 
 Toda area imprimivel que simule a pagina fisica deve manter aparencia de papel independentemente do tema do sistema operacional, tema do navegador, modo escuro forcado ou recurso equivalente. A superficie imprimivel deve declarar fundo branco, cores compativeis com impressao, contraste adequado, `color-scheme` claro e protecao contra ajuste forcado de cores. Apenas a interface Web externa a folha pode adaptar-se a tema claro/escuro.

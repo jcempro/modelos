@@ -6,7 +6,7 @@
 
 html,
 body {
-  background: #fff;
+  background: #ccc;
 }
 
 .print-page,
@@ -57,6 +57,19 @@ p {
 div.main {
   width: calc(100% - .3cm);
   box-sizing: border-box;
+}
+
+@media screen {
+  body:not(.imprimir) {
+    min-height: 100vh;
+    background: #ccc;
+  }
+
+  body:not(.imprimir) div.main {
+    margin: 1.25rem auto;
+    background: #fff !important;
+    box-shadow: 0 10px 24px rgb(20 35 50 / 18%);
+  }
 }
 
 table {
@@ -375,6 +388,11 @@ div.versao {
 }
 
 @media print {
+  html,
+  body {
+    background: #fff;
+  }
+
   body {
     margin-right: .9cm;
   }
@@ -400,6 +418,7 @@ div.versao {
 
 body.imprimir {
   margin-right: .9cm;
+  background: #fff;
 }
 
 body.imprimir div.versao {

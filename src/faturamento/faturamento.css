@@ -512,7 +512,7 @@ input:disabled {
 
 .signature-date {
   align-self: start;
-  width: 8.6cm;
+  width: 11.3cm;
   margin: 0.42cm 0 0 auto;
   text-align: center;
 }
@@ -525,6 +525,7 @@ input:disabled {
 .signature-date strong,
 .signature-date em {
   display: block;
+  white-space: nowrap;
 }
 
 .signature-date em {

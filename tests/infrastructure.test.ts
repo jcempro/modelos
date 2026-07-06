@@ -107,3 +107,11 @@ test("shared printable surface stays light under forced dark modes", async () =>
   assert.match(css, /color-scheme:\s*only light;/);
   assert.match(css, /forced-color-adjust:\s*none;/);
 });
+
+test("print page sizing does not constrain application chrome globally", async () => {
+  const ts = await readFile("src/assets/js/documentos.ts", "utf8");
+
+  assert.doesNotMatch(ts, /\*\{max-width:/);
+  assert.match(ts, /body:not\(\.imprimir\) div\.main/);
+  assert.match(ts, /body\.imprimir div\.main/);
+});
