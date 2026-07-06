@@ -31,6 +31,15 @@ test("faturamento builds exactly twelve consecutive months ending at reference",
   assert.equal(formatMesAno(period[11]!), "05/2026");
 });
 
+test("faturamento accepts compatible month-year inputs and normalizes them", () => {
+  assert.equal(formatMesAno(parseMesAno("102025")!), "10/2025");
+  assert.equal(formatMesAno(parseMesAno("10-2025")!), "10/2025");
+  assert.equal(formatMesAno(parseMesAno("10.2025")!), "10/2025");
+  assert.equal(formatMesAno(parseMesAno("1 2025")!), "01/2025");
+  assert.equal(parseMesAno("13/2025"), null);
+  assert.equal(parseMesAno("10/20/25"), null);
+});
+
 test("faturamento classifies months from reference", () => {
   const reference = parseMesAno("05/2026");
   const before = parseMesAno("04/2026");

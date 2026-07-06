@@ -32,7 +32,7 @@ Cidade-UF, dd de Mes de aaaa,
 
 A relacao sempre possui exatamente doze meses consecutivos, sem duplicidade, lacuna, excesso, falta ou desordem cronologica.
 
-O usuario informa apenas o Mes inicial exibido na tabela, no formato `mm/aaaa`. Por padrao, esse mes corresponde ao mes da data de assinatura menos doze meses. O usuario pode altera-lo para iniciar a tabela em outro periodo; a alteracao regenera os doze meses e preserva a classificacao automatica.
+O usuario informa apenas o Mes inicial exibido na tabela, apresentado no formato `mm/aaaa`. A edicao deve aceitar entradas materialmente compativeis, com ou sem separadores usuais, como `102025`, `10-2025`, `10.2025` ou `10/2025`, e normalizar para `mm/aaaa` apos a edicao. Meses fora de 1 a 12 ou anos fora da faixa valida sao invalidos. Por padrao, esse mes corresponde ao mes da data de assinatura menos doze meses. O usuario pode altera-lo para iniciar a tabela em outro periodo; a alteracao regenera os doze meses e preserva a classificacao automatica.
 
 O Mes/Ano de Referencia nao e campo editavel. Ele e valor derivado da data de assinatura e do ultimo mes classificado como `REALIZADO` na tabela. Quando nenhum mes da tabela estiver realizado, usa-se o ultimo mes encerrado antes do mes da data de assinatura como referencia deterministica de compatibilidade.
 
@@ -104,7 +104,7 @@ A interface Web nao precisa reproduzir exatamente a folha durante edicao. Deve p
 
 Erros obrigatorios: CNPJ invalido; CPF invalido; data invalida; Mes inicial invalido; UF invalida; periodo diferente de doze meses; meses duplicados, ausentes, nao consecutivos ou fora de ordem; valores negativos; percentuais fora de 0% a 100%; prazo medio negativo; total anual divergente; documento extrapolando A4 por conteudo fora dos limites esperados.
 
-Normalizacoes: CNPJ/CPF para digitos no armazenamento e mascara na apresentacao; moeda BRL; percentual brasileiro; Mes/Ano `mm/aaaa`; localidade `Cidade-UF`; espacos excedentes em textos livres.
+Normalizacoes: CNPJ/CPF para digitos no armazenamento e mascara na apresentacao; moeda BRL; percentual brasileiro; Mes/Ano compativel com ou sem separador para `mm/aaaa`; localidade `Cidade-UF`; espacos excedentes em textos livres.
 
 Entradas invalidas nao devem corromper dados validos. Quando possivel, preservar o valor original para correcao e bloquear apenas consolidacao, impressao ou exportacao inconsistente.
 

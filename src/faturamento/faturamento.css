@@ -290,7 +290,7 @@ input:disabled {
   width: 21cm;
   min-height: 29.7cm;
   margin: 0 auto;
-  padding: 1cm 0.9cm 0.9cm;
+  padding: 0.82cm 0.86cm 0.72cm;
   background: var(--paper);
   box-shadow: 0 10px 24px rgb(20 35 50 / 25%);
 }
@@ -304,7 +304,7 @@ input:disabled {
 }
 
 .print-page h1 {
-  margin: 0 0 0.75cm;  
+  margin: 0 0 0.45cm;  
   font-size: 14pt;
   font-weight: 800;
   letter-spacing: 0;
@@ -325,8 +325,8 @@ input:disabled {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;  
-  margin-top: 4em;
-  margin-bottom: 3em;
+  margin-top: 2.1em;
+  margin-bottom: 1.55em;
   border-collapse: separate;
   border-spacing: 0 1mm;
 }
@@ -354,27 +354,26 @@ input:disabled {
   display: grid;
   grid-template-columns: 7.5cm 6.8cm;
   justify-content: space-between;
-  margin: 0.75cm 0;
-  margin-bottom: 3.5em;
+  margin: 0.52cm 0 0.92cm;
 }
 
 .summary-box {
-  min-height: 1.35cm;
-  padding: 0.16cm 0.28cm;
+  min-height: 1.18cm;
+  padding: 0.12cm 0.24cm;
   border: 1.5mm solid #6f6f6f;
   text-align: center;
 }
 
 .summary-box span {
   display: block;
-  margin-bottom: 0.25cm;
+  margin-bottom: 0.14cm;
   font-size: 10pt;
   font-weight: bold;
 }
 
 .summary-box strong {
   display: block;
-  font-size: 15pt;
+  font-size: 13.5pt;
   font-weight: bold;
 }
 
@@ -404,8 +403,8 @@ input:disabled {
 
 .market-table th,
 .market-table td {
-  height: 0.48cm;
-  padding: 0.03cm 0.06cm;
+  height: 0.42cm;
+  padding: 0.02cm 0.05cm;
   border: 1px solid var(--line);
   vertical-align: middle;
 }
@@ -435,11 +434,11 @@ input:disabled {
 .market-table tfoot td {  
   font-weight: bold !important;
   background-color: #bbb !important;  
-  border-top: 1mm solid #333 !important;
+  border-top: 0.65mm solid #333 !important;
 }
 
 .market-table thead th{  
-  border-bottom: 1mm solid #333 !important;
+  border-bottom: 0.65mm solid #333 !important;
   font-weight: bold !important;
   background-color: #bbb !important;  
 }
@@ -465,8 +464,8 @@ input:disabled {
 .percent-table td,
 .tax-table th,
 .tax-table td {
-  height: 0.46cm;
-  padding: 0.03cm 0.08cm;
+  height: 0.42cm;
+  padding: 0.02cm 0.07cm;
   border: 1px solid var(--line);
 }
 
@@ -487,7 +486,7 @@ input:disabled {
 }
 
 .tax-table {
-  margin-top: 0.32cm;
+  margin-top: 0.24cm;
 }
 
 .tax-table th,
@@ -506,7 +505,7 @@ input:disabled {
 }
 
 .tax-table td {
-  height: 0.5cm;
+  height: 0.44cm;
   font-size: 9pt;
   font-weight: 700;
 }
@@ -514,7 +513,7 @@ input:disabled {
 .signature-date {
   align-self: start;
   width: 8.6cm;
-  margin: 0.72cm 0 0 auto;
+  margin: 0.42cm 0 0 auto;
   text-align: center;
 }
 
@@ -535,7 +534,7 @@ input:disabled {
 
 .signature-block {
   width: 11.3cm;
-  margin: 2.15cm 0 0 auto;
+  margin: 1.02cm 0 0 auto;
   text-align: center;
 }
 
@@ -556,7 +555,7 @@ input:disabled {
 }
 
 .committee {
-  margin-top: 0.6cm;
+  margin-top: 0.32cm;
 }
 
 @media (max-width: 1120px) {
@@ -605,7 +604,7 @@ input:disabled {
     min-height: 0;
     height: 29.7cm;
     margin: 0;
-    padding: 1cm 0.9cm 0.9cm;
+    padding: 0.82cm 0.86cm 0.72cm;
     box-shadow: none;
     overflow: hidden;
     break-after: avoid;
@@ -633,6 +632,7 @@ body.imprimir .print-page {
   min-height: 0;
   height: 29.7cm;
   margin: 0;
+  padding: 0.82cm 0.86cm 0.72cm;
   box-shadow: none;
   overflow: hidden;
 }

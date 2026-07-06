@@ -308,14 +308,18 @@ export function isRegimeAllowed(regime: string, annualCents: number | null): boo
 }
 
 export function parseMesAno(value: string): MesAno | null {
-  const match = /^(\d{1,2})\/(\d{4})$/.exec(`${value ?? ""}`.trim());
+  const raw = `${value ?? ""}`.trim();
+  const separated = /^(\d{1,2})\D+(\d{4})$/.exec(raw);
+  const compact = /^\d{5,6}$/.test(raw) ? raw : "";
 
-  if (!match) {
+  if (!separated && !compact) {
     return null;
   }
 
-  const mes = Number.parseInt(match[1] ?? "", 10);
-  const ano = Number.parseInt(match[2] ?? "", 10);
+  const mesText = separated ? (separated[1] ?? "") : compact.slice(0, compact.length - 4);
+  const anoText = separated ? (separated[2] ?? "") : compact.slice(-4);
+  const mes = Number.parseInt(mesText, 10);
+  const ano = Number.parseInt(anoText, 10);
 
   if (mes < 1 || mes > 12 || ano < 1900 || ano > 2999) {
     return null;
