@@ -456,7 +456,7 @@ div.menu {
   width: 100%;
   --jcem-icon-color: currentColor;
   --jcem-icon-hover-color: currentColor;
-  --jcem-toolbar-icon-color: #444;
+  --jcem-toolbar-icon-color: #888;/* não regredir, ajuste manual do dev */
   --jcem-toolbar-icon-hover-color: #123a62;
   color: #18212b;
   font-family: "Noto Sans", "Tahoma", "Arial", "sans-serif";
