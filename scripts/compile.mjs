@@ -183,6 +183,7 @@ async function buildBrowserScripts() {
       format: "iife",
       legalComments: "none",
       logLevel: "silent",
+      mangleProps: /^__p\d+$/,
       minify: true,
       sourcemap: false,
       target: "es2020",

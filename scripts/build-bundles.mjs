@@ -4,7 +4,7 @@ import { mkdir, open, readFile, readdir, rename, rm, unlink, writeFile } from "n
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { constants as zlibConstants, deflateRawSync } from "node:zlib";
-import { minifyCssText, minifyHtmlText, minifyJsText } from "./asset-optimizer.mjs";
+import { minifyCssText, minifyHtmlText, minifyJsText, stripSourceMapReferences } from "./asset-optimizer.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = path.join(root, "dist");
@@ -197,7 +197,7 @@ async function inlineScripts(html, indexFile) {
 
     const source = await readFile(file, "utf8");
     const js = externalResources.has(src)
-      ? source.trim()
+      ? stripSourceMapReferences(source)
       : await minifyJsText(source, path.relative(root, file));
     return `<script>${escapeInlineScript(js)}</script>`;
   });

@@ -9,6 +9,7 @@ import {
   faPrint,
   faStamp
 } from "@fortawesome/free-solid-svg-icons";
+import { g as guard } from "./guard";
 
 (function bootstrapDocumentos(w: Window, d: Document): void {
   "use strict";
@@ -1005,7 +1006,7 @@ import {
     const data = normalizePayload(config.exportPayload ? config.exportPayload() : defaultSharePayload({ root: config.root }));
 
     return {
-      app: "tools.jcem.pro",
+      app: guard().__p3 as PortableDocumentEnvelope["app"],
       data,
       exportedAt: new Date().toISOString(),
       moduleId,
@@ -1506,47 +1507,6 @@ import {
     }
   }
 
-  const j = (parts: string[], separator = ""): string => parts.join(separator);
-  const chromeDefaults = {
-    authorName: j(["Jean", "Carlo", "EM"]),
-    authorUrl: j(["https://www.", "jeancarloem", ".com"]),
-    brandName: j(["Tools ", "Jean", "Carlo", "EM"]),
-    domain: j(["tools", "jcem", "pro"], "."),
-    licenseName: j(["Mozilla", "Public", "License", "2.0"], " "),
-    licenseUrl: j(["https://www.", "mozilla.org", "/MPL/2.0/"])
-  };
-  const chromeCopy = {
-    footerInfo: (domain: string): string => j([
-      "Modelos e ferramentas são recursos auxiliares publicados em <strong>",
-      escapeHtml(domain),
-      "</strong> para execução local no navegador, com salvamento local quando aplicável."
-    ]),
-    footerLicense: (licenseLink: string): string => j([
-      "Código disponibilizado sob ",
-      licenseLink,
-      "; preserve avisos e consulte o texto integral para direitos e obrigações."
-    ]),
-    headerLicense: (licenseLink: string): string => j(["Licença: ", licenseLink, "."]),
-    headerSummary: (authorLink: string, domain: string): string => j([
-      "Ferramentas e modelos Web estáticos mantidos por ",
-      authorLink,
-      " e publicados em <strong>",
-      escapeHtml(domain),
-      "</strong>."
-    ]),
-    legalOne: j([
-      "Os recursos não substituem conferência técnica, jurídica, contábil, regulatória ou profissional adequada ao caso concreto. ",
-      "O software é fornecido \"no estado em que se encontra\", sem garantias de qualquer natureza, expressas, implícitas ou legais, ",
-      "inclusive quanto à conformidade legal, regulatória, ausência de defeitos, adequação a finalidades específicas ou não violação de direitos."
-    ]),
-    legalTwo: j([
-      "Estes avisos têm finalidade exclusivamente informativa e complementar: não alteram, substituem, restringem, ampliam nem modificam ",
-      "os direitos, deveres, permissões e limitações definidos pela licença do software, que permanece como único instrumento normativo ",
-      "para uso, redistribuição, modificação e demais direitos relacionados ao código."
-    ]),
-    offlineStatus: j(["Salvamento local, offline e automático, se aplicável."])
-  };
-
   function escapeHtml(value: string): string {
     return value.replace(/[&<>"']/g, (char) => ({
       "&": "&amp;",
@@ -1586,12 +1546,13 @@ import {
   function renderChrome(options: ChromeOptions = {}): void {
     removeExistingChrome();
 
-    const domain = options.domain ?? chromeDefaults.domain;
-    const licenseName = options.licenseName ?? chromeDefaults.licenseName;
-    const licenseUrl = options.licenseUrl ?? chromeDefaults.licenseUrl;
-    const brandName = chromeDefaults.brandName;
-    const authorName = options.authorName ?? options.author ?? chromeDefaults.authorName;
-    const authorUrl = options.authorUrl ?? chromeDefaults.authorUrl;
+    const seal = guard();
+    const domain = options.domain ?? seal.__p3;
+    const licenseName = options.licenseName ?? seal.__p4;
+    const licenseUrl = options.licenseUrl ?? seal.__p5;
+    const brandName = seal.__p2;
+    const authorName = options.authorName ?? options.author ?? seal.__p0;
+    const authorUrl = options.authorUrl ?? seal.__p1;
     const authorLink = externalLink(authorUrl, authorName);
     const licenseLink = externalLink(licenseUrl, licenseName, "license noopener noreferrer");
     const mount = typeof options.mountBefore === "string"
@@ -1603,12 +1564,12 @@ import {
     header.innerHTML = `
       <div class="jcem-chrome-identity">
         <a class="jcem-chrome-brand" href="https://${domain}/">${escapeHtml(brandName)}</a>
-        <p>${chromeCopy.headerSummary(authorLink, domain)}</p>
-        <p>${chromeCopy.headerLicense(licenseLink)}</p>
+        <p>${seal.__p6}${authorLink}${seal.__p7}${escapeHtml(domain)}${seal.__p8}</p>
+        <p>${seal.__p9}${licenseLink}${seal.__p10}</p>
       </div>
       <div class="jcem-chrome-meta">
         <span class="jcem-chrome-domain">${domain}</span>
-        <span class="ico autosave jcem-autosave"><span>${chromeCopy.offlineStatus}</span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>
+        <span class="ico autosave jcem-autosave"><span>${seal.__p11}</span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>
       </div>
       <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
     `;
@@ -1621,22 +1582,22 @@ import {
     const footer = d.createElement("footer");
     footer.className = "jcem-chrome jcem-chrome-footer no-print";
     footer.innerHTML = `
-      <section class="jcem-footer-block" aria-label="Autoria">
-        <h2>Autoria</h2>
-        <p>Autor: ${authorLink}.</p>
+      <section class="jcem-footer-block" aria-label="${seal.__p12}">
+        <h2>${seal.__p12}</h2>
+        <p>${seal.__p13}${authorLink}${seal.__p10}</p>
       </section>
-      <section class="jcem-footer-block" aria-label="Licença">
-        <h2>Licença</h2>
-        <p>${chromeCopy.footerLicense(licenseLink)}</p>
+      <section class="jcem-footer-block" aria-label="${seal.__p14}">
+        <h2>${seal.__p14}</h2>
+        <p>${seal.__p17}${licenseLink}${seal.__p18}</p>
       </section>
-      <section class="jcem-footer-block" aria-label="Informações institucionais">
-        <h2>Informações institucionais</h2>
-        <p>${chromeCopy.footerInfo(domain)}</p>
+      <section class="jcem-footer-block" aria-label="${seal.__p15}">
+        <h2>${seal.__p15}</h2>
+        <p>${seal.__p19}${escapeHtml(domain)}${seal.__p20}</p>
       </section>
-      <section class="jcem-footer-block jcem-footer-legal" aria-label="Disclaimer e isenção de responsabilidade">
-        <h2>Disclaimer e isenção de responsabilidade</h2>
-        <p>${chromeCopy.legalOne}</p>
-        <p>${chromeCopy.legalTwo}</p>
+      <section class="jcem-footer-block jcem-footer-legal" aria-label="${seal.__p16}">
+        <h2>${seal.__p16}</h2>
+        <p>${seal.__p21}</p>
+        <p>${seal.__p22}</p>
       </section>
     `;
 

@@ -2,6 +2,10 @@ import * as esbuild from "esbuild";
 
 const htmlBlockPattern = /<script\b(?![^>]*\bsrc\s*=)[\s\S]*?<\/script>|<(style|pre|textarea)\b[\s\S]*?<\/\1>/gi;
 
+export function stripSourceMapReferences(text) {
+  return text.replace(/(?:\/[/*]#|\/\/#)\s*sourceMappingURL=[^\r\n*]*(?:\*\/)?/gi, "").trim();
+}
+
 export async function minifyCssText(css, sourcefile = "inline.css") {
   const result = await esbuild.transform(css, {
     loader: "css",
@@ -9,7 +13,7 @@ export async function minifyCssText(css, sourcefile = "inline.css") {
     minify: true,
     sourcefile
   });
-  return result.code.trim();
+  return stripSourceMapReferences(result.code);
 }
 
 export async function minifyJsText(js, sourcefile = "inline.js") {
@@ -17,11 +21,12 @@ export async function minifyJsText(js, sourcefile = "inline.js") {
     format: "iife",
     legalComments: "none",
     loader: "js",
+    mangleProps: /^__p\d+$/,
     minify: true,
     sourcefile,
     target: "es2020"
   });
-  return result.code.trim();
+  return stripSourceMapReferences(result.code);
 }
 
 export async function optimizeTextByPath(rel, text) {

@@ -182,20 +182,50 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   assert.doesNotMatch(sharedCss, /\\27A6|\\1F5B6|\\1F5BC|\\232B|\\21E9/);
 });
 
-test("institutional chrome centralizes author, license and legal notices", async () => {
+test("institutional chrome protects author, license and legal notices", async () => {
   const sharedTs = await readFile("src/assets/js/documentos.ts", "utf8");
+  const guardTs = await readFile("src/assets/js/guard.ts", "utf8");
   const sharedCss = await readFile("src/assets/css/documentos.css", "utf8");
+  const compile = await readFile("scripts/compile.mjs", "utf8");
+  const validate = await readFile("scripts/validate-publication.mjs", "utf8");
+  const { g } = await import("../src/assets/js/guard");
+  const seal = g();
+  const protectedSources = [sharedTs, guardTs];
+  const protectedTerms = [
+    "JeanCarloEM",
+    "jeancarloem",
+    "tools.jcem.pro",
+    "Mozilla Public License",
+    "mozilla.org/MPL",
+    "Código disponibilizado sob",
+    "Os recursos não substituem",
+    "único instrumento normativo"
+  ];
 
-  assert.match(sharedTs, /authorName:\s*j\(\["Jean",\s*"Carlo",\s*"EM"\]\)/);
-  assert.match(sharedTs, /authorUrl:\s*j\(\["https:\/\/www\.",\s*"jeancarloem",\s*"\.com"\]\)/);
-  assert.match(sharedTs, /brandName:\s*j\(\["Tools ",\s*"Jean",\s*"Carlo",\s*"EM"\]\)/);
-  assert.match(sharedTs, /chromeCopy/);
-  assert.doesNotMatch(sharedTs, /authorName:\s*"JeanCarloEM"/);
+  for (const source of protectedSources) {
+    for (const term of protectedTerms) {
+      assert.ok(!source.includes(term), `protected term leaked in source: ${term}`);
+    }
+  }
+
+  assert.equal(seal.__p0, "JeanCarloEM");
+  assert.equal(seal.__p1, "https://www.jeancarloem.com");
+  assert.equal(seal.__p2, "Tools JeanCarloEM");
+  assert.equal(seal.__p3, "tools.jcem.pro");
+  assert.equal(seal.__p4, "Mozilla Public License 2.0");
+  assert.equal(seal.__p5, "https://www.mozilla.org/MPL/2.0/");
+  assert.match(seal.__p21, /Os recursos não substituem/);
+  assert.match(seal.__p22, /único instrumento normativo/);
+  assert.match(sharedTs, /guard\(\)/);
+  assert.doesNotMatch(sharedTs, /chromeDefaults|chromeCopy/);
   assert.doesNotMatch(sharedTs, /Tools JCEM/);
   assert.doesNotMatch(sharedTs, /author:\s*"JCEM"/);
   assert.match(sharedTs, /target="_blank"/);
   assert.match(sharedTs, /rel="\$\{escapeHtml\(rel\)\}"/);
-  assert.match(sharedTs, /único instrumento normativo|unico instrumento normativo/);
   assert.match(sharedTs, /jcem-footer-legal/);
+  assert.match(compile, /mangleProps:\s*\/\^__p\\d\+\$\/,/);
+  assert.match(validate, /protectedChromeTerms/);
+  assert.match(validate, /assertNoSourceMapReference/);
+  assert.match(validate, /assertNoProtectedChromeText/);
   assert.match(sharedCss, /\.jcem-chrome-footer\s*{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s);
 });

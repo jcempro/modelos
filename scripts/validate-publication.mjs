@@ -26,6 +26,18 @@ const staticSourceExtensions = new Set([
   ".woff2"
 ]);
 const textOutputExtensions = new Set([".css", ".html", ".js", ".json", ".txt", ".xml"]);
+const protectedChromeTerms = [
+  "JeanCarloEM",
+  "jeancarloem",
+  "tools.jcem.pro",
+  "Mozilla Public License",
+  "mozilla.org/MPL",
+  "Código disponibilizado sob",
+  "Modelos e ferramentas são recursos auxiliares",
+  "Os recursos não substituem",
+  "único instrumento normativo",
+  "Disclaimer e isenção"
+];
 const compiledOutputs = new Map([
   ...buildConfig.browserScripts,
   ...buildConfig.bookmarklets
@@ -103,6 +115,19 @@ function assertNoPublicSourceReferences(rel, content) {
   }
 }
 
+function assertNoSourceMapReference(rel, content) {
+  if (/sourceMappingURL/i.test(content)) {
+    throw new Error(`dist/${rel} contem referencia a source map em artefato de producao`);
+  }
+}
+
+function assertNoProtectedChromeText(rel, content) {
+  const found = protectedChromeTerms.filter((term) => content.includes(term));
+  if (found.length > 0) {
+    throw new Error(`dist/${rel} expoe texto institucional protegido em claro: ${found.join(", ")}`);
+  }
+}
+
 function bundleForIndex(rel) {
   return `${path.dirname(rel)}/${path.basename(path.dirname(rel))}.bundle.zip`.replace(/^\.\//, "");
 }
@@ -121,6 +146,7 @@ async function assertBundleZip(rel, expectedInnerName) {
   }
   const html = extractSingleFileZipText(data, expectedInnerName, rel);
   assertAutonomousBundleHtml(rel, html);
+  assertNoSourceMapReference(rel, html);
 }
 
 function extractSingleFileZipText(data, expectedInnerName, rel) {
@@ -158,6 +184,10 @@ function assertAutonomousBundleHtml(rel, html) {
     throw new Error(`Bundle offline contem script externo ou dependente de arquivo em dist/: ${rel}`);
   }
 
+  scriptBlocks.forEach((match, index) => {
+    assertNoProtectedChromeText(`${rel}#script-${index + 1}`, match[0]);
+  });
+
   const withoutScripts = html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
   const stylesheetLink = /<link\b[^>]*\brel\s*=\s*(["'])[^"']*\bstylesheet\b[^"']*\1[^>]*>/i;
   if (stylesheetLink.test(withoutScripts)) {
@@ -190,7 +220,12 @@ async function validatePublicText(files) {
     if (!textOutputExtensions.has(path.extname(rel).toLowerCase())) {
       continue;
     }
-    assertNoPublicSourceReferences(rel, await readFile(path.join(distDir, rel), "utf8"));
+    const content = await readFile(path.join(distDir, rel), "utf8");
+    assertNoPublicSourceReferences(rel, content);
+    assertNoSourceMapReference(rel, content);
+    if (path.extname(rel).toLowerCase() === ".js") {
+      assertNoProtectedChromeText(rel, content);
+    }
   }
 }
 
