@@ -868,12 +868,7 @@ import {
     api.storage.setItem(element.id, element.value);
   }
 
-  function applyJsonPayload(): void {
-    const data = api.query.json();
-    if (!data) {
-      return;
-    }
-
+  function applyDataPayload(data: Record<string, unknown>): void {
     assignIfPresent("razao-social", data.razaoSocial ?? data.empresa ?? data.nomeEmpresa);
     assignIfPresent("cnpj", data.cnpj);
     assignIfPresent("cidade", data.cidade);
@@ -945,10 +940,19 @@ import {
         assignIfPresent(`mes-${index}-vista`, item.vendasVista);
         assignIfPresent(`mes-${index}-prazo`, item.vendasPrazo);
         if (!data.prazoMedio && index === 0) {
-          assignIfPresent("prazo-medio", item.prazoMedio);
+        assignIfPresent("prazo-medio", item.prazoMedio);
         }
       });
     }
+  }
+
+  function applyJsonPayload(): void {
+    const data = api.query.json();
+    if (!data) {
+      return;
+    }
+
+    applyDataPayload(data);
   }
 
   function isRecord(value: unknown): value is Record<string, unknown> {
@@ -1033,6 +1037,18 @@ import {
 
   api.ready(() => {
     api.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".faturamento-shell" });
+    api.toolbar.configure({
+      exportPayload: payload,
+      importPayload: (data) => {
+        applyDataPayload(data);
+        refreshPeriodIfNeeded();
+        updateDistributionLockState();
+        renderPreview();
+      },
+      moduleId: "faturamento",
+      schema: "jcem.faturamento.v1",
+      version: "1.0.0"
+    });
     api.layout.printable({
       document: "#documento-faturamento",
       forms: [{ placement: "external", selector: ".editor" }],

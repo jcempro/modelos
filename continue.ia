@@ -3,3 +3,5 @@
 Antes de continuar qualquer alteração, leia [AGENTS.md](AGENTS.md), [RCF.md](RCF.md), todos os `RCF.md` específicos envolvidos e o arquivo alvo.
 
 Este projeto prioriza documentos Web estáticos com impressão fiel em A4. Preserve a separação entre interface Web e área imprimível, mantenha autosave, compatibilidade com Ctrl+P/PDF dedicado, preenchimento parametrizado por JSON Base64 e centralização de recursos reutilizáveis em `src/assets/`. Use `src/` como fonte canônica para TS, TSX, HTML, CSS e RCFs específicos; gere somente `dist/` como saída de build, raiz publicada e artefato de produção.
+
+Ao continuar infraestrutura visual, mantenha workspace, preview, scroll, formulários externos, toolbar, ícones Font Awesome modulares, tooltips, exportação/importação local e contraste de interface no escopo global. Módulos imprimíveis devem declarar conteúdo, campos, payloads e mapeamentos, preservando estilos locais apenas para o interior da folha oficial. Autoria, licença, disclaimer, isenção de responsabilidade e textos institucionais pertencem ao chrome global; o autor exibido é JeanCarloEM com hyperlink institucional.

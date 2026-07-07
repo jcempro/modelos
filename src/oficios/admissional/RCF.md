@@ -125,11 +125,15 @@ Payload JSON Base64 integral deve aceitar, alem dos aliases legados:
 - `cnpj`;
 - `tel`, `fone` ou `telefone`.
 
+A exportacao local pela toolbar global deve usar envelope do modulo `admissional`, schema `jcem.admissional.v1` e versao vigente do documento. A importacao local deve validar extensao, modulo, schema e versao antes de aplicar dados aos campos mapeados, incluindo timbre quando fornecido como Data URL. Arquivos de outros modulos devem ser recusados sem alterar o documento.
+
 ## 8. Compatibilidade e Responsabilidades
 
 Identificadores e comportamentos que sustentam dados ja salvos em `localStorage` devem ser preservados. Campos sem `id` continuam recebendo identificador automatico pela infraestrutura compartilhada.
 
 Conteudo textual, mapeamentos, mensagens especificas, margens particulares, layout interno de assinatura e selecao de validadores pertencem ao modulo admissional. Layout global de workspace/preview, validacao comum, autosave, impressao, timbre, data, toolbar, Base64 e estilos documentais comuns pertencem a camada compartilhada.
+
+Aparencia da toolbar, icones Font Awesome, tooltips, separadores, contraste de interface, workspace, preview e posicionamento da folha nao pertencem ao modulo admissional. O CSS local deve conter apenas ajustes particulares do conteudo interno da folha.
 
 ## 9. Arquitetura Local
 

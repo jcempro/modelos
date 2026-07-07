@@ -99,6 +99,44 @@
     };
   }
 
+  function assignField(selector: string, value: unknown): void {
+    if (typeof value !== "string" && typeof value !== "number") {
+      return;
+    }
+
+    const field = api.one<HTMLInputElement>(selector);
+    if (!field) {
+      return;
+    }
+
+    field.value = `${value}`;
+    api.storage.setItem(field.id || field.name || selector, field.value);
+    field.dispatchEvent(new Event("blur", { bubbles: true }));
+  }
+
+  function applyDataPayload(data: Record<string, unknown>): void {
+    assignField('input[hint="Bairro"]', data.bairro);
+    assignField('input[hint="Cargo/Função"]', data.cargo);
+    assignField('input[hint="Celular"]', data.celular);
+    assignField("#cep", data.cep);
+    assignField("#cnpj", data.cnpj);
+    assignField("#cpf", data.cpf);
+    assignField('input[hint="e-mail"]', data.email);
+    assignField("#nome", data.empresa);
+    assignField('input[hint="Logradouro"]', data.logradouro);
+    assignField('input[hint="Município"]', data.municipio);
+    assignField('input[name="nome"]', data.pessoaNome);
+    assignField('input[hint="Recado"]', data.recado);
+    assignField('input[hint="Salário"]', data.salario);
+    assignField("#fone", data.telefone);
+    assignField('input[hint="UF"]', data.uf);
+
+    if (typeof data.timbre === "string" && data.timbre.startsWith("data:")) {
+      api.storage.setItem("timbre", data.timbre);
+      api.image.load({ key: "timbre", selector: "img.logo" });
+    }
+  }
+
   function applyParams(): void {
     api.query.apply({
       fields: [
@@ -133,6 +171,13 @@
 
   api.ready(() => {
     api.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".versao" });
+    api.toolbar.configure({
+      exportPayload: sharePayload,
+      importPayload: applyDataPayload,
+      moduleId: "admissional",
+      schema: "jcem.admissional.v1",
+      version: "1.0.1"
+    });
     api.layout.printable({
       document: ".main",
       forms: [{ placement: "internal", selector: ".main" }]

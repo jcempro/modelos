@@ -19,10 +19,6 @@ const externalResources = new Map([
   [
     "https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js",
     path.join(root, "node_modules", "zepto", "dist", "zepto.min.js")
-  ],
-  [
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/v5-font-face.min.css",
-    path.join(root, "node_modules", "@fortawesome", "fontawesome-free", "css", "v5-font-face.min.css")
   ]
 ]);
 

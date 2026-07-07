@@ -2,7 +2,7 @@
 
 ## 1. Identidade
 
-**Projeto:** Modelos Web JCEM.
+**Projeto:** Modelos Web JeanCarloEM.
 
 **Objetivo:** publicar modelos e utilitarios Web estaticos em `tools.jcem.pro`, com infraestrutura compartilhada para documentos editaveis, parametrizaveis, persistidos localmente e imprimiveis com fidelidade A4.
 
@@ -62,6 +62,8 @@ A Area imprimivel e a unica regiao que pode ser limitada artificialmente pelas d
 
 O layout visual dos modulos imprimiveis deve ser centralizado em infraestrutura global opcional. Container de workspace, area cinza externa, preview, regiao de formularios, posicionamento da folha, scroll, dimensionamento, margens da viewport e comportamento responsivo nao pertencem ao modulo. O modulo imprimivel apenas renderiza o conteudo da folha, declara formularios internos ou externos, vincula campos aos elementos do documento e fornece configuracoes especificas. Ferramentas nao imprimiveis nao precisam ativar essa infraestrutura e nao devem receber workspace residual.
 
+Estilizacao visual estrutural da aplicacao nao pertence aos modulos. Aparencia do preview, fundo externo, fundo morto, sombras, bordas, containers, espacamentos estruturais, transicoes, scroll de preview/formulario, organizacao entre formulario e folha, estados visuais globais e contraste entre cabecalho, toolbar, formulario, preview e rodape pertencem ao framework compartilhado. Modulos podem manter apenas estilos do conteudo interno da folha e ajustes semanticos locais de campos, tabelas ou blocos especificos que nao sejam reutilizaveis.
+
 A responsividade pode melhorar a edicao Web, mas nao pode alterar medidas, margens, proporcoes, alinhamentos, timbre, paginacao ou hierarquia da area imprimivel. Mudancas em CSS, fontes, escalas, placeholders, tabelas, assinatura, toolbar ou PDF exigem revisao contra impressao/PDF.
 
 Toda area imprimivel que simule a pagina fisica deve manter aparencia de papel independentemente do tema do sistema operacional, tema do navegador, modo escuro forcado ou recurso equivalente. A superficie imprimivel deve declarar fundo branco, cores compativeis com impressao, contraste adequado, `color-scheme` claro e protecao contra ajuste forcado de cores. Apenas a interface Web externa a folha pode adaptar-se a tema claro/escuro.
@@ -82,7 +84,11 @@ Recursos compartilhados obrigatorios quando aplicaveis:
 
 Cabecalho, toolbar e rodape globais sao obrigatorios para modulos publicados, exceto `dizimo` por compatibilidade visual e historica. Modulos nao podem duplicar cabecalhos/rodapes nem alterar a estrutura base; excecoes exigem previsao expressa neste RCF ou no RCF especifico.
 
-O cabecalho global deve informar `tools.jcem.pro` e a licenca `Mozilla Public License 2.0`, com link para `https://www.mozilla.org/MPL/2.0/`. O rodape deve conter disclaimer, versao resumida da licenca, autor, isencao de responsabilidade, isencao de garantia e aviso de fornecimento "no estado em que se encontra", sem garantias de qualquer natureza, inclusive conformidade legal, regulatoria ou adequacao a finalidade especifica.
+O cabecalho e o rodape globais devem consumir uma unica fonte institucional compartilhada. A autoria exibida na interface deve ser apresentada exclusivamente como `JeanCarloEM`, sempre com hyperlink para `https://www.jeancarloem.com`, aberto em nova aba com `rel="noopener noreferrer"` ou equivalente. Siglas como `JCEM` podem permanecer apenas em identificadores tecnicos, dominio, namespace, historico ou nome de projeto quando houver justificativa funcional.
+
+O cabecalho global deve informar `tools.jcem.pro`, autoria, execucao local quando aplicavel e a licenca `Mozilla Public License 2.0`, com link para `https://www.mozilla.org/MPL/2.0/`. O rodape deve separar autoria, licenca, informacoes institucionais e disclaimer/isencao de responsabilidade como um unico contexto juridico, evitando repeticao textual.
+
+Avisos institucionais, disclaimer, isencao de responsabilidade, limitacoes de garantia e textos complementares possuem finalidade exclusivamente informativa. Eles nao alteram, substituem, restringem, ampliam nem modificam os direitos, deveres, permissoes, limitacoes ou condicoes definidos pela licenca do software. A licenca permanece o unico instrumento normativo que disciplina uso, redistribuicao, modificacao e demais direitos relacionados ao codigo.
 
 A toolbar deve ser componente reutilizavel, configuravel e extensivel por slots, hooks ou configuracao equivalente, com precedencia:
 
@@ -91,6 +97,10 @@ global < categoria < tipo documental < documento individual
 ```
 
 Acoes podem ser habilitadas, ocultadas, ordenadas, parametrizadas, sobrescritas ou complementadas sem duplicar logica. Quando existir `<nome-da-pasta>.bundle.zip` no mesmo caminho publicado do `index.html`, a toolbar pode oferecer download com icone/simbolo comum e texto acessivel.
+
+A renderizacao visual da toolbar pertence exclusivamente a camada global. Modulos podem declarar apenas configuracao, campos, payloads, callbacks, hooks, validacoes e acoes adicionais; nao devem definir icones, estados visuais, tooltip, separadores, espacamentos estruturais nem aparencia base dos botoes. Botoes globais precedem botoes especificos do modulo. Separadores sao declarativos e representam apenas respiro e linha vertical discreta.
+
+Icones de toolbar devem usar Font Awesome gratuito instalado via NPM em pacotes modulares, importando somente definicoes realmente utilizadas para permitir tree shaking, minificacao, bundle offline e GitHub Pages sem carregar a biblioteca completa. A selecao de icone deve aceitar `iconName`, codigo Unicode equivalente ou identificador Font Awesome. Icones Unicode, emojis ou simbolos textuais nao devem ser usados como icones de acoes. Tooltips devem ser globais, declarativos por `hint` e posicionados por biblioteca pequena, mantida e compativel com bundle offline.
 
 ## 6. Dados, Validacao e Persistencia
 
@@ -105,6 +115,10 @@ Todo documento deve aceitar preenchimento integral por um parametro contendo JSO
 A acao global `share` deve perguntar se o usuario deseja copiar link limpo ou preenchido. No modo preenchido, deve montar URL canonica, gerar JSON Base64, copiar para a area de transferencia, tratar falhas de forma recuperavel e permitir hooks locais para validacao previa, payload, mensagens e pos-acoes. URLs com dados em Base64 sao potencialmente publicas.
 
 Documentos podem oferecer limpeza configuravel de campos, data automatica em portugues, upload de timbre/imagem e restauracao por `localStorage`. Formatos, obrigatoriedade, posicionamento e escopos sao regras especificas.
+
+Documentos editaveis podem oferecer exportacao e importacao local de preenchimento em JSON pela toolbar global. O envelope minimo deve conter identificador do modulo, versao, schema, timestamp, dados e informacoes de compatibilidade. A abertura deve validar extensao, modulo, schema e versao antes de preencher campos. Arquivos de outro modulo devem ser recusados com mensagem adequada. Modulos complexos fornecem payload e aplicador proprios; modulos simples podem usar serializacao generica da camada compartilhada.
+
+Autosave e indicadores visuais nao podem roubar foco, mover cursor, perder selecao ou disparar renderizacoes parciais que interrompam digitacao. Durante eventos de digitacao, a camada compartilhada deve persistir o valor vigente sem normalizacao destrutiva; normalizacoes e alertas que possam alterar o valor devem ocorrer em eventos de consolidacao, como `blur`, ou em fluxos explicitamente acionados pelo usuario.
 
 ## 7. Compatibilidade, Dependencias e Utilitarios
 
@@ -168,6 +182,7 @@ Novas regras de negocio devem ser documentadas no RCF apropriado. Logica duplica
 - Responsividade nao modifica a precisao da area imprimivel.
 - JSON Base64 e universal para documentos e deve ser tratado como ofuscacao.
 - A acao global de compartilhamento centraliza URL, Base64, clipboard e hooks.
+- A toolbar global centraliza renderizacao, icones Font Awesome modulares, tooltips, separadores, exportacao/importacao local e ordem das acoes.
 - Dependencias externas sao versionadas, justificadas e registradas.
 - TypeScript e fonte canonica de aplicacao; TSX e preferencial para componentes reutilizaveis.
 - Scripts Node.js em `.mjs` dentro de `scripts/` sao bootstrap executavel da toolchain.

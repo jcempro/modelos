@@ -193,7 +193,7 @@ a {
 a:after {
     display: none;
     line-height: .9em;
-    font-family: "Font Awesome 5 Free";
+    font-family: "Roboto", "Tahoma", "Arial", "Sans Serif";
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
     font-style: normal;

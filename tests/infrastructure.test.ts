@@ -76,6 +76,14 @@ test("build config keeps source and public paths explicit", async () => {
   assert.equal(config.build.generatedRootFiles[".nojekyll"], "");
 });
 
+test("compile pruning preserves bundle zips for current index pages", async () => {
+  const compile = await readFile("scripts/compile.mjs", "utf8");
+
+  assert.match(compile, /function bundleForIndex/);
+  assert.match(compile, /path\.posix\.basename\(dir\)\}\.bundle\.zip/);
+  assert.match(compile, /generated\.add\(bundle\)/);
+});
+
 test("modules use shared institutional chrome except dizimo", async () => {
   const violations: string[] = [];
 
@@ -134,4 +142,39 @@ test("printable modules consume the shared document workspace layout", async () 
   assert.match(admissionalTs, /api\.layout\.printable/);
   assert.doesNotMatch(faturamentoCss, /\.faturamento-shell\s*{/);
   assert.doesNotMatch(faturamentoCss, /\.preview-wrap\s*{/);
+});
+
+test("shared toolbar uses declarative Font Awesome icons and portable data actions", async () => {
+  const pkg = JSON.parse(await readFile("package.json", "utf8")) as {
+    devDependencies: Record<string, string>;
+  };
+  const sharedTs = await readFile("src/assets/js/documentos.ts", "utf8");
+  const sharedCss = await readFile("src/assets/css/documentos.css", "utf8");
+
+  assert.ok(pkg.devDependencies["@fortawesome/free-solid-svg-icons"]);
+  assert.ok(pkg.devDependencies["@floating-ui/dom"]);
+  assert.equal(pkg.devDependencies["@fortawesome/fontawesome-free"], undefined);
+  assert.equal(pkg.devDependencies["@fortawesome/fontawesome-svg-core"], undefined);
+  assert.match(sharedTs, /renderIcon/);
+  assert.match(sharedTs, /ToolbarItemConfig/);
+  assert.match(sharedTs, /exportFilling/);
+  assert.match(sharedTs, /importFilling/);
+  assert.match(sharedTs, /computePosition/);
+  assert.doesNotMatch(sharedCss, /\\27A6|\\1F5B6|\\1F5BC|\\232B|\\21E9/);
+});
+
+test("institutional chrome centralizes author, license and legal notices", async () => {
+  const sharedTs = await readFile("src/assets/js/documentos.ts", "utf8");
+  const sharedCss = await readFile("src/assets/css/documentos.css", "utf8");
+
+  assert.match(sharedTs, /authorName:\s*"JeanCarloEM"/);
+  assert.match(sharedTs, /authorUrl:\s*"https:\/\/www\.jeancarloem\.com"/);
+  assert.match(sharedTs, /brandName:\s*"Tools JeanCarloEM"/);
+  assert.doesNotMatch(sharedTs, /Tools JCEM/);
+  assert.doesNotMatch(sharedTs, /author:\s*"JCEM"/);
+  assert.match(sharedTs, /target="_blank"/);
+  assert.match(sharedTs, /rel="\$\{escapeHtml\(rel\)\}"/);
+  assert.match(sharedTs, /único instrumento normativo|unico instrumento normativo/);
+  assert.match(sharedTs, /jcem-footer-legal/);
+  assert.match(sharedCss, /\.jcem-chrome-footer\s*{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s);
 });

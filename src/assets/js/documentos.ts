@@ -1,8 +1,27 @@
+import { computePosition, flip, offset, shift } from "@floating-ui/dom";
+import {
+  faBoxOpen,
+  faEraser,
+  faFileArrowDown,
+  faFileArrowUp,
+  faPaperPlane,
+  faPrint,
+  faStamp
+} from "@fortawesome/free-solid-svg-icons";
+
 (function bootstrapDocumentos(w: Window, d: Document): void {
   "use strict";
 
+  type FaIconDefinition = {
+    icon: [number, number, Array<number | string>, string, string | string[]];
+    iconName: string;
+    prefix: string;
+  };
+
   const storage = w.localStorage;
   const placeholders = new WeakMap<HTMLInputElement, string | null>();
+  const autosaveBound = new WeakSet<HTMLInputElement>();
+  const tooltipBound = new WeakSet<HTMLElement>();
 
   function $<T extends Element = Element>(selector: string, root: ParentNode = d): T[] {
     return Array.from(root.querySelectorAll<T>(selector));
@@ -358,27 +377,32 @@
         input.id = `${idPrefix}${index}`;
       }
 
-      input.value = store.getItem(input.id) ?? "";
+      const storedValue = store.getItem(input.id);
+      if (!input.dataset.jcemAutosaveHydrated) {
+        input.dataset.jcemAutosaveHydrated = "true";
+        if (storedValue !== null && d.activeElement !== input) {
+          input.value = storedValue;
+        }
+      }
+
+      if (autosaveBound.has(input)) {
+        return;
+      }
+      autosaveBound.add(input);
 
       for (const eventName of ["blur", "keyup", "input"]) {
         on(input, eventName, (event) => {
-          if ("tratando" in input && input.tratando === true) {
+          const shouldNormalize = event.type === "blur";
+
+          if (!shouldNormalize) {
+            store.setItem(input.id, input.value);
             return;
           }
 
-          input.tratando = true;
-          const shouldNormalize = event.type === "blur";
-          const result = validateAndNormalize(input, shouldNormalize, validation);
-
-          w.setTimeout(() => {
-            input.tratando = false;
-          }, 100);
+          const result = validateAndNormalize(input, true, validation);
 
           if (result) {
-            if (!shouldNormalize) {
-              return;
-            }
-            if (input.value.trim().length > 0 && shouldNormalize && typeof result === "string") {
+            if (input.value.trim().length > 0 && typeof result === "string") {
               w.alert(result);
             }
             input.value = "";
@@ -718,6 +742,10 @@
       return false;
     }
 
+    if (typeof w.fetch !== "function") {
+      return true;
+    }
+
     try {
       const response = await w.fetch(url, {
         cache: "no-store",
@@ -726,7 +754,7 @@
       });
       return response.ok;
     } catch (_error) {
-      return false;
+      return true;
     }
   }
 
@@ -820,6 +848,469 @@
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   }
 
+  const iconDefinitions: FaIconDefinition[] = [
+    faBoxOpen,
+    faEraser,
+    faFileArrowDown,
+    faFileArrowUp,
+    faPaperPlane,
+    faPrint,
+    faStamp
+  ];
+
+  const iconsByKey = new Map<string, FaIconDefinition>();
+  const toolbarRuntime: ToolbarRuntimeConfig = {};
+
+  for (const definition of iconDefinitions) {
+    const aliases = definition.icon[2];
+    iconsByKey.set(definition.iconName.toLowerCase(), definition);
+    iconsByKey.set(`${definition.prefix}:${definition.iconName}`.toLowerCase(), definition);
+    iconsByKey.set(definition.icon[3].toLowerCase(), definition);
+    for (const alias of aliases) {
+      iconsByKey.set(`${alias}`.toLowerCase(), definition);
+    }
+  }
+
+  function resolveIconDefinition(iconRef: ToolbarIconRef | string | undefined): FaIconDefinition | null {
+    if (!iconRef) {
+      return null;
+    }
+
+    if (typeof iconRef === "string") {
+      return iconsByKey.get(iconRef.toLowerCase()) ?? null;
+    }
+
+    const keys = [
+      iconRef.identifier,
+      iconRef.iconName,
+      iconRef.unicode
+    ].filter((value): value is string => Boolean(value));
+
+    for (const key of keys) {
+      const definition = iconsByKey.get(key.toLowerCase());
+      if (definition) {
+        return definition;
+      }
+    }
+
+    return null;
+  }
+
+  function renderIcon(iconRef: ToolbarIconRef | string | undefined): string {
+    const definition = resolveIconDefinition(iconRef);
+    if (!definition) {
+      return "";
+    }
+
+    const width = definition.icon[0];
+    const height = definition.icon[1];
+    const paths = definition.icon[4];
+    const pathList = Array.isArray(paths) ? paths : [paths];
+    const renderedPaths = pathList.map((path) => `<path fill="currentColor" d="${path}"></path>`).join("");
+    return `<svg class="jcem-fa-icon" aria-hidden="true" focusable="false" role="img" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${renderedPaths}</svg>`;
+  }
+
+  function moduleIdFromPath(): string {
+    const parts = w.location.pathname.split("/").filter(Boolean);
+    const last = parts[parts.length - 1] ?? "";
+    const folder = last.toLowerCase().endsWith(".html") ? parts[parts.length - 2] : last;
+    return (folder || d.body.id || d.title || "documento").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase();
+  }
+
+  function moduleVersion(): string {
+    const meta = one<HTMLMetaElement>('meta[name="jcem-module-version"]');
+    const bodyVersion = d.body.dataset.jcemVersion;
+    return meta?.content || bodyVersion || "1.0.0";
+  }
+
+  function configureToolbar(config: ToolbarRuntimeConfig): void {
+    Object.assign(toolbarRuntime, config);
+  }
+
+  function downloadTextFile(filename: string, content: string, mime = "application/json;charset=utf-8"): void {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const link = d.createElement("a");
+    link.href = url;
+    link.download = filename;
+    d.body.appendChild(link);
+    link.click();
+    d.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function safeBasename(value: string, fallback: string): string {
+    const withoutControls = Array.from(value.trim()).filter((char) => char.charCodeAt(0) >= 32).join("");
+    const normalized = withoutControls.replace(/[<>:"/\\|?*]+/g, "-").replace(/\s+/g, " ");
+    return normalized.length > 0 ? normalized : fallback;
+  }
+
+  function portableEnvelope(config: ToolbarRuntimeConfig = {}): PortableDocumentEnvelope {
+    const moduleId = config.moduleId ?? moduleIdFromPath();
+    const schema = config.schema ?? "jcem.document.fill.v1";
+    const version = config.version ?? moduleVersion();
+    const data = normalizePayload(config.exportPayload ? config.exportPayload() : defaultSharePayload({ root: config.root }));
+
+    return {
+      app: "tools.jcem.pro",
+      data,
+      exportedAt: new Date().toISOString(),
+      moduleId,
+      path: w.location.pathname,
+      schema,
+      version
+    };
+  }
+
+  function exportFilling(config: ToolbarRuntimeConfig = {}): PortableDocumentEnvelope | null {
+    const envelope = portableEnvelope(config);
+    const extension = config.fileExtension ?? ".json";
+    const basename = safeBasename(w.prompt(config.messages?.exportBasename ?? "Nome do arquivo:", envelope.moduleId) ?? "", envelope.moduleId);
+    if (!basename) {
+      return null;
+    }
+
+    const filename = basename.toLowerCase().endsWith(extension.toLowerCase()) ? basename : `${basename}${extension}`;
+    downloadTextFile(filename, `${JSON.stringify(envelope, null, 2)}\n`);
+    return envelope;
+  }
+
+  function isCompatibleVersion(expected: string | undefined, received: unknown, accepted: string[] | undefined): boolean {
+    if (typeof received !== "string" || received.trim().length === 0) {
+      return false;
+    }
+
+    if (accepted?.includes(received)) {
+      return true;
+    }
+
+    if (!expected) {
+      return true;
+    }
+
+    const [expectedMajor] = expected.split(".");
+    const [receivedMajor] = received.split(".");
+    return expectedMajor === receivedMajor;
+  }
+
+  function setControlValue(control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, value: unknown): void {
+    if (control instanceof HTMLInputElement && control.type === "checkbox") {
+      control.checked = value === true || value === "true" || value === "on" || value === "1";
+      control.dispatchEvent(new Event("input", { bubbles: true }));
+      control.dispatchEvent(new Event("change", { bubbles: true }));
+      return;
+    }
+
+    if (control instanceof HTMLInputElement && control.type === "radio") {
+      control.checked = `${control.value}` === `${value}`;
+      control.dispatchEvent(new Event("change", { bubbles: true }));
+      return;
+    }
+
+    control.value = value == null ? "" : `${value}`;
+    control.dispatchEvent(new Event("input", { bubbles: true }));
+    control.dispatchEvent(new Event("blur", { bubbles: true }));
+  }
+
+  function applyDataToControls(data: Record<string, unknown>, root: ParentNode = d): void {
+    const controls = $<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea", root);
+    for (const control of controls) {
+      if (control instanceof HTMLInputElement && ["button", "file", "reset", "submit"].includes(control.type)) {
+        continue;
+      }
+
+      const keys = [control.id, control.name].filter(Boolean);
+      const key = keys.find((candidate) => Object.prototype.hasOwnProperty.call(data, candidate));
+      if (key) {
+        setControlValue(control, data[key]);
+      }
+    }
+  }
+
+  function validatePortableEnvelope(value: unknown, config: ToolbarRuntimeConfig = {}): PortableDocumentEnvelope {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("Arquivo invalido ou corrompido.");
+    }
+
+    const envelope = value as PortableDocumentEnvelope;
+    const expectedModule = config.moduleId ?? moduleIdFromPath();
+    const expectedSchema = config.schema ?? "jcem.document.fill.v1";
+
+    if (envelope.moduleId !== expectedModule) {
+      throw new Error(`Arquivo pertence ao modulo "${envelope.moduleId ?? "desconhecido"}" e nao pode ser aberto neste modulo.`);
+    }
+
+    if (envelope.schema !== expectedSchema) {
+      throw new Error("Schema do arquivo incompativel com este modulo.");
+    }
+
+    if (!isCompatibleVersion(config.version ?? moduleVersion(), envelope.version, config.acceptVersions)) {
+      throw new Error("Versao do arquivo incompativel com este modulo.");
+    }
+
+    if (!envelope.data || typeof envelope.data !== "object" || Array.isArray(envelope.data)) {
+      throw new Error("Arquivo sem dados preenchiveis validos.");
+    }
+
+    return envelope;
+  }
+
+  function importFilling(config: ToolbarRuntimeConfig = {}): void {
+    const extension = config.fileExtension ?? ".json";
+    const input = d.createElement("input");
+    input.type = "file";
+    input.accept = extension;
+    input.className = "jcem-file-dialog";
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      input.remove();
+      if (!file) {
+        return;
+      }
+
+      if (!file.name.toLowerCase().endsWith(extension.toLowerCase())) {
+        w.alert(config.messages?.importFailed ?? `Arquivo recusado: extensao esperada ${extension}.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        try {
+          const envelope = validatePortableEnvelope(JSON.parse(`${reader.result ?? ""}`), config);
+          if (config.importPayload) {
+            config.importPayload(envelope.data, envelope);
+          } else {
+            applyDataToControls(envelope.data, typeof config.root === "string" ? one(config.root) ?? d : config.root ?? d);
+          }
+          w.alert(config.messages?.imported ?? "Arquivo aberto e dados preenchidos.");
+        } catch (error) {
+          w.alert(error instanceof Error ? error.message : config.messages?.importFailed ?? "Nao foi possivel abrir o arquivo.");
+        }
+      });
+      reader.readAsText(file);
+    });
+    d.body.appendChild(input);
+    input.click();
+  }
+
+  function bindTooltip(element: HTMLElement): void {
+    if (tooltipBound.has(element) || !element.dataset.jcemTooltip) {
+      return;
+    }
+    tooltipBound.add(element);
+
+    let tooltip: HTMLElement | null = null;
+    const close = (): void => {
+      tooltip?.remove();
+      tooltip = null;
+    };
+    const open = (): void => {
+      close();
+      const text = element.dataset.jcemTooltip ?? "";
+      if (!text) {
+        return;
+      }
+      tooltip = d.createElement("div");
+      tooltip.className = "jcem-tooltip";
+      tooltip.textContent = text;
+      d.body.appendChild(tooltip);
+      void computePosition(element, tooltip, {
+        middleware: [offset(8), flip(), shift({ padding: 8 })],
+        placement: "bottom"
+      }).then(({ x, y }) => {
+        if (tooltip) {
+          Object.assign(tooltip.style, { left: `${x}px`, top: `${y}px` });
+        }
+      });
+    };
+
+    on(element, "mouseenter", open);
+    on(element, "focus", open);
+    on(element, "mouseleave", close);
+    on(element, "blur", close);
+    on(element, "keydown", (event) => {
+      if (event instanceof KeyboardEvent && event.key === "Escape") {
+        close();
+      }
+    });
+  }
+
+  function initTooltips(root: ParentNode = d): void {
+    for (const element of $<HTMLElement>("[data-jcem-tooltip]", root)) {
+      bindTooltip(element);
+    }
+  }
+
+  function createToolbarSeparator(): HTMLElement {
+    const separator = d.createElement("span");
+    separator.className = "jcem-toolbar-separator";
+    separator.setAttribute("role", "separator");
+    separator.setAttribute("aria-orientation", "vertical");
+    return separator;
+  }
+
+  function createToolbarElement(item: ToolbarItemConfig): HTMLElement {
+    if (item.type === "separator") {
+      return createToolbarSeparator();
+    }
+
+    const element = item.href ? d.createElement("a") : d.createElement("button");
+    element.className = item.className ?? "";
+    element.dataset.jcemToolbarId = item.id;
+    element.dataset.jcemTooltip = item.hint || item.label || item.id;
+    element.setAttribute("aria-label", item.hint || item.label || item.id);
+
+    if (element instanceof HTMLButtonElement) {
+      element.type = "button";
+    } else {
+      element.href = item.href ?? "#";
+      if (item.download) {
+        element.setAttribute("download", item.download === true ? "" : item.download);
+      }
+    }
+
+    for (const [key, value] of Object.entries(item.dataset ?? {})) {
+      element.dataset[key] = value;
+    }
+
+    if (item.hidden) {
+      element.hidden = true;
+    }
+
+    const iconHtml = renderIcon(item.icon);
+    const labelHtml = item.label ? `<span class="jcem-toolbar-label">${item.label}</span>` : "";
+    element.innerHTML = `${iconHtml}${labelHtml}`;
+    if (!item.label) {
+      element.classList.add("jcem-icon-only");
+    }
+    item.onClick?.(element);
+    return element;
+  }
+
+  function toolbarItemFromLegacy(element: HTMLElement): ToolbarItemConfig | null {
+    const className = element.className || "";
+    const textValue = (element.textContent ?? "").trim();
+
+    if (element instanceof HTMLInputElement && element.type === "file") {
+      return null;
+    }
+
+    if (element.matches("[data-bundle-download],.bundle")) {
+      return {
+        className,
+        dataset: { bundleDownload: element.dataset.bundleDownload ?? "" },
+        download: true,
+        hidden: element.hidden,
+        hint: "Baixar versao offline",
+        href: element instanceof HTMLAnchorElement ? element.getAttribute("href") ?? undefined : undefined,
+        icon: { unicode: "f49e" },
+        id: "bundle",
+        label: "Versão Offline"
+      };
+    }
+
+    if (element.matches(".pdf.print")) {
+      return { className, hint: "Gerar PDF", icon: { unicode: "f02f" }, id: "pdf", label: textValue || "PDF" };
+    }
+
+    if (element.matches(".browser-print,.print:not(.pdf):not(.formulario)")) {
+      return { className, hint: "Imprimir", icon: { unicode: "f02f" }, id: "print", label: "", onClick: (created) => on(created, "click", () => w.print()) };
+    }
+
+    if (element.matches(".clear")) {
+      return { className, hint: "Limpar", icon: { unicode: "f12d" }, id: "clear", label: "" };
+    }
+
+    if (element.matches(".share")) {
+      return { className, hint: "Enviar", icon: { unicode: "f1d8" }, id: "share", label: "" };
+    }
+
+    if (element.matches(".timbre")) {
+      return {
+        className,
+        dataset: element instanceof HTMLLabelElement && element.htmlFor ? { targetInput: element.htmlFor } : undefined,
+        hint: "Selecionar timbre",
+        icon: { unicode: "f5bf" },
+        id: "timbre",
+        label: textValue || "Timbre",
+        onClick: (created) => {
+          if (element instanceof HTMLLabelElement && element.htmlFor) {
+            on(created, "click", () => {
+              one<HTMLInputElement>(`#${element.htmlFor}`)?.click();
+            });
+          }
+        }
+      };
+    }
+
+    return {
+      className,
+      hint: element.getAttribute("title") || textValue,
+      icon: element.matches(".pdf,.print") ? { unicode: "f02f" } : undefined,
+      id: element.dataset.jcemToolbarId || textValue.toLowerCase().replace(/[^a-z0-9_-]+/g, "-") || "acao",
+      label: textValue
+    };
+  }
+
+  function renderToolbarFromSlot(actions: HTMLElement, selector?: string): void {
+    const source = selector ? one<HTMLElement>(selector) : null;
+    if (!source) {
+      return;
+    }
+
+    const legacyItems: ToolbarItemConfig[] = [];
+    const preserveControls: HTMLElement[] = [];
+    for (const child of Array.from(source.children)) {
+      if (!(child instanceof HTMLElement)) {
+        continue;
+      }
+      if (child instanceof HTMLInputElement && child.type === "file") {
+        child.classList.add("jcem-toolbar-control");
+        preserveControls.push(child);
+        continue;
+      }
+      const item = toolbarItemFromLegacy(child);
+      if (item) {
+        legacyItems.push(item);
+      }
+    }
+
+    const hasPdf = legacyItems.some((item) => item.id === "pdf");
+    const orderById: Record<string, number> = {
+      "export-fill": 10,
+      "import-fill": 20,
+      "separator-fill": 30,
+      pdf: 40,
+      print: 50,
+      clear: 60,
+      timbre: 70,
+      share: 80,
+      bundle: 90
+    };
+    const orderedLegacyItems = legacyItems
+      .map((item, index) => ({ index, item }))
+      .sort((left, right) => (orderById[left.item.id] ?? 100 + left.index) - (orderById[right.item.id] ?? 100 + right.index))
+      .map(({ item }) => item);
+    const items: ToolbarItemConfig[] = [
+      ...(hasPdf ? [
+        { className: "ico save-fill jcem-export-fill", hint: "Salvar localmente", icon: { unicode: "f56d" }, id: "export-fill", label: "", onClick: (element: HTMLElement) => on(element, "click", () => exportFilling(toolbarRuntime)) },
+        { className: "ico open-fill jcem-import-fill", hint: "Abrir a partir do arquivo", icon: { unicode: "f574" }, id: "import-fill", label: "", onClick: (element: HTMLElement) => on(element, "click", () => importFilling(toolbarRuntime)) },
+        { id: "separator-fill", type: "separator" as const }
+      ] : []),
+      ...orderedLegacyItems
+    ];
+
+    actions.replaceChildren();
+    for (const control of preserveControls) {
+      actions.appendChild(control);
+    }
+    for (const item of items) {
+      actions.appendChild(createToolbarElement(item));
+    }
+    source.remove();
+    initTooltips(actions);
+  }
+
   function chooseShareMode(options: ShareOptions, context: ShareContext): ShareMode | null {
     if (options.promptMode) {
       return options.promptMode(context);
@@ -896,28 +1387,32 @@
   }
 
   const chromeDefaults = {
-    author: "JCEM",
+    authorName: "JeanCarloEM",
+    authorUrl: "https://www.jeancarloem.com",
+    brandName: "Tools JeanCarloEM",
     domain: "tools.jcem.pro",
     licenseName: "Mozilla Public License 2.0",
     licenseUrl: "https://www.mozilla.org/MPL/2.0/"
   };
 
+  function escapeHtml(value: string): string {
+    return value.replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    }[char] ?? char));
+  }
+
+  function externalLink(href: string, label: string, rel = "noopener noreferrer"): string {
+    return `<a href="${escapeHtml(href)}" target="_blank" rel="${escapeHtml(rel)}">${escapeHtml(label)}</a>`;
+  }
+
   function removeExistingChrome(): void {
     for (const element of $(".jcem-chrome-header,.jcem-chrome-footer")) {
       element.remove();
     }
-  }
-
-  function moveActionSlot(actions: HTMLElement, selector?: string): void {
-    const source = selector ? one<HTMLElement>(selector) : null;
-    if (!source) {
-      return;
-    }
-
-    while (source.firstChild) {
-      actions.appendChild(source.firstChild);
-    }
-    source.remove();
   }
 
   function renderChrome(options: ChromeOptions = {}): void {
@@ -926,7 +1421,11 @@
     const domain = options.domain ?? chromeDefaults.domain;
     const licenseName = options.licenseName ?? chromeDefaults.licenseName;
     const licenseUrl = options.licenseUrl ?? chromeDefaults.licenseUrl;
-    const author = options.author ?? chromeDefaults.author;
+    const brandName = chromeDefaults.brandName;
+    const authorName = options.authorName ?? options.author ?? chromeDefaults.authorName;
+    const authorUrl = options.authorUrl ?? chromeDefaults.authorUrl;
+    const authorLink = externalLink(authorUrl, authorName);
+    const licenseLink = externalLink(licenseUrl, licenseName, "license noopener noreferrer");
     const mount = typeof options.mountBefore === "string"
       ? one(options.mountBefore)
       : options.mountBefore ?? d.body.firstElementChild;
@@ -935,9 +1434,9 @@
     header.className = "jcem-chrome jcem-chrome-header no-print";
     header.innerHTML = `
       <div class="jcem-chrome-identity">
-        <a class="jcem-chrome-brand" href="https://${domain}/">Tools JCEM</a>
-        <p>Ferramentas e modelos Web estáticos publicados em <strong>${domain}</strong>.</p>
-        <p>Licença: <a href="${licenseUrl}" rel="license noopener" target="_blank">${licenseName}</a>.</p>
+        <a class="jcem-chrome-brand" href="https://${domain}/">${escapeHtml(brandName)}</a>
+        <p>Ferramentas e modelos Web estáticos mantidos por ${authorLink} e publicados em <strong>${domain}</strong>.</p>
+        <p>Licença: ${licenseLink}.</p>
       </div>
       <div class="jcem-chrome-meta">
         <span class="jcem-chrome-domain">${domain}</span>
@@ -948,20 +1447,34 @@
 
     const actions = one<HTMLElement>(".jcem-chrome-actions", header);
     if (actions) {
-      moveActionSlot(actions, options.actionsSelector);
+      renderToolbarFromSlot(actions, options.actionsSelector);
     }
 
     const footer = d.createElement("footer");
     footer.className = "jcem-chrome jcem-chrome-footer no-print";
     footer.innerHTML = `
-      <p><strong>Disclaimer:</strong> modelos e ferramentas são recursos auxiliares e não substituem conferência técnica, jurídica, contábil, regulatória ou profissional adequada ao caso concreto.</p>
-      <p><strong>Licença:</strong> código disponibilizado sob <a href="${licenseUrl}" rel="license noopener" target="_blank">${licenseName}</a>; preserve avisos e consulte o texto integral para direitos e obrigações.</p>
-      <p><strong>Autor:</strong> ${author}.</p>
-      <p><strong>Isenção de responsabilidade e garantia:</strong> o software é fornecido "no estado em que se encontra", sem garantias de qualquer natureza, expressas, implícitas ou legais, inclusive quanto à conformidade legal, regulatória, ausência de defeitos, adequação a finalidades específicas ou não violação de direitos.</p>
+      <section class="jcem-footer-block" aria-label="Autoria">
+        <h2>Autoria</h2>
+        <p>Autor: ${authorLink}.</p>
+      </section>
+      <section class="jcem-footer-block" aria-label="Licença">
+        <h2>Licença</h2>
+        <p>Código disponibilizado sob ${licenseLink}; preserve avisos e consulte o texto integral para direitos e obrigações.</p>
+      </section>
+      <section class="jcem-footer-block" aria-label="Informações institucionais">
+        <h2>Informações institucionais</h2>
+        <p>Modelos e ferramentas são recursos auxiliares publicados em <strong>${domain}</strong> para execução local no navegador, com salvamento local quando aplicável.</p>
+      </section>
+      <section class="jcem-footer-block jcem-footer-legal" aria-label="Disclaimer e isenção de responsabilidade">
+        <h2>Disclaimer e isenção de responsabilidade</h2>
+        <p>Os recursos não substituem conferência técnica, jurídica, contábil, regulatória ou profissional adequada ao caso concreto. O software é fornecido "no estado em que se encontra", sem garantias de qualquer natureza, expressas, implícitas ou legais, inclusive quanto à conformidade legal, regulatória, ausência de defeitos, adequação a finalidades específicas ou não violação de direitos.</p>
+        <p>Estes avisos têm finalidade exclusivamente informativa e complementar: não alteram, substituem, restringem, ampliam nem modificam os direitos, deveres, permissões e limitações definidos pela licença do software, que permanece como único instrumento normativo para uso, redistribuição, modificação e demais direitos relacionados ao código.</p>
+      </section>
     `;
 
     d.body.insertBefore(header, mount ?? null);
     d.body.appendChild(footer);
+    initTooltips(header);
   }
 
   w.JCEMDocumentos = {
@@ -978,6 +1491,12 @@
     },
     clipboard: {
       copy: copyToClipboard
+    },
+    data: {
+      apply: applyDataToControls,
+      envelope: portableEnvelope,
+      export: exportFilling,
+      import: importFilling
     },
     bundle: {
       bindDownload: bindBundleDownload
@@ -1015,7 +1534,9 @@
     },
     storage,
     toolbar: {
-      bind: bindToolbar
+      bind: bindToolbar,
+      configure: configureToolbar,
+      tooltips: initTooltips
     },
     util: {
       capitalizeFirst,

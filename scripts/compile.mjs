@@ -52,6 +52,20 @@ function isStaticSource(file) {
   return staticSourceExtensions.has(path.extname(file).toLowerCase());
 }
 
+function bundleForIndex(rel) {
+  const normalized = normalizeRel(rel);
+  if (path.posix.basename(normalized).toLowerCase() !== "index.html") {
+    return undefined;
+  }
+
+  const dir = path.posix.dirname(normalized);
+  if (!dir || dir === ".") {
+    return undefined;
+  }
+
+  return `${dir}/${path.posix.basename(dir)}.bundle.zip`;
+}
+
 async function collectFiles(dir, prefix = "") {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
   const files = [];
@@ -129,6 +143,12 @@ async function copyStaticSources() {
 
 async function pruneDist() {
   const generated = new Set([...generatedFiles].map((file) => normalizeRel(file)));
+  for (const file of [...generated]) {
+    const bundle = bundleForIndex(file);
+    if (bundle) {
+      generated.add(bundle);
+    }
+  }
 
   for (const rel of await collectFiles(distRoot)) {
     if (generated.has(normalizeRel(rel))) {

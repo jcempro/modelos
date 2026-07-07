@@ -60,12 +60,20 @@ declare global {
     };
     toolbar: {
       bind: (actions: Record<string, (event: Event) => void>) => void;
+      configure: (config: ToolbarRuntimeConfig) => void;
+      tooltips: (root?: ParentNode) => void;
     };
     date: {
       current: (selector: string) => void;
     };
     clipboard: {
       copy: (value: string) => Promise<void>;
+    };
+    data: {
+      apply: (data: Record<string, unknown>, root?: ParentNode) => void;
+      envelope: (config?: ToolbarRuntimeConfig) => PortableDocumentEnvelope;
+      export: (config?: ToolbarRuntimeConfig) => PortableDocumentEnvelope | null;
+      import: (config?: ToolbarRuntimeConfig) => void;
     };
     bundle: {
       bindDownload: (selector?: string) => void;
@@ -170,6 +178,8 @@ declare global {
   interface ChromeOptions {
     actionsSelector?: string;
     author?: string;
+    authorName?: string;
+    authorUrl?: string;
     domain?: string;
     licenseName?: string;
     licenseUrl?: string;
@@ -279,5 +289,55 @@ declare global {
     payload?: () => Record<string, unknown> | null | undefined;
     promptMode?: (context: ShareContext) => ShareMode | null;
     root?: ParentNode | string;
+  }
+
+  interface ToolbarIconRef {
+    iconName?: string;
+    identifier?: string;
+    unicode?: string;
+  }
+
+  interface ToolbarItemConfig {
+    className?: string;
+    dataset?: Record<string, string>;
+    download?: boolean | string;
+    hidden?: boolean;
+    hint?: string;
+    hook?: string;
+    href?: string;
+    icon?: ToolbarIconRef | string;
+    id: string;
+    label?: string;
+    onClick?: (element: HTMLElement) => void;
+    order?: number;
+    type?: "button" | "separator";
+  }
+
+  interface PortableDocumentEnvelope {
+    app: "tools.jcem.pro";
+    data: Record<string, unknown>;
+    exportedAt: string;
+    moduleId: string;
+    path: string;
+    schema: string;
+    version: string;
+  }
+
+  interface ToolbarMessages {
+    exportBasename?: string;
+    importFailed?: string;
+    imported?: string;
+  }
+
+  interface ToolbarRuntimeConfig {
+    acceptVersions?: string[];
+    exportPayload?: () => Record<string, unknown> | null | undefined;
+    fileExtension?: string;
+    importPayload?: (data: Record<string, unknown>, envelope: PortableDocumentEnvelope) => void;
+    messages?: ToolbarMessages;
+    moduleId?: string;
+    root?: ParentNode | string;
+    schema?: string;
+    version?: string;
   }
 }

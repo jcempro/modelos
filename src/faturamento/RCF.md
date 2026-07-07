@@ -84,6 +84,8 @@ No compartilhamento preenchido, o payload deve representar a relacao completa: e
 
 Autosave local deve preservar dados cadastrais, financeiros, mes inicial, periodo, classificacoes derivadas, percentuais, regime tributario, assinatura e Prazo Medio unico.
 
+A exportacao local pela toolbar global deve usar envelope do modulo `faturamento`, schema `jcem.faturamento.v1` e payload equivalente ao compartilhamento preenchido. A importacao local deve validar modulo, schema e versao antes de aplicar dados, reutilizando os mesmos aliases e normalizacoes do JSON Base64. Arquivos de outros modulos devem ser recusados sem alterar o formulario.
+
 ## 9. Impressao, PDF e Interface
 
 O impresso deve seguir o modelo visual oficial, priorizar fidelidade A4 e caber em uma pagina quando os conteudos estiverem dentro dos limites esperados. Impressao nativa e PDF dedicado, quando disponivel, devem ocultar interface Web, mensagens, alertas e ferramentas.
@@ -111,6 +113,8 @@ Entradas invalidas nao devem corromper dados validos. Quando possivel, preservar
 ## 12. Componentes e Reuso
 
 O modulo deve reutilizar infraestrutura compartilhada para layout de workspace/preview/formularios, toolbar/acoes documentais, autosave, JSON Base64, impressao/PDF, separacao interface/area imprimivel, validadores, normalizadores, formatacao de datas/moedas/percentuais/documentos brasileiros, mensagens e estados de erro.
+
+Layout de formulario externo, workspace, contraste da interface, tooltips, icones, separadores e botoes globais da toolbar pertencem a camada compartilhada. O CSS local deve permanecer restrito ao desenho interno da folha oficial e a detalhes semanticos especificos da Relacao de Faturamento.
 
 Devem ser promovidas ou consumidas como compartilhadas as logicas reutilizaveis, incluindo validacao de Mes/Ano, geracao de doze meses, formatacao/arredondamento BRL, reconciliacao de centavos, validacao percentual, Cidade-UF e serializacao de formularios complexos.
 

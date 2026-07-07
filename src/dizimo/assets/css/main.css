@@ -24,7 +24,7 @@ div.input:first-of-type {
 div.input>.go,
 div.input:after,
 div.input:before {
-    font-family: "Font Awesome 5 Free";
+    font-family: "Roboto", "Tahoma", "Arial", "Sans Serif";
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
     font-style: normal;
@@ -47,7 +47,7 @@ div.input:before {
 }
 
 div.input.currency:before {
-    content: "\f81d";
+    content: "R$";
 }
 
 div.input:after {
@@ -124,7 +124,7 @@ div.input>input[type=button]:before,
 div.input>input[type=submit]:before,
 div.input>button:before,
 div.input>.button:before {
-    font-family: "Font Awesome 5 Free";
+    font-family: "Roboto", "Tahoma", "Arial", "Sans Serif";
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
     font-style: normal;
