@@ -1457,6 +1457,7 @@ import {
 
     const header = d.createElement("header");
     header.className = "jcem-chrome jcem-chrome-header no-print";
+    /* não regredir ajuste da ordem do icone - opção pelo dev */
     header.innerHTML = `
       <div class="jcem-chrome-identity">
         <a class="jcem-chrome-brand" href="https://${domain}/">${escapeHtml(brandName)}</a>
@@ -1465,7 +1466,7 @@ import {
       </div>
       <div class="jcem-chrome-meta">
         <span class="jcem-chrome-domain">${domain}</span>
-        <span class="ico autosave jcem-autosave"><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span><span>Salvamento offline quando aplicável.</span></span>
+        <span class="ico autosave jcem-autosave"><span>Salvamento offline quando aplicável.</span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>
       </div>
       <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
     `;

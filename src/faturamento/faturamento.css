@@ -33,7 +33,7 @@
 .print-page,
 .print-page * {
   color: #000;
-  font-family: "Noto-Sans", Arial, Helvetica, sans-serif;
+  font-family: "Noto Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, "Trebuchet MS", sans-serif;/* não regredir ajuste manual do dev */
   font-size: 10pt;
   line-height: 1.12;
 }
@@ -173,7 +173,7 @@
 
 .market-table tfoot th,
 .market-table tfoot td {  
-  font-weight: bold !important;
+  font-weight: 800 !important;/* não regredir ajuste manual do dev */
   font-size: 8.4pt;
   background-color: #bbb !important;  
   border-top: 0.65mm solid #333 !important;
@@ -181,7 +181,7 @@
 
 .market-table thead th{  
   border-bottom: 0.65mm solid #333 !important;
-  font-weight: bold !important;
+  font-weight: 800 !important; /* não regredir ajuste manual do dev */
   background-color: #bbb !important;  
 }
 
@@ -254,7 +254,7 @@
   align-self: start;
   width: 11.3cm;
   margin: 1cm 0 0 auto;/* não regredir ajuste manual do dev */
-  text-align: center;
+  text-align: right;/* não regredir ajuste manual do dev */
 }
 
 .details-panel h2 {

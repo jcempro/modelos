@@ -11,7 +11,7 @@ Cancelar: compartilhar apenas o link limpo da pagina.`;return e.confirm(s)?"fill
       </div>
       <div class="jcem-chrome-meta">
         <span class="jcem-chrome-domain">${a}</span>
-        <span class="ico autosave jcem-autosave"><span class="jcem-autosave-icon">${K2({unicode:"f0c7"})}</span><span>Salvamento offline quando aplic\xE1vel.</span></span>
+        <span class="ico autosave jcem-autosave"><span>Salvamento offline quando aplic\xE1vel.</span><span class="jcem-autosave-icon">${K2({unicode:"f0c7"})}</span></span>
       </div>
       <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
     `;let i2=u(".jcem-chrome-actions",T);i2&&z4(i2,c.actionsSelector);let F2=r.createElement("footer");F2.className="jcem-chrome jcem-chrome-footer no-print",F2.innerHTML=`
