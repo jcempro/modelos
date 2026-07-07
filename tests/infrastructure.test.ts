@@ -154,6 +154,8 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   };
   const sharedTs = await readFile("src/assets/js/documentos.ts", "utf8");
   const sharedCss = await readFile("src/assets/css/documentos.css", "utf8");
+  const faturamentoTs = await readFile("src/faturamento/faturamento.ts", "utf8");
+  const admissionalTs = await readFile("src/oficios/admissional/admissional.ts", "utf8");
 
   assert.ok(pkg.devDependencies["@fortawesome/free-solid-svg-icons"]);
   assert.ok(pkg.devDependencies["@floating-ui/dom"]);
@@ -166,11 +168,17 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   assert.match(sharedTs, /toolbarActionHooks/);
   assert.match(sharedTs, /hook:\s*"document\.export"/);
   assert.match(sharedTs, /hook:\s*"document\.import"/);
+  assert.match(sharedTs, /toolbarRuntime\.actions/);
+  assert.match(sharedTs, /id:\s*"blank-pdf"/);
   assert.match(sharedTs, /exportFilling/);
   assert.match(sharedTs, /importFilling/);
   assert.match(sharedTs, /computePosition/);
-  assert.match(sharedCss, /--jcem-toolbar-icon-color:\s*#444;/);
+  assert.match(sharedCss, /--jcem-toolbar-icon-color:\s*#888;\/\*\s*não regredir/);
   assert.match(sharedCss, /\.jcem-chrome-actions\.menu \.jcem-fa-icon\s*{[^}]*var\(--jcem-toolbar-icon-color\)/s);
+  assert.match(faturamentoTs, /actions:\s*{/);
+  assert.match(admissionalTs, /actions:\s*{/);
+  assert.doesNotMatch(faturamentoTs, /api\.toolbar\.bind|api\.share\.bindToolbar/);
+  assert.doesNotMatch(admissionalTs, /api\.toolbar\.bind|api\.share\.bindToolbar/);
   assert.doesNotMatch(sharedCss, /\\27A6|\\1F5B6|\\1F5BC|\\232B|\\21E9/);
 });
 

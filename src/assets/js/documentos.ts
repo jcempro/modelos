@@ -906,6 +906,7 @@ import {
   const toolbarLegacyBlueprints: ToolbarLegacyBlueprint[] = [
     { datasetSource: "bundle", download: true, hint: "Baixar versao offline", hrefSource: "href", icon: { unicode: "f49e" }, id: "bundle", label: "fixed:Versão Offline", order: 90, selector: "[data-bundle-download],.bundle" },
     { hint: "Gerar PDF", icon: { unicode: "f02f" }, id: "pdf", label: "text:PDF", order: 40, selector: ".pdf.print" },
+    { hint: "Gerar PDF em branco", icon: { unicode: "f02f" }, id: "blank-pdf", label: "text:Imprimir Branco", order: 45, selector: ".pdf.formulario" },
     { hint: "Imprimir", hook: "window.print", icon: { unicode: "f02f" }, id: "print", label: "", order: 50, selector: ".browser-print,.print:not(.pdf):not(.formulario)" },
     { hint: "Limpar", icon: { unicode: "f12d" }, id: "clear", label: "", order: 60, selector: ".clear" },
     { hint: "Enviar", icon: { unicode: "f1d8" }, id: "share", label: "", order: 80, selector: ".share" },
@@ -1257,14 +1258,19 @@ import {
   }
 
   /**
-   * Associa o hook declarativo de um item ao elemento renderizado.
-   * Recebe elemento e configuração do item; não retorna valor e só registra evento quando o hook existe no catálogo global.
+   * Associa hook interno e ação declarativa de módulo ao item renderizado.
+   * Recebe elemento e configuração do item; não retorna valor e resolve o comportamento no clique por metadados globais e runtime.
    */
   function bindToolbarHook(element: HTMLElement, item: ToolbarItemConfig): void {
     const hook = item.hook ? toolbarActionHooks[item.hook] : undefined;
-    if (hook) {
-      on(element, "click", () => hook(element, item));
-    }
+    const actionKey = item.action || item.id;
+    on(element, "click", (event) => {
+      hook?.(element, item);
+      const action = toolbarRuntime.actions?.[actionKey];
+      if (action) {
+        void action(event, element, item);
+      }
+    });
   }
 
   /**

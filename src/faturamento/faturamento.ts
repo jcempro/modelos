@@ -1036,8 +1036,26 @@ import {
   }
 
   api.ready(() => {
-    api.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".faturamento-shell" });
+    const shareOptions: ShareOptions = {
+      beforeShare: () => {
+        refreshPeriodIfNeeded();
+        renderPreview();
+      },
+      messages: {
+        copiedClean: "Endereco limpo da relacao copiado para a area de transferencia.",
+        copiedFilled: "Endereco da relacao preenchida copiado para a area de transferencia."
+      },
+      payload
+    };
+
     api.toolbar.configure({
+      actions: {
+        clear: () => clearForm(),
+        pdf: () => printPdf(),
+        share: (event) => {
+          void api.share.run(shareOptions, event);
+        }
+      },
       exportBasename: () => normalizeCompanyFileBasename(input("razao-social").value),
       exportPayload: payload,
       importPayload: (data) => {
@@ -1050,6 +1068,7 @@ import {
       schema: "jcem.faturamento.v1",
       version: "1.0.0"
     });
+    api.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".faturamento-shell" });
     api.layout.printable({
       document: "#documento-faturamento",
       forms: [{ placement: "external", selector: ".editor" }],
@@ -1067,24 +1086,6 @@ import {
     refreshPeriodIfNeeded();
     updateDistributionLockState();
     bindStaticInputs();
-
-    api.toolbar.bind({
-      ".browser-print": () => w.print(),
-      ".clear-form": clearForm,
-      ".pdf.print": printPdf
-    });
-
-    api.share.bindToolbar(".share-url", {
-      beforeShare: () => {
-        refreshPeriodIfNeeded();
-        renderPreview();
-      },
-      messages: {
-        copiedClean: "Endereco limpo da relacao copiado para a area de transferencia.",
-        copiedFilled: "Endereco da relacao preenchida copiado para a area de transferencia."
-      },
-      payload
-    });
 
     const distribute = api.one<HTMLButtonElement>("#distribuir-faturamento");
     api.on(distribute, "click", distributeAnnual);

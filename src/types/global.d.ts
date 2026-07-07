@@ -320,6 +320,8 @@ declare global {
     type?: "button" | "separator";
   }
 
+  type ToolbarRuntimeAction = (event: Event, element: HTMLElement, item: ToolbarItemConfig) => void | Promise<void>;
+
   interface PortableDocumentEnvelope {
     app: "tools.jcem.pro";
     data: Record<string, unknown>;
@@ -338,6 +340,7 @@ declare global {
 
   interface ToolbarRuntimeConfig {
     acceptVersions?: string[];
+    actions?: Record<string, ToolbarRuntimeAction>;
     exportBasename?: string | (() => string);
     exportPayload?: () => Record<string, unknown> | null | undefined;
     fileExtension?: string;

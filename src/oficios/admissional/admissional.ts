@@ -170,14 +170,31 @@
   }
 
   api.ready(() => {
-    api.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".versao" });
+    const shareOptions: ShareOptions = {
+      beforeShare: (context) => context.mode === "clean" || validateCompany(),
+      messages: {
+        copiedClean: "Endereco limpo do modelo copiado para a area de transferencia.",
+        copiedFilled: "Endereco do modelo preenchido copiado para a area de transferencia."
+      },
+      payload: sharePayload
+    };
+
     api.toolbar.configure({
+      actions: {
+        "blank-pdf": () => printBlankPdf(),
+        clear: () => api.autosave.clearAutoFields(),
+        pdf: () => printPdf(),
+        share: (event) => {
+          void api.share.run(shareOptions, event);
+        }
+      },
       exportPayload: sharePayload,
       importPayload: applyDataPayload,
       moduleId: "admissional",
       schema: "jcem.admissional.v1",
       version: "1.0.1"
     });
+    api.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".versao" });
     api.layout.printable({
       document: ".main",
       forms: [{ placement: "internal", selector: ".main" }]
@@ -188,21 +205,6 @@
     api.autosave.init({ validation });
     api.date.current("span.data");
     api.image.bindUpload({ inputSelector: "input[type=file]", key: "timbre", selector: "img.logo" });
-
-    api.toolbar.bind({
-      ".menu .clear": () => api.autosave.clearAutoFields(),
-      ".menu .pdf.formulario": printBlankPdf,
-      ".menu .pdf.print": printPdf
-    });
-
-    api.share.bindToolbar(".menu .share", {
-      beforeShare: (context) => context.mode === "clean" || validateCompany(),
-      messages: {
-        copiedClean: "Endereco limpo do modelo copiado para a area de transferencia.",
-        copiedFilled: "Endereco do modelo preenchido copiado para a area de transferencia."
-      },
-      payload: sharePayload
-    });
 
     applyParams();
   });
