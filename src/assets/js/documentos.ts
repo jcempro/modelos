@@ -19,6 +19,24 @@ import {
     prefix: string;
   };
 
+  type ToolbarHook = (element: HTMLElement, item: ToolbarItemConfig) => void;
+  type ToolbarLabelSource = "" | "text" | `fixed:${string}` | `text:${string}`;
+  type ToolbarDatasetSource = "bundle" | "targetInput";
+  type ToolbarHrefSource = "href";
+  type ToolbarLegacyBlueprint = {
+    datasetSource?: ToolbarDatasetSource;
+    download?: boolean | string;
+    fallbackId?: string;
+    hint: string;
+    hook?: string;
+    hrefSource?: ToolbarHrefSource;
+    icon?: ToolbarIconRef | string;
+    id: string;
+    label: ToolbarLabelSource;
+    order: number;
+    selector: string;
+  };
+
   const storage = w.localStorage;
   const placeholders = new WeakMap<HTMLInputElement, string | null>();
   const autosaveBound = new WeakSet<HTMLInputElement>();
@@ -863,6 +881,37 @@ import {
 
   const iconsByKey = new Map<string, FaIconDefinition>();
   const toolbarRuntime: ToolbarRuntimeConfig = {};
+  const toolbarActionHooks: Record<string, ToolbarHook> = {
+    "document.export": () => {
+      exportFilling(toolbarRuntime);
+    },
+    "document.import": () => {
+      importFilling(toolbarRuntime);
+    },
+    "input.trigger": (_element, item) => {
+      const target = item.dataset?.targetInput;
+      if (target) {
+        one<HTMLInputElement>(`#${target}`)?.click();
+      }
+    },
+    "window.print": () => {
+      w.print();
+    }
+  };
+  const toolbarFillItems: ToolbarItemConfig[] = [
+    { className: "ico save-fill jcem-export-fill", hint: "Salvar localmente", hook: "document.export", icon: { unicode: "f56d" }, id: "export-fill", label: "", order: 10 },
+    { className: "ico open-fill jcem-import-fill", hint: "Abrir a partir do arquivo", hook: "document.import", icon: { unicode: "f574" }, id: "import-fill", label: "", order: 20 },
+    { id: "separator-fill", order: 30, type: "separator" as const }
+  ];
+  const toolbarLegacyBlueprints: ToolbarLegacyBlueprint[] = [
+    { datasetSource: "bundle", download: true, hint: "Baixar versao offline", hrefSource: "href", icon: { unicode: "f49e" }, id: "bundle", label: "fixed:Versão Offline", order: 90, selector: "[data-bundle-download],.bundle" },
+    { hint: "Gerar PDF", icon: { unicode: "f02f" }, id: "pdf", label: "text:PDF", order: 40, selector: ".pdf.print" },
+    { hint: "Imprimir", hook: "window.print", icon: { unicode: "f02f" }, id: "print", label: "", order: 50, selector: ".browser-print,.print:not(.pdf):not(.formulario)" },
+    { hint: "Limpar", icon: { unicode: "f12d" }, id: "clear", label: "", order: 60, selector: ".clear" },
+    { hint: "Enviar", icon: { unicode: "f1d8" }, id: "share", label: "", order: 80, selector: ".share" },
+    { datasetSource: "targetInput", hint: "Selecionar timbre", hook: "input.trigger", icon: { unicode: "f5bf" }, id: "timbre", label: "text:Timbre", order: 70, selector: ".timbre" },
+    { fallbackId: "acao", hint: "", icon: { unicode: "f02f" }, id: "", label: "text", order: 100, selector: ".pdf,.print" }
+  ];
 
   for (const definition of iconDefinitions) {
     const aliases = definition.icon[2];
@@ -1158,6 +1207,10 @@ import {
     return separator;
   }
 
+  /**
+   * Renderiza um item de toolbar a partir de metadados declarativos.
+   * Recebe a configuração normalizada, cria botão/link/separador, aplica acessibilidade, datasets, ícone, estado e hooks; retorna o elemento pronto para montagem.
+   */
   function createToolbarElement(item: ToolbarItemConfig): HTMLElement {
     if (item.type === "separator") {
       return createToolbarSeparator();
@@ -1186,131 +1239,183 @@ import {
       element.hidden = true;
     }
 
+    if (item.enabled === false && element instanceof HTMLButtonElement) {
+      element.disabled = true;
+    } else if (item.enabled === false) {
+      element.setAttribute("aria-disabled", "true");
+    }
+
     const iconHtml = renderIcon(item.icon);
     const labelHtml = item.label ? `<span class="jcem-toolbar-label">${item.label}</span>` : "";
     element.innerHTML = `${iconHtml}${labelHtml}`;
     if (!item.label) {
       element.classList.add("jcem-icon-only");
     }
+    bindToolbarHook(element, item);
     item.onClick?.(element);
     return element;
   }
 
-  function toolbarItemFromLegacy(element: HTMLElement): ToolbarItemConfig | null {
-    const className = element.className || "";
-    const textValue = (element.textContent ?? "").trim();
+  /**
+   * Associa o hook declarativo de um item ao elemento renderizado.
+   * Recebe elemento e configuração do item; não retorna valor e só registra evento quando o hook existe no catálogo global.
+   */
+  function bindToolbarHook(element: HTMLElement, item: ToolbarItemConfig): void {
+    const hook = item.hook ? toolbarActionHooks[item.hook] : undefined;
+    if (hook) {
+      on(element, "click", () => hook(element, item));
+    }
+  }
 
+  /**
+   * Extrai o texto visível de um item legado usado como fonte declarativa.
+   * Recebe o elemento original e retorna texto aparado para rótulos, dicas ou fallback de identificador.
+   */
+  function toolbarText(element: HTMLElement): string {
+    return (element.textContent ?? "").trim();
+  }
+
+  /**
+   * Resolve o identificador lógico de um item de toolbar.
+   * Recebe elemento legado, blueprint e texto extraído; retorna id explícito, derivado ou fallback estável.
+   */
+  function toolbarId(element: HTMLElement, blueprint: ToolbarLegacyBlueprint, textValue: string): string {
+    const configured = element.dataset.jcemToolbarId || blueprint.id;
+    const fallback = blueprint.fallbackId ?? "acao";
+    return configured || textValue.toLowerCase().replace(/[^a-z0-9_-]+/g, "-") || fallback;
+  }
+
+  /**
+   * Resolve o rótulo exibido de acordo com a estratégia declarada no blueprint.
+   * Recebe a fonte do rótulo e o texto legado; retorna texto vazio, original ou fallback configurado.
+   */
+  function toolbarLabel(source: ToolbarLabelSource, textValue: string): string {
+    if (source === "") {
+      return "";
+    }
+    if (source === "text") {
+      return textValue;
+    }
+    if (source.startsWith("fixed:")) {
+      return source.slice("fixed:".length);
+    }
+    return textValue || source.slice("text:".length);
+  }
+
+  /**
+   * Converte atributos legados em dataset declarativo consumido pelos hooks.
+   * Recebe elemento e origem declarada; retorna dataset normalizado ou ausência de dataset.
+   */
+  function toolbarDataset(element: HTMLElement, source?: ToolbarDatasetSource): Record<string, string> | undefined {
+    if (source === "bundle") {
+      return { bundleDownload: element.dataset.bundleDownload ?? "" };
+    }
+    if (source === "targetInput" && element instanceof HTMLLabelElement && element.htmlFor) {
+      return { targetInput: element.htmlFor };
+    }
+    return undefined;
+  }
+
+  /**
+   * Resolve o href preservado para ações renderizadas como link.
+   * Recebe elemento e origem declarada; retorna o href original apenas quando o blueprint permite.
+   */
+  function toolbarHref(element: HTMLElement, source?: ToolbarHrefSource): string | undefined {
+    return source === "href" && element instanceof HTMLAnchorElement ? element.getAttribute("href") ?? undefined : undefined;
+  }
+
+  /**
+   * Localiza o blueprint compatível com um item legado do slot de ações.
+   * Recebe o elemento original e retorna a primeira regra declarativa aplicável.
+   */
+  function toolbarBlueprintFor(element: HTMLElement): ToolbarLegacyBlueprint | null {
+    return toolbarLegacyBlueprints.find((blueprint) => element.matches(blueprint.selector)) ?? null;
+  }
+
+  /**
+   * Normaliza um elemento legado para configuração declarativa de toolbar.
+   * Recebe o elemento do slot, preserva compatibilidade de classes/dados e retorna item pronto para renderização.
+   */
+  function toolbarItemFromLegacy(element: HTMLElement): ToolbarItemConfig | null {
     if (element instanceof HTMLInputElement && element.type === "file") {
       return null;
     }
 
-    if (element.matches("[data-bundle-download],.bundle")) {
-      return {
-        className,
-        dataset: { bundleDownload: element.dataset.bundleDownload ?? "" },
-        download: true,
-        hidden: element.hidden,
-        hint: "Baixar versao offline",
-        href: element instanceof HTMLAnchorElement ? element.getAttribute("href") ?? undefined : undefined,
-        icon: { unicode: "f49e" },
-        id: "bundle",
-        label: "Versão Offline"
-      };
+    const blueprint = toolbarBlueprintFor(element);
+    if (!blueprint) {
+      return null;
     }
 
-    if (element.matches(".pdf.print")) {
-      return { className, hint: "Gerar PDF", icon: { unicode: "f02f" }, id: "pdf", label: textValue || "PDF" };
-    }
-
-    if (element.matches(".browser-print,.print:not(.pdf):not(.formulario)")) {
-      return { className, hint: "Imprimir", icon: { unicode: "f02f" }, id: "print", label: "", onClick: (created) => on(created, "click", () => w.print()) };
-    }
-
-    if (element.matches(".clear")) {
-      return { className, hint: "Limpar", icon: { unicode: "f12d" }, id: "clear", label: "" };
-    }
-
-    if (element.matches(".share")) {
-      return { className, hint: "Enviar", icon: { unicode: "f1d8" }, id: "share", label: "" };
-    }
-
-    if (element.matches(".timbre")) {
-      return {
-        className,
-        dataset: element instanceof HTMLLabelElement && element.htmlFor ? { targetInput: element.htmlFor } : undefined,
-        hint: "Selecionar timbre",
-        icon: { unicode: "f5bf" },
-        id: "timbre",
-        label: textValue || "Timbre",
-        onClick: (created) => {
-          if (element instanceof HTMLLabelElement && element.htmlFor) {
-            on(created, "click", () => {
-              one<HTMLInputElement>(`#${element.htmlFor}`)?.click();
-            });
-          }
-        }
-      };
-    }
-
+    const textValue = toolbarText(element);
     return {
-      className,
-      hint: element.getAttribute("title") || textValue,
-      icon: element.matches(".pdf,.print") ? { unicode: "f02f" } : undefined,
-      id: element.dataset.jcemToolbarId || textValue.toLowerCase().replace(/[^a-z0-9_-]+/g, "-") || "acao",
-      label: textValue
+      className: element.className || "",
+      dataset: toolbarDataset(element, blueprint.datasetSource),
+      download: blueprint.download,
+      hidden: element.hidden,
+      hint: blueprint.hint || element.getAttribute("title") || textValue,
+      hook: blueprint.hook,
+      href: toolbarHref(element, blueprint.hrefSource),
+      icon: blueprint.icon,
+      id: toolbarId(element, blueprint, textValue),
+      label: toolbarLabel(blueprint.label, textValue),
+      order: blueprint.order
     };
   }
 
-  function renderToolbarFromSlot(actions: HTMLElement, selector?: string): void {
-    const source = selector ? one<HTMLElement>(selector) : null;
-    if (!source) {
-      return;
-    }
-
-    const legacyItems: ToolbarItemConfig[] = [];
-    const preserveControls: HTMLElement[] = [];
+  /**
+   * Separa controles preservados e ações declarativas de um slot de toolbar.
+   * Recebe o container legado e retorna inputs auxiliares preservados e itens normalizados.
+   */
+  function toolbarItemsFromSlot(source: HTMLElement): { controls: HTMLElement[]; items: ToolbarItemConfig[] } {
+    const controls: HTMLElement[] = [];
+    const items: ToolbarItemConfig[] = [];
     for (const child of Array.from(source.children)) {
       if (!(child instanceof HTMLElement)) {
         continue;
       }
       if (child instanceof HTMLInputElement && child.type === "file") {
         child.classList.add("jcem-toolbar-control");
-        preserveControls.push(child);
+        controls.push(child);
         continue;
       }
       const item = toolbarItemFromLegacy(child);
       if (item) {
-        legacyItems.push(item);
+        items.push(item);
       }
     }
+    return { controls, items };
+  }
 
-    const hasPdf = legacyItems.some((item) => item.id === "pdf");
-    const orderById: Record<string, number> = {
-      "export-fill": 10,
-      "import-fill": 20,
-      "separator-fill": 30,
-      pdf: 40,
-      print: 50,
-      clear: 60,
-      timbre: 70,
-      share: 80,
-      bundle: 90
-    };
-    const orderedLegacyItems = legacyItems
+  /**
+   * Ordena itens de toolbar usando metadados de precedência.
+   * Recebe itens normalizados e retorna nova lista estável por ordem declarada e posição original.
+   */
+  function sortToolbarItems(items: ToolbarItemConfig[]): ToolbarItemConfig[] {
+    return items
       .map((item, index) => ({ index, item }))
-      .sort((left, right) => (orderById[left.item.id] ?? 100 + left.index) - (orderById[right.item.id] ?? 100 + right.index))
+      .sort((left, right) => (left.item.order ?? 100 + left.index) - (right.item.order ?? 100 + right.index))
       .map(({ item }) => item);
-    const items: ToolbarItemConfig[] = [
-      ...(hasPdf ? [
-        { className: "ico save-fill jcem-export-fill", hint: "Salvar localmente", icon: { unicode: "f56d" }, id: "export-fill", label: "", onClick: (element: HTMLElement) => on(element, "click", () => exportFilling(toolbarRuntime)) },
-        { className: "ico open-fill jcem-import-fill", hint: "Abrir a partir do arquivo", icon: { unicode: "f574" }, id: "import-fill", label: "", onClick: (element: HTMLElement) => on(element, "click", () => importFilling(toolbarRuntime)) },
-        { id: "separator-fill", type: "separator" as const }
-      ] : []),
-      ...orderedLegacyItems
-    ];
+  }
+
+  /**
+   * Renderiza a toolbar global a partir do slot declarado pelo módulo.
+   * Recebe o container de destino e seletor do slot; monta ações globais, ações legadas normalizadas e tooltips.
+   */
+  function renderToolbarFromSlot(actions: HTMLElement, selector?: string): void {
+    const source = selector ? one<HTMLElement>(selector) : null;
+    if (!source) {
+      return;
+    }
+
+    const { controls, items: legacyItems } = toolbarItemsFromSlot(source);
+    const hasPdf = legacyItems.some((item) => item.id === "pdf");
+    const items = sortToolbarItems([
+      ...(hasPdf ? toolbarFillItems : []),
+      ...legacyItems
+    ]);
 
     actions.replaceChildren();
-    for (const control of preserveControls) {
+    for (const control of controls) {
       actions.appendChild(control);
     }
     for (const item of items) {
@@ -1395,13 +1500,45 @@ import {
     }
   }
 
+  const j = (parts: string[], separator = ""): string => parts.join(separator);
   const chromeDefaults = {
-    authorName: "JeanCarloEM",
-    authorUrl: "https://www.jeancarloem.com",
-    brandName: "Tools JeanCarloEM",
-    domain: "tools.jcem.pro",
-    licenseName: "Mozilla Public License 2.0",
-    licenseUrl: "https://www.mozilla.org/MPL/2.0/"
+    authorName: j(["Jean", "Carlo", "EM"]),
+    authorUrl: j(["https://www.", "jeancarloem", ".com"]),
+    brandName: j(["Tools ", "Jean", "Carlo", "EM"]),
+    domain: j(["tools", "jcem", "pro"], "."),
+    licenseName: j(["Mozilla", "Public", "License", "2.0"], " "),
+    licenseUrl: j(["https://www.", "mozilla.org", "/MPL/2.0/"])
+  };
+  const chromeCopy = {
+    footerInfo: (domain: string): string => j([
+      "Modelos e ferramentas são recursos auxiliares publicados em <strong>",
+      escapeHtml(domain),
+      "</strong> para execução local no navegador, com salvamento local quando aplicável."
+    ]),
+    footerLicense: (licenseLink: string): string => j([
+      "Código disponibilizado sob ",
+      licenseLink,
+      "; preserve avisos e consulte o texto integral para direitos e obrigações."
+    ]),
+    headerLicense: (licenseLink: string): string => j(["Licença: ", licenseLink, "."]),
+    headerSummary: (authorLink: string, domain: string): string => j([
+      "Ferramentas e modelos Web estáticos mantidos por ",
+      authorLink,
+      " e publicados em <strong>",
+      escapeHtml(domain),
+      "</strong>."
+    ]),
+    legalOne: j([
+      "Os recursos não substituem conferência técnica, jurídica, contábil, regulatória ou profissional adequada ao caso concreto. ",
+      "O software é fornecido \"no estado em que se encontra\", sem garantias de qualquer natureza, expressas, implícitas ou legais, ",
+      "inclusive quanto à conformidade legal, regulatória, ausência de defeitos, adequação a finalidades específicas ou não violação de direitos."
+    ]),
+    legalTwo: j([
+      "Estes avisos têm finalidade exclusivamente informativa e complementar: não alteram, substituem, restringem, ampliam nem modificam ",
+      "os direitos, deveres, permissões e limitações definidos pela licença do software, que permanece como único instrumento normativo ",
+      "para uso, redistribuição, modificação e demais direitos relacionados ao código."
+    ]),
+    offlineStatus: j(["Salvamento local, offline e automático, se aplicável."])
   };
 
   function escapeHtml(value: string): string {
@@ -1457,16 +1594,15 @@ import {
 
     const header = d.createElement("header");
     header.className = "jcem-chrome jcem-chrome-header no-print";
-    /* não regredir ajuste da ordem do icone - opção pelo dev */
     header.innerHTML = `
       <div class="jcem-chrome-identity">
         <a class="jcem-chrome-brand" href="https://${domain}/">${escapeHtml(brandName)}</a>
-        <p>Ferramentas e modelos Web estáticos mantidos por ${authorLink} e publicados em <strong>${domain}</strong>.</p>
-        <p>Licença: ${licenseLink}.</p>
+        <p>${chromeCopy.headerSummary(authorLink, domain)}</p>
+        <p>${chromeCopy.headerLicense(licenseLink)}</p>
       </div>
       <div class="jcem-chrome-meta">
         <span class="jcem-chrome-domain">${domain}</span>
-        <span class="ico autosave jcem-autosave"><span>Salvamento local, offline e automático, se aplicável.</span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>
+        <span class="ico autosave jcem-autosave"><span>${chromeCopy.offlineStatus}</span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>
       </div>
       <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
     `;
@@ -1485,16 +1621,16 @@ import {
       </section>
       <section class="jcem-footer-block" aria-label="Licença">
         <h2>Licença</h2>
-        <p>Código disponibilizado sob ${licenseLink}; preserve avisos e consulte o texto integral para direitos e obrigações.</p>
+        <p>${chromeCopy.footerLicense(licenseLink)}</p>
       </section>
       <section class="jcem-footer-block" aria-label="Informações institucionais">
         <h2>Informações institucionais</h2>
-        <p>Modelos e ferramentas são recursos auxiliares publicados em <strong>${domain}</strong> para execução local no navegador, com salvamento local quando aplicável.</p>
+        <p>${chromeCopy.footerInfo(domain)}</p>
       </section>
       <section class="jcem-footer-block jcem-footer-legal" aria-label="Disclaimer e isenção de responsabilidade">
         <h2>Disclaimer e isenção de responsabilidade</h2>
-        <p>Os recursos não substituem conferência técnica, jurídica, contábil, regulatória ou profissional adequada ao caso concreto. O software é fornecido "no estado em que se encontra", sem garantias de qualquer natureza, expressas, implícitas ou legais, inclusive quanto à conformidade legal, regulatória, ausência de defeitos, adequação a finalidades específicas ou não violação de direitos.</p>
-        <p>Estes avisos têm finalidade exclusivamente informativa e complementar: não alteram, substituem, restringem, ampliam nem modificam os direitos, deveres, permissões e limitações definidos pela licença do software, que permanece como único instrumento normativo para uso, redistribuição, modificação e demais direitos relacionados ao código.</p>
+        <p>${chromeCopy.legalOne}</p>
+        <p>${chromeCopy.legalTwo}</p>
       </section>
     `;
 

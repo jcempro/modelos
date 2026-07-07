@@ -161,9 +161,16 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   assert.equal(pkg.devDependencies["@fortawesome/fontawesome-svg-core"], undefined);
   assert.match(sharedTs, /renderIcon/);
   assert.match(sharedTs, /ToolbarItemConfig/);
+  assert.match(sharedTs, /toolbarLegacyBlueprints/);
+  assert.match(sharedTs, /toolbarFillItems/);
+  assert.match(sharedTs, /toolbarActionHooks/);
+  assert.match(sharedTs, /hook:\s*"document\.export"/);
+  assert.match(sharedTs, /hook:\s*"document\.import"/);
   assert.match(sharedTs, /exportFilling/);
   assert.match(sharedTs, /importFilling/);
   assert.match(sharedTs, /computePosition/);
+  assert.match(sharedCss, /--jcem-toolbar-icon-color:\s*#444;/);
+  assert.match(sharedCss, /\.jcem-chrome-actions\.menu \.jcem-fa-icon\s*{[^}]*var\(--jcem-toolbar-icon-color\)/s);
   assert.doesNotMatch(sharedCss, /\\27A6|\\1F5B6|\\1F5BC|\\232B|\\21E9/);
 });
 
@@ -171,9 +178,11 @@ test("institutional chrome centralizes author, license and legal notices", async
   const sharedTs = await readFile("src/assets/js/documentos.ts", "utf8");
   const sharedCss = await readFile("src/assets/css/documentos.css", "utf8");
 
-  assert.match(sharedTs, /authorName:\s*"JeanCarloEM"/);
-  assert.match(sharedTs, /authorUrl:\s*"https:\/\/www\.jeancarloem\.com"/);
-  assert.match(sharedTs, /brandName:\s*"Tools JeanCarloEM"/);
+  assert.match(sharedTs, /authorName:\s*j\(\["Jean",\s*"Carlo",\s*"EM"\]\)/);
+  assert.match(sharedTs, /authorUrl:\s*j\(\["https:\/\/www\.",\s*"jeancarloem",\s*"\.com"\]\)/);
+  assert.match(sharedTs, /brandName:\s*j\(\["Tools ",\s*"Jean",\s*"Carlo",\s*"EM"\]\)/);
+  assert.match(sharedTs, /chromeCopy/);
+  assert.doesNotMatch(sharedTs, /authorName:\s*"JeanCarloEM"/);
   assert.doesNotMatch(sharedTs, /Tools JCEM/);
   assert.doesNotMatch(sharedTs, /author:\s*"JCEM"/);
   assert.match(sharedTs, /target="_blank"/);

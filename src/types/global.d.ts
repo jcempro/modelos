@@ -299,9 +299,12 @@ declare global {
   }
 
   interface ToolbarItemConfig {
+    action?: string;
     className?: string;
     dataset?: Record<string, string>;
     download?: boolean | string;
+    enabled?: boolean;
+    group?: string;
     hidden?: boolean;
     hint?: string;
     hook?: string;
@@ -311,6 +314,9 @@ declare global {
     label?: string;
     onClick?: (element: HTMLElement) => void;
     order?: number;
+    permission?: string;
+    shortcut?: string;
+    state?: string;
     type?: "button" | "separator";
   }
 
