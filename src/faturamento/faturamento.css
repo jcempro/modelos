@@ -60,8 +60,8 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;  
-  margin-top: 0;
-  margin-bottom: 0.5cm;
+  margin-top: 1cm; /* não regredir ajuste manual do dev */
+  margin-bottom: 0.7cm;/* não regredir ajuste manual do dev */
   border-collapse: separate;
   border-spacing: 0 1mm;
 }
@@ -89,7 +89,7 @@
   grid-template-columns: repeat(2, minmax(0, 8.45cm));
   gap: 0.55cm;
   justify-content: center;
-  margin: 0.54cm 0 0.62cm;
+  margin: 1.1cm 0 1.3cm; /* não regredir ajuste manual do dev */
 }
 
 .summary-box {
@@ -253,7 +253,7 @@
 .signature-date {
   align-self: start;
   width: 11.3cm;
-  margin: 0.76cm 0 0 auto;
+  margin: 1cm 0 0 auto;/* não regredir ajuste manual do dev */
   text-align: center;
 }
 
@@ -275,7 +275,7 @@
 
 .signature-block {
   width: 11.3cm;
-  margin: 1.02cm 0 0 auto;
+  margin: 2.5cm 0 0 auto;/* não regredir ajuste manual do dev */
   text-align: center;
 }
 
