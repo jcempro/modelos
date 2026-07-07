@@ -54,7 +54,7 @@ Totais exibidos devem corresponder exatamente a soma dos doze meses de cada colu
 
 Na impressao, a tabela deve usar largura proporcional para Mes/Ano, Vendas a Vista, Vendas a Prazo e Situacao, comportando valores ate R$ 99.999.999,99 nas colunas monetarias. Para preservar largura, as linhas mensais e totais podem omitir o prefixo `R$` quando o cabecalho das colunas indicar `(R$)`.
 
-A largura reduzida pela ausencia do prazo medio repetido deve liberar area lateral direita para Percentual de Recebimento, Regime de Tributacao e Prazo Medio, alinhados ao topo da tabela. Regime de Tributacao e Prazo Medio podem ser apresentados como blocos verticais chave/valor, em linhas, para evitar estouro horizontal. Valores de regime podem usar abreviacoes inequívocas, como `Simples Nac.` e `Lucro Pres.`.
+A largura reduzida pela ausencia do prazo medio repetido deve liberar area lateral direita para Percentual de Recebimento, Regime de Tributacao e Prazo Medio, alinhados ao topo da tabela. Regime de Tributacao e Prazo Medio podem ser apresentados como blocos verticais chave/valor, em linhas, para evitar estouro horizontal. Valores de regime podem usar abreviacoes inequívocas, como `Simples Nac.` e `Lucro Pres.`. Todas as celulas impressas devem ter padding minimo de 1 mm nas laterais e 1,5 mm nas margens superior/inferior; cabecalhos e rodapes de tabelas devem usar negrito, com destaque claro para totais.
 
 ## 6. Distribuicao, Edicao e Previsao
 
@@ -88,9 +88,9 @@ A exportacao local pela toolbar global deve usar envelope do modulo `faturamento
 
 ## 9. Impressao, PDF e Interface
 
-O impresso deve seguir o modelo visual oficial, priorizar fidelidade A4 e caber em uma pagina quando os conteudos estiverem dentro dos limites esperados. Impressao nativa e PDF dedicado, quando disponivel, devem ocultar interface Web, mensagens, alertas e ferramentas.
+O impresso deve seguir o modelo visual oficial, priorizar fidelidade A4 e caber em uma pagina quando os conteudos estiverem dentro dos limites esperados. Espaços entre titulo, dados cadastrais, resumo, tabelas, local/data e assinatura devem seguir proporcao editorial formal, sem colar blocos nem desperdiçar a pagina. Impressao nativa e PDF dedicado, quando disponivel, devem ocultar interface Web, mensagens, alertas e ferramentas.
 
-A interface Web nao precisa reproduzir exatamente a folha durante edicao. Deve priorizar produtividade, clareza, rapidez, validacao em tempo real, prevencao de inconsistencias e revisao visual fiel antes da impressao.
+A interface Web nao precisa reproduzir exatamente a folha durante edicao. Deve priorizar produtividade, clareza, rapidez, validacao em tempo real, prevencao de inconsistencias e revisao visual fiel antes da impressao. Campos curtos, percentuais, datas, UF, prazos e seletores nao devem ocupar largura desnecessaria; grupos de formulario devem evitar paineis isolados para campo unico quando houver agrupamento semantico coerente.
 
 ## 10. Fluxo Operacional
 

@@ -66,24 +66,25 @@ div.main {
 }
 
 body.jcem-printable-layout {
-  height: 100vh;
-  min-height: 0;
+  min-height: 100vh;
   margin: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #fff;
 }
 
 .jcem-document-workspace {
-  flex: 1 1 0;
+  flex: 1 0 auto;
   display: grid;
-  grid-template-columns: minmax(360px, 620px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   min-height: 0;
   margin: 0;
   padding: 0;
   background: #c6cdd4;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .jcem-printable-layout .jcem-chrome {
@@ -211,7 +212,7 @@ img.logo {
   min-height: 0;
   margin: 0;
   padding: 14px;
-  overflow: auto;
+  overflow: visible;
   border-right: 1px solid #b8c1ca;
   background: #e7edf2;
   color: #18212b;
@@ -226,8 +227,9 @@ img.logo {
 
 .jcem-document-form-region .editor-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
   gap: 12px;
+  align-items: start;
 }
 
 .jcem-document-form-region fieldset {
@@ -278,6 +280,19 @@ img.logo {
   color: #111827;
 }
 
+.jcem-document-form-region input[inputmode="numeric"],
+.jcem-document-form-region input.percent,
+.jcem-document-form-region input[type="date"],
+.jcem-document-form-region input[maxlength="2"],
+.jcem-document-form-region select {
+  max-width: 12rem;
+}
+
+.jcem-document-form-region input.money,
+.jcem-document-form-region input[inputmode="decimal"] {
+  max-width: 15rem;
+}
+
 .jcem-document-form-region input:focus,
 .jcem-document-form-region select:focus,
 .jcem-document-form-region textarea:focus {
@@ -294,6 +309,12 @@ img.logo {
 .jcem-document-form-region .field-row.two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.jcem-document-form-region .field-row.three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -419,13 +440,7 @@ div.menu {
 
 .ico.save:before,
 .ico.save2:before {
-  content: "";
-  display: inline-block;
-  width: 0.55rem;
-  height: 0.55rem;
-  margin-right: 0.35rem;
-  border-radius: 50%;
-  vertical-align: middle;
+  content: none;
 }
 
 .ico.save:before {
@@ -450,13 +465,17 @@ div.menu {
 }
 
 .jcem-chrome-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: grid;
   grid-template-columns: minmax(16rem, 1fr) auto;
   gap: 0.7rem 1rem;
   align-items: start;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1rem 0;
   border-bottom: 1px solid #aeb8c2;
   background: #f1f5f8;
+  box-shadow: 0 1px 0 rgb(20 35 50 / 6%);
 }
 
 .jcem-chrome-identity p,
@@ -500,11 +519,38 @@ div.menu {
 }
 
 .jcem-autosave {
-  max-width: 21rem;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  max-width: 17rem;
   padding: 0;
   background: transparent;
   color: #4d5d6b;
   font-size: 0.78rem;
+}
+
+.jcem-autosave-icon {
+  display: inline-flex;
+  color: #357b75;
+}
+
+.jcem-autosave-icon .jcem-fa-icon {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+  transition: color 220ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+.jcem-autosave.save .jcem-autosave-icon .jcem-fa-icon {
+  color: #2d7fbd;
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.jcem-autosave.save2 .jcem-autosave-icon .jcem-fa-icon {
+  color: #58938d;
+  opacity: 0.62;
+  transform: scale(0.94);
 }
 
 .jcem-chrome-actions.menu {
@@ -515,11 +561,11 @@ div.menu {
   gap: 0.35rem;
   align-items: center;
   width: 100%;
-  margin: 0;
-  padding: 0.55rem 0 0;
+  margin: 0 -1rem;
+  padding: 0.52rem 1rem;
   border: 0;
-  background: #ddd;
-  padding: .4em;
+  border-top: 1px solid #c9d2db;
+  background: #dce3ea;
 }
 
 .jcem-chrome-actions.menu:empty {
@@ -566,7 +612,7 @@ div.menu {
   width: 2rem;
   height: 2rem;
   flex: 0 0 auto;
-  fill: red;
+  fill: currentColor;
 }
 
 .jcem-toolbar-label {
@@ -615,10 +661,40 @@ div.menu {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.65rem 1rem;
-  margin-top: 1rem;
+  margin-top: 0;
   padding: 0.8rem 1rem;
   border-top: 1px solid #aeb8c2;
   background: #f1f5f8;
+}
+
+body.jcem-chrome-compact .jcem-chrome-header {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.3rem 0.75rem;
+  align-items: center;
+  padding: 0.36rem 1rem 0;
+  box-shadow: 0 8px 20px rgb(20 35 50 / 14%);
+}
+
+body.jcem-chrome-compact .jcem-chrome-identity p,
+body.jcem-chrome-compact .jcem-chrome-domain {
+  display: none;
+}
+
+body.jcem-chrome-compact .jcem-chrome-brand {
+  margin-bottom: 0;
+  font-size: 0.96rem;
+}
+
+body.jcem-chrome-compact .jcem-chrome-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+body.jcem-chrome-compact .jcem-chrome-actions.menu {
+  margin-top: 0.3rem;
+  padding-top: 0.38rem;
+  padding-bottom: 0.38rem;
 }
 
 .jcem-footer-block {
@@ -773,6 +849,17 @@ body.imprimir .no-print {
   display: none !important;
 }
 
+@media (min-width: 1120px) {
+  .jcem-document-workspace {
+    grid-template-columns: minmax(20rem, clamp(21rem, 32vw, 31rem)) minmax(0, 1fr);
+  }
+
+  .jcem-document-form-region.no-print,
+  .jcem-document-form-region {
+    overflow: auto;
+  }
+}
+
 @media (max-width: 720px) {
   .jcem-chrome-header {
     grid-template-columns: 1fr;
@@ -792,6 +879,7 @@ body.imprimir .no-print {
   }
 
   .jcem-document-form-region .field-row.two,
+  .jcem-document-form-region .field-row.three,
   .jcem-document-form-region .field-row.city-uf,
   .jcem-document-form-region .editor-grid {
     grid-template-columns: 1fr;

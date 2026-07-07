@@ -4,6 +4,7 @@ import {
   faEraser,
   faFileArrowDown,
   faFileArrowUp,
+  faFloppyDisk,
   faPaperPlane,
   faPrint,
   faStamp
@@ -22,6 +23,7 @@ import {
   const placeholders = new WeakMap<HTMLInputElement, string | null>();
   const autosaveBound = new WeakSet<HTMLInputElement>();
   const tooltipBound = new WeakSet<HTMLElement>();
+  let chromeScrollStateBound = false;
 
   function $<T extends Element = Element>(selector: string, root: ParentNode = d): T[] {
     return Array.from(root.querySelectorAll<T>(selector));
@@ -427,7 +429,7 @@ import {
     function tick(state: 0 | 1): void {
       indicatorElement.className = indicatorElement.className.replace(/( |^)save2? ?/i, "");
       indicatorElement.className += state ? " save" : " save2";
-      w.setTimeout(() => tick(state ? 0 : 1), 600);
+      w.setTimeout(() => tick(state ? 0 : 1), 850);
     }
 
     tick(0);
@@ -853,6 +855,7 @@ import {
     faEraser,
     faFileArrowDown,
     faFileArrowUp,
+    faFloppyDisk,
     faPaperPlane,
     faPrint,
     faStamp
@@ -1415,6 +1418,22 @@ import {
     }
   }
 
+  function updateChromeScrollState(): void {
+    d.body.classList.toggle("jcem-chrome-compact", w.scrollY > 24);
+  }
+
+  function bindChromeScrollState(): void {
+    if (chromeScrollStateBound) {
+      updateChromeScrollState();
+      return;
+    }
+
+    chromeScrollStateBound = true;
+    on(w, "scroll", updateChromeScrollState);
+    on(w, "resize", updateChromeScrollState);
+    updateChromeScrollState();
+  }
+
   function renderChrome(options: ChromeOptions = {}): void {
     removeExistingChrome();
 
@@ -1440,7 +1459,7 @@ import {
       </div>
       <div class="jcem-chrome-meta">
         <span class="jcem-chrome-domain">${domain}</span>
-        <span class="ico autosave jcem-autosave">Execução local no navegador; salvamento local quando aplicável.</span>
+        <span class="ico autosave jcem-autosave"><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span><span>Salvamento offline quando aplicável.</span></span>
       </div>
       <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
     `;
@@ -1475,6 +1494,7 @@ import {
     d.body.insertBefore(header, mount ?? null);
     d.body.appendChild(footer);
     initTooltips(header);
+    bindChromeScrollState();
   }
 
   w.JCEMDocumentos = {

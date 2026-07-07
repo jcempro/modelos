@@ -133,11 +133,15 @@ test("printable modules consume the shared document workspace layout", async () 
 
   assert.match(sharedTs, /renderPrintableLayout/);
   assert.match(sharedTs, /jcem-document-workspace/);
-  assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*height:\s*100vh;/s);
+  assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*min-height:\s*100vh;/s);
   assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*margin:\s*0;/s);
-  assert.match(sharedCss, /\.jcem-document-workspace\s*{[^}]*flex:\s*1 1 0;/s);
+  assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*overflow-y:\s*auto;/s);
+  assert.doesNotMatch(sharedCss, /body\.jcem-printable-layout\s*{[^}]*overflow:\s*hidden;/s);
+  assert.match(sharedCss, /\.jcem-document-workspace\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s);
+  assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[^}]*\.jcem-document-workspace\s*{[^}]*grid-template-columns:/s);
   assert.match(sharedCss, /\.jcem-document-preview-region\s*{[^}]*padding:\s*1rem;/s);
   assert.match(sharedCss, /\.jcem-document-form-region\.no-print,\s*\.jcem-document-form-region\s*{[^}]*background:\s*#e7edf2;/s);
+  assert.doesNotMatch(sharedCss, /\.jcem-chrome-footer\s*{[^}]*position:\s*fixed;/s);
   assert.match(faturamentoTs, /api\.layout\.printable/);
   assert.match(admissionalTs, /api\.layout\.printable/);
   assert.doesNotMatch(faturamentoCss, /\.faturamento-shell\s*{/);

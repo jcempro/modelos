@@ -147,53 +147,61 @@
 
           <fieldset>
             <legend>Recebimento</legend>
-            <label for="prazo-medio">Prazo Médio de Recebimento</label>
-            <input
-              id="prazo-medio"
-              name="prazoMedio"
-              type="text"
-              inputmode="numeric"
-              value="45"
-            />
+            <div class="field-row two">
+              <div>
+                <label for="prazo-medio">Prazo Médio de Recebimento</label>
+                <input
+                  id="prazo-medio"
+                  name="prazoMedio"
+                  type="text"
+                  inputmode="numeric"
+                  value="45"
+                />
+              </div>
+              <div>
+                <label for="regime-tributacao">Regime de Tributação</label>
+                <select id="regime-tributacao" name="regimeTributacao">
+                  <option value="">Selecione</option>
+                  <option value="MEI">MEI</option>
+                  <option value="Simples">Simples</option>
+                  <option value="Lucro Presumido">Lucro Presumido</option>
+                  <option value="Lucro Real">Lucro Real</option>
+                </select>
+              </div>
+            </div>
 
-            <label for="percentual-cartoes">Cartões</label>
-            <input
-              id="percentual-cartoes"
-              name="cartoes"
-              class="percent"
-              type="text"
-              inputmode="decimal"
-            />
-
-            <label for="percentual-cheques">Cheques</label>
-            <input
-              id="percentual-cheques"
-              name="cheques"
-              class="percent"
-              type="text"
-              inputmode="decimal"
-            />
-
-            <label for="percentual-titulos">Títulos</label>
-            <input
-              id="percentual-titulos"
-              name="titulos"
-              class="percent"
-              type="text"
-              inputmode="decimal"
-            />
-          </fieldset>
-
-          <fieldset>
-            <legend>Regime</legend>
-            <label for="regime-tributacao">Regime de Tributação</label>
-            <select id="regime-tributacao" name="regimeTributacao">
-              <option value="">Selecione</option>
-              <option value="MEI">MEI</option>
-              <option value="Simples">Simples</option>
-              <option value="Lucro Presumido">Lucro Presumido</option>
-              <option value="Lucro Real">Lucro Real</option>
-            </select>
+            <div class="field-row three">
+              <div>
+                <label for="percentual-cartoes">Cartões</label>
+                <input
+                  id="percentual-cartoes"
+                  name="cartoes"
+                  class="percent"
+                  type="text"
+                  inputmode="decimal"
+                />
+              </div>
+              <div>
+                <label for="percentual-cheques">Cheques</label>
+                <input
+                  id="percentual-cheques"
+                  name="cheques"
+                  class="percent"
+                  type="text"
+                  inputmode="decimal"
+                />
+              </div>
+              <div>
+                <label for="percentual-titulos">Títulos</label>
+                <input
+                  id="percentual-titulos"
+                  name="titulos"
+                  class="percent"
+                  type="text"
+                  inputmode="decimal"
+                />
+              </div>
+            </div>
           </fieldset>
 
           <fieldset>
