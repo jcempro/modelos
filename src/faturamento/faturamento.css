@@ -15,6 +15,11 @@
   --warn: #fff4cc;
 }
 
+table th,
+table td {
+  padding: 1.5mm;  
+}
+
 .print-page {
   box-sizing: border-box;
   width: 21cm;
@@ -62,8 +67,7 @@
 
 .company-table th,
 .company-table td {
-  height: 0.45cm;
-  padding: 0 3px;
+  height: 0.45cm;  
   border-bottom: 1px solid var(--line);
   vertical-align: bottom;  
   line-height: 1.5em !important;
@@ -83,7 +87,7 @@
   display: grid;
   grid-template-columns: 7.5cm 6.8cm;
   justify-content: space-between;
-  margin: 0.52cm 0 0.92cm;
+  margin: 1cm 0 1cm;
 }
 
 .summary-box {
@@ -132,8 +136,7 @@
 
 .market-table th,
 .market-table td {
-  height: 0.42cm;
-  padding: 0.02cm 0.05cm;
+  height: 0.42cm;  
   border: 1px solid var(--line);
   vertical-align: middle;
 }
@@ -193,8 +196,7 @@
 .percent-table td,
 .tax-table th,
 .tax-table td {
-  height: 0.42cm;
-  padding: 0.02cm 0.07cm;
+  height: 0.42cm;  
   border: 1px solid var(--line);
 }
 
@@ -225,8 +227,7 @@
 }
 
 .tax-table th {
-  height: auto;
-  padding: 0.05cm 0.08cm;
+  height: auto;  
   background: #fff;
   font-size: 7.8pt;
   font-weight: 700;
