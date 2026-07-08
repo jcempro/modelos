@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=/NOSCRIPT.html" />
+    </noscript>
+    <title>Redirecting...</title>
+
+    <script>
+      (async (L, w) => {
+        /* normalização de URLs (ou canonicalização), que reduz diferentes representações equivalentes a uma forma única e estável.
+         * A ideia é tratar URLs como equivalentes quando só variam em detalhes irrelevantes (ex: http ↔ https, / no final, #, etc.).
+         */
+        const normUrl = (u) => {
+          const x = new URL(u, L.origin);
+          let p = x.pathname.replace(/\/+$/, "") || "/";
+          const s = /^(https?|wss?)$/.test(x.protocol.replace(":", ""));
+          return (
+            (s ? "" : x.protocol + "//") +
+            x.hostname.toLowerCase() +
+            (x.port && !/^(80|443)$/.test(x.port) ? ":" + x.port : "") +
+            p +
+            (x.search || "")
+          );
+        };
+
+        const isInt = (v) =>
+          Number.isInteger(v) ||
+          (typeof v === "string" && /^[+-]?\d+$/.test(v));
+
+        const GO = async (t, flbk) => {
+          const p = (L.pathname + L.search).replace(
+            /^\/\s*404\.html(\/|\?)/gi,
+            "/",
+          );
+          if (/\/[^/]*\.[^/]*$/.test(p)) throw 4;
+          try {
+            const r = await fetch(
+              p.replace(/(\/?[^\/]*\/?)$/, "/") + "data.json",
+            );
+            if (!r.ok) throw 1;
+            const j = await r.json().catch(() => {
+              throw 2;
+            });
+            const u = j?.[0];
+            new URL(u); // lança se inválida
+            if (Array.isArray(j) && j.length == 1 && typeof u == "string")
+              L.href = u;
+            else throw 3;
+          } catch (e) {
+            flbk(e, isInt(t) ? t + 1 : 1);
+          }
+        };
+
+        const STP2 = (e) => {
+          throw e;
+        };
+
+        GO(0, STP2);
+      })(window.location, window);
+    </script>
+
+    <style>
+      :root {
+        --blue: #c08282;
+        --blue2: #2b92db;
+        --amber: #cc4c1e;
+        --bg: #ebebeb;
+        --text: #222;
+        --radius: 1rem;
+      }
+
+      * {
+        box-sizing: border-box;
+        font-family: "Noto Sans", "Segoe UI", "Tahoma", sans-serif;
+        color: var(--text);
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Loader top bar */
+      .loader-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 0.7rem;
+        background: linear-gradient(
+          90deg,
+          var(--blue2) 0%,
+          var(--blue2) 50%,
+          transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: loading 1s linear infinite;
+        z-index: 9999;
+        border-bottom: 1px solid #eee;
+      }
+
+      @keyframes loading {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Loader top bar -->
+    <div class="loader-bar"></div>
+
+    <noscript>
+      <main>
+        <h1><span>⚠️</span>Problem / Problema / 问题</h1>
+
+        <div class="lang">
+          <h2>🇺🇸 English</h2>
+          <p>
+            <span>⚠️</span><strong>JavaScript is disabled.</strong><br />
+            This prevents automatic redirection to your destination.
+          </p>
+        </div>
+
+        <div class="lang">
+          <h2>🇧🇷 Português</h2>
+          <p>
+            <span>⚠️</span><strong>O JavaScript está desativado.</strong><br />
+            Isso impede o redirecionamento automático para o destino.
+          </p>
+        </div>
+
+        <div class="lang">
+          <h2>🇪🇸 Español</h2>
+          <p>
+            <span>⚠️</span><strong>JavaScript está deshabilitado.</strong><br />
+            Esto impide la redirección automática al destino.
+          </p>
+        </div>
+
+        <div class="lang">
+          <h2>🇨🇳 中文（普通话）</h2>
+          <p>
+            <span>⚠️</span><strong>JavaScript 已被禁用。</strong><br />
+            这会阻止自动跳转到目标页面。
+          </p>
+        </div>
+      </main>
+    </noscript>
+  </body>
+</html>

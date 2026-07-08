@@ -207,3 +207,163 @@ Novas regras de negocio devem ser documentadas no RCF apropriado. Logica duplica
 - Publicacao estatica usa `dist/` como raiz unica do Pages.
 - A validacao bloqueia `src/` ou `dist/` como segmento/referencia publica, arquivos obsoletos, diretorios vazios e `*.bundle.html` solto.
 - URLs internas de assets e bundles devem ser estaveis com ou sem barra final, preferencialmente root-relative.
+
+# Aditivo Normativo — Páginas Estáticas, GitHub Pages e Recursos Compartilhados
+
+Sem prejuízo das demais disposições deste RCF, passam a integrar sua arquitetura as seguintes diretrizes relativas às páginas HTML especiais, ao pipeline de build e à publicação no GitHub Pages.
+
+---
+
+# 1. Páginas Especiais
+
+O projeto poderá conter páginas HTML especiais localizadas diretamente em `./src/`, destinadas exclusivamente à infraestrutura de publicação, compatibilidade ou suporte.
+
+Atualmente:
+
+```text
+./src/index.html
+./src/404.html
+./src/NOSCRIPT.html
+```
+
+Essas páginas não integram a aplicação principal, não participam do bundling e permanecem documentos HTML independentes, salvo disposição expressa deste RCF.
+
+Todas participam normalmente do build e devem receber as mesmas otimizações compatíveis aplicadas às demais páginas HTML.
+
+---
+
+# 2. index.html
+
+`./src/index.html` constitui a página inicial publicada pelo GitHub Pages.
+
+Permanece como HTML independente durante todo o pipeline, sem bundling.
+
+Durante o build deverá receber otimização agressiva, incluindo, quando aplicável, minificação, otimização estrutural, compactação de CSS e JavaScript incorporados, eliminação de redundâncias, remoção de comentários e demais otimizações compatíveis.
+
+---
+
+# 3. 404.html
+
+`./src/404.html` constitui a página de tratamento de caminhos inexistentes no GitHub Pages.
+
+Permanece como HTML independente, não integra bundles e recebe o mesmo nível de otimização aplicado às demais páginas publicadas.
+
+Além da exibição convencional do erro 404, deverá tentar recuperar automaticamente redirecionamentos cadastrados.
+
+Para isso, deverá:
+
+* normalizar (canonicalizar) a URL solicitada, eliminando diferenças irrelevantes como protocolo convencional, capitalização do host, portas padrão, barras finais e demais representações equivalentes;
+* remover automaticamente referências à própria `404.html`, caso presentes;
+* considerar apenas caminhos lógicos do site, ignorando requisições destinadas diretamente a arquivos;
+* derivar deterministicamente a localização de `data.json` correspondente ao diretório solicitado;
+* obter esse arquivo por requisição HTTP;
+* validar integralmente sua estrutura antes de qualquer utilização.
+
+Inicialmente, considera-se válida exclusivamente a estrutura:
+
+```json
+[
+    "https://destino"
+]
+```
+
+O documento deverá ser um JSON válido contendo exatamente um único elemento, obrigatoriamente uma URL absoluta válida.
+
+Somente após validação completa deverá ocorrer o redirecionamento.
+
+Qualquer erro de rede, ausência do arquivo, JSON inválido, estrutura incompatível, URL inválida ou qualquer outra inconsistência deverá degradar silenciosamente para o fluxo normal da página 404, sem mensagens ou interrupções ao usuário.
+
+---
+
+# 4. NOSCRIPT.html
+
+`./src/NOSCRIPT.html` constitui exclusivamente a fonte oficial do conteúdo exibido quando JavaScript estiver desabilitado.
+
+Não deverá:
+
+* ser publicado;
+* possuir URL pública;
+* integrar bundles;
+* ser copiado para a saída do build;
+* tornar-se página navegável.
+
+Sua única finalidade é servir como documento-fonte para geração automática do conteúdo `<noscript>` de todas as páginas HTML publicadas.
+
+---
+
+# 5. Documento-fonte
+
+Para facilitar desenvolvimento, manutenção, testes e revisão visual, `NOSCRIPT.html` deverá permanecer um documento HTML completo, válido e autocontido, podendo conter normalmente `DOCTYPE`, `html`, `head`, `meta`, `title`, `style`, `body` e quaisquer outros elementos necessários ao seu funcionamento independente.
+
+Essa estrutura existe apenas para edição e manutenção, não representando a estrutura final incorporada às demais páginas.
+
+---
+
+# 6. Fonte única de verdade
+
+Todo conteúdo, estrutura, estilos e comportamento apresentados pelo `<noscript>` deverão derivar exclusivamente de `NOSCRIPT.html`.
+
+Não será permitida duplicação dessa implementação.
+
+Qualquer alteração nesse documento deverá refletir automaticamente em todas as páginas HTML geradas.
+
+---
+
+# 7. Extração e Transformação
+
+A incorporação de `NOSCRIPT.html` não poderá ocorrer por simples cópia textual.
+
+O pipeline deverá interpretar estruturalmente o documento e extrair apenas os elementos semanticamente necessários à renderização do `<noscript>`.
+
+A seleção deverá ser automática, resiliente e independente da organização atual do documento, evitando dependência de posições fixas, substituições textuais ou expressões regulares.
+
+Estruturas próprias de um documento HTML completo — como `DOCTYPE`, `html`, `head`, `meta`, `title` e equivalentes — deverão ser descartadas quando não contribuírem para a renderização final.
+
+Por outro lado, toda estrutura, conteúdo, atributos e estilos necessários à reprodução fiel da experiência visual deverão ser preservados, podendo ser reorganizados, adaptados, consolidados, normalizados e minificados para produzir um `<noscript>` semanticamente correto e otimizado.
+
+---
+
+# 8. Inserção
+
+O `<noscript>` derivado de `NOSCRIPT.html` deverá ser incorporado automaticamente em todas as páginas HTML publicadas, incluindo:
+
+* `index.html`;
+* `404.html`;
+* páginas produzidas por bundles;
+* páginas geradas automaticamente;
+* quaisquer outros documentos HTML distribuídos.
+
+Nenhuma página publicada poderá deixar de conter essa implementação.
+
+---
+
+# 9. Estilos
+
+Os estilos provenientes de `NOSCRIPT.html` deverão ser transformados juntamente com seu conteúdo.
+
+O pipeline deverá minimizar conflitos entre seus estilos e os da página hospedeira, bem como impedir interferência inversa, preservando isolamento, previsibilidade visual, aderência ao tema global e compatibilidade com qualquer página em que seja incorporado.
+
+---
+
+# 10. Pipeline
+
+O build deverá reconhecer explicitamente a finalidade de cada página especial, garantindo que:
+
+* `index.html` permaneça HTML independente publicado;
+* `404.html` permaneça HTML independente publicado;
+* `NOSCRIPT.html` seja utilizado exclusivamente como documento-fonte;
+* `NOSCRIPT.html` nunca seja publicado;
+* nenhuma dessas páginas participe do bundling;
+* toda página HTML publicada incorpore automaticamente o `<noscript>` oficial.
+
+---
+
+# 11. Otimização
+
+Toda página HTML produzida pelo projeto — incluindo `index.html`, `404.html` e páginas geradas por bundles — deverá passar por otimização agressiva durante o build.
+
+O pipeline deverá aplicar todas as otimizações compatíveis para reduzir tamanho, redundâncias, custo de carregamento e processamento, preservando integralmente o comportamento funcional.
+
+A ausência de bundling não reduz o nível de otimização esperado.
+
+Todo o processamento deverá permanecer determinístico, reprodutível, desacoplado e resiliente a futuras alterações estruturais dos documentos HTML.
