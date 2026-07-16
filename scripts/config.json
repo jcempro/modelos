@@ -2,6 +2,10 @@
   "build": {
     "browserScripts": [
       {
+        "source": "src/assets/js/dashboard.ts",
+        "output": "assets/js/dashboard.js"
+      },
+      {
         "source": "src/assets/js/documentos.ts",
         "output": "assets/js/documentos.js"
       },

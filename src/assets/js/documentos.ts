@@ -1545,6 +1545,42 @@ import { g as guard } from "./guard";
     updateChromeScrollState();
   }
 
+  function applyTheme(theme: "dark" | "light"): void {
+    d.documentElement.dataset.theme = theme;
+    try { storage.setItem("jcem-theme", theme); } catch { /* PROTECAO: tema continua funcional sem persistencia. */ }
+  }
+
+  function initTheme(): HTMLButtonElement {
+    let stored: string | null = null;
+    try { stored = storage.getItem("jcem-theme"); } catch { /* PROTECAO: usa preferencia do sistema. */ }
+    const initial = stored === "dark" || stored === "light" ? stored : (w.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    applyTheme(initial);
+    const button = d.createElement("button");
+    button.className = "jcem-theme-toggle";
+    button.type = "button";
+    button.setAttribute("aria-label", "Alternar tema claro e escuro");
+    button.innerHTML = '<span aria-hidden="true">◐</span>';
+    on(button, "click", () => applyTheme(d.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+    return button;
+  }
+
+  async function renderAppNavigation(): Promise<void> {
+    try {
+      const response = await fetch("/assets/config/apps.json");
+      const catalog = await response.json() as { apps?: Array<{ href: string; id: string; title: string }>; navigationPosition?: string };
+      if (!Array.isArray(catalog.apps)) return;
+      const aside = d.createElement("aside");
+      aside.className = `jcem-app-nav no-print jcem-app-nav-${catalog.navigationPosition === "right" ? "right" : "left"}`;
+      aside.innerHTML = `<button class="jcem-nav-toggle" type="button" aria-expanded="false" aria-label="Expandir aplicativos">☰</button><nav aria-label="Aplicativos"><a href="/" title="Workspace"><img src="/assets/brand/logo.svg" alt=""><span>Workspace</span></a>${catalog.apps.map((app) => `<a href="${escapeHtml(app.href)}" title="${escapeHtml(app.title)}"><span class="jcem-nav-dot" aria-hidden="true"></span><span>${escapeHtml(app.title)}</span></a>`).join("")}</nav>`;
+      on(one<HTMLButtonElement>(".jcem-nav-toggle", aside), "click", (event) => {
+        const button = event.currentTarget as HTMLButtonElement;
+        const expanded = aside.classList.toggle("is-expanded");
+        button.setAttribute("aria-expanded", String(expanded));
+      });
+      d.body.appendChild(aside);
+    } catch { /* PROTECAO: falha do catalogo nao bloqueia o aplicativo. */ }
+  }
+
   function renderChrome(options: ChromeOptions = {}): void {
     removeExistingChrome();
 
@@ -1605,7 +1641,9 @@ import { g as guard } from "./guard";
     `;
 
     d.body.insertBefore(header, mount ?? null);
+    one<HTMLElement>(".jcem-chrome-meta", header)?.appendChild(initTheme());
     d.body.appendChild(footer);
+    void renderAppNavigation();
     initTooltips(header);
     bindChromeScrollState();
   }

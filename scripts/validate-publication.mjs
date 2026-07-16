@@ -320,6 +320,9 @@ async function main() {
     if (publicPath.toLowerCase().includes("/src/")) {
       throw new Error(`URL publica invalida para src/${rel}: ${publicPath}`);
     }
+    if (rel === "index.html") {
+      continue;
+    }
     const bundle = bundleForIndex(rel);
     expectedFiles.add(bundle);
     if (!distSet.has(bundle)) {

@@ -1,0 +1,10 @@
+{
+  "defaultApp": null,
+  "navigationPosition": "left",
+  "apps": [
+    { "id": "faturamento", "title": "Faturamento", "description": "Declaração e projeção de faturamento.", "href": "/faturamento/", "icon": "chart" },
+    { "id": "admissional", "title": "Ofício admissional", "description": "Modelo de solicitação de exame admissional.", "href": "/oficios/admissional/", "icon": "document" },
+    { "id": "csv-bd", "title": "Conversor CSV", "description": "Conversão e revisão de bases tabulares.", "href": "/csv-bd/", "icon": "table" },
+    { "id": "dizimo", "title": "Calculadora de dízimo", "description": "Calculadora local de valores e percentuais.", "href": "/dizimo/", "icon": "calculator" }
+  ]
+}

@@ -95,12 +95,12 @@ test("NOSCRIPT source is incorporated without direct publication", async () => {
   assert.match(validate, /assertOfficialNoscript/);
 });
 
-test("modules use shared institutional chrome except dizimo", async () => {
+test("application modules use shared institutional chrome except declared special pages", async () => {
   const violations: string[] = [];
 
   for (const file of await collectIndexFiles()) {
     const normalized = file.split(path.sep).join("/");
-    if (normalized === "src/dizimo/index.html") {
+    if (normalized === "src/dizimo/index.html" || normalized === "src/index.html") {
       continue;
     }
 
