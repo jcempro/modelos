@@ -81,3 +81,15 @@
 - Implementacao e validacao automatizada concluidas por `npm run check`: type-check, lint, 39 testes, build, quatro bundles e publicacao aprovados.
 - Validacao visual no navegador integrado foi tentada com servidor local ativo; `127.0.0.1` retornou conexao recusada e `localhost` foi bloqueado pelo cliente. Nenhuma conclusao visual foi inferida.
 - Pendencia unica para concluir a FT: validar dashboard, 404, tema, menu retraido/expandido e impressao/PDF em navegador com acesso ao servidor local; depois gerar handoff final e convergir `dev` em `master`.
+
+### Retomada 20260716.1740.00 - dev-live e bundles
+
+- Causa raiz do live: servidor abria antes do build pronto, dependia de subprocesso NPM watch e nao regenerava bundles; porta ocupada terminava por excecao sem diagnostico controlado.
+- Causa raiz da diferenca offline: navegacao global buscava `/assets/config/apps.json`, indisponivel sob `file:`, ocultando parte da evolucao dentro do ZIP.
+- Correcao aplicada: build inicial direto por Node; servidor somente apos Web+ZIP; watch unico de `src/`; rebuild completo serializado; reload pos-sucesso; `no-store`; diagnostico `EADDRINUSE`; catalogo embutido no bundle como metadado codificado com URLs upstream absolutas.
+- Falhas adicionais encontradas na validacao real: injecao live substituia o primeiro `</body>` inclusive dentro do JavaScript de `html2pdf`; strings da dependencia com `<script>` ativavam parsing HTML duplamente escapado; grade desktop sobrescrevia o modo documental do Admissional.
+- Correcoes adicionais: live reload inserido somente no fechamento estrutural final; tags de script escapadas no empacotamento; catalogo offline independente de globais e `fetch`; especificidade da grade documental preservada.
+- Evidencia visual: Web e ZIP de Faturamento e Admissional renderizados no navegador; toolbar, tema e navegacao presentes; quatro links de aplicativos absolutos; Faturamento com editor e A4; Admissional centralizado em 794 px; sem overflow horizontal.
+- Validacao final: `npm run check` aprovado com type-check, lint, 41 testes, build, quatro ZIPs e publicacao de 5 paginas/36 arquivos.
+- Prova de integracao: `/`, `/faturamento/`, `/oficios/admissional/` e os dois ZIPs responderam HTTP 200; toque em SCSS regenerou o ZIP e o servidor permaneceu HTTP 200.
+- Proximo ponto: atualizar handoff, commitar e disponibilizar a branch `dev` para validacao humana.

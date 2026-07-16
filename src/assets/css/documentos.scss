@@ -869,6 +869,10 @@ body.imprimir .no-print {
     grid-template-columns: minmax(20rem, clamp(21rem, 32vw, 31rem)) minmax(0, 1fr);
   }
 
+  .jcem-document-workspace.jcem-document-workspace--document-only {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .jcem-document-form-region.no-print,
   .jcem-document-form-region {
     overflow: auto;

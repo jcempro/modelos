@@ -1564,8 +1564,13 @@ import { g as guard } from "./guard";
 
   async function renderAppNavigation(): Promise<void> {
     try {
-      const response = await fetch("/assets/config/apps.json");
-      const catalog = await response.json() as { apps?: Array<{ href: string; id: string; title: string }>; navigationPosition?: string };
+      type AppCatalog = { apps?: Array<{ href: string; id: string; title: string }>; navigationPosition?: string };
+      const embedded = (w as Window & { __JCEM_APP_CATALOG__?: AppCatalog }).__JCEM_APP_CATALOG__;
+      const encoded = one<HTMLMetaElement>('meta[name="jcem-app-catalog"]')?.content;
+      const metadata: AppCatalog | undefined = encoded
+        ? JSON.parse((encoded.match(/\\u[0-9a-f]{4}/gi) ?? []).map((unit) => String.fromCharCode(Number.parseInt(unit.slice(2), 16))).join(""))
+        : undefined;
+      const catalog = embedded ?? metadata ?? await fetch("/assets/config/apps.json").then((response) => response.json()) as AppCatalog;
       if (!Array.isArray(catalog.apps)) return;
       const aside = d.createElement("aside");
       aside.className = `jcem-app-nav no-print jcem-app-nav-${catalog.navigationPosition === "right" ? "right" : "left"}`;

@@ -162,7 +162,8 @@ async function asyncReplace(text, pattern, replacer) {
 }
 
 function escapeInlineScript(js) {
-  return js.replace(/<\/script/gi, "<\\/script");
+  // PROTECAO: evita o estado HTML "script data double escaped" em strings de dependencias.
+  return js.replace(/<\/script/gi, "<\\/script").replace(/<script/gi, "<\\x73cript");
 }
 
 function escapeInlineStyle(css) {
@@ -226,6 +227,19 @@ function assertOffline(html, rel) {
   if (automaticExternal.test(html) || cssExternal.test(html)) {
     throw new Error(`Bundle offline ainda contem recurso externo automatico: ${rel}`);
   }
+}
+
+async function embedOfflineCatalog(html) {
+  const source = JSON.parse(await readFile(path.join(distDir, "assets", "config", "apps.json"), "utf8"));
+  const catalog = {
+    ...source,
+    apps: Array.isArray(source.apps) ? source.apps.map((app) => ({ ...app, href: new URL(app.href, "https://tools.jcem.pro/").href })) : []
+  };
+  const encoded = JSON.stringify(catalog).split("")
+    .map((char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
+    .join("");
+  const meta = `<meta name="jcem-app-catalog" content="${encoded}">`;
+  return /<head\b[^>]*>/i.test(html) ? html.replace(/<head\b[^>]*>/i, (head) => `${head}${meta}`) : `${meta}${html}`;
 }
 
 function crc32(data) {
@@ -324,6 +338,7 @@ async function buildBundle(rel) {
   ];
 
   let html = await readFile(indexFile, "utf8");
+  html = await embedOfflineCatalog(html);
   html = await inlineStyles(html, indexFile);
   html = await inlineScripts(html, indexFile);
   html = await inlineMediaSources(html, indexFile);
