@@ -114,3 +114,13 @@
 - Evidencia visual: Bundle Faturamento apresentou seis SVGs Base64 carregados, labels ocultos e toolbar intacta; dashboard raiz apresentou quatro cards com logos e switch independente.
 - Validacao final: `npm run check` aprovado com type-check, lint, 41 testes, quatro ZIPs e publicacao de 5 paginas/36 arquivos.
 - Proximo ponto: atualizar handoff, criar dois commits e liberar `dev` para validacao humana.
+
+### Refatoracao GUI CSS-first 20260716.2355.00
+
+- Solicitacao humana: remover JavaScript de responsividade, geometria, scroll e alternancia da sidebar; refinar toolbar, marca, autosave e rodape.
+- Contrato: layout e estado visual pertencem ao SASS; JavaScript permanece apenas para comportamento funcional e montagem estrutural. Sidebar usa checkbox, label e seletores de irmaos, integra o fluxo entre header/footer e expande sobre o conteudo sem mover o eixo dos icones.
+- Implementacao: listeners de scroll/resize e ResizeObserver removidos; compactacao por scroll removida; shell em grid CSS; logos reposicionados; textos institucionais removidos do header; toolbar ganhou multi-icone generico, f0c7/f07c, f49e+f358 e separador imprimir/limpar; footer recebeu maior respiro; autosave oculta texto progressivamente por CSS.
+- Evidencia automatizada: `npm run check` aprovou type-check, lint, 41 testes, quatro bundles e publicacao de 5 paginas/36 arquivos.
+- Evidencia visual Web: header sem dominio/frase institucional; logos global/projeto carregados; bundle com dois SVGs; separador entre imprimir/limpar; sidebar expandiu para 249 px sem alterar eixo de 23,33 px e sem overflow; breakpoint de 500 px ocultou o texto de autosave, preservou o icone e manteve header/toolbar sem overflow; tema escuro preservou toolbar grafite e icones claros.
+- Correcao adicional por evidencia visual: os dois icones da versao offline preservam largura compacta individual, mas usam a mesma altura de 2 rem dos demais icones da toolbar.
+- Proximo ponto: validar ajuste cromatico e altura final, gerar handoff e criar dois commits operacionais.
