@@ -124,3 +124,15 @@
 - Evidencia visual Web: header sem dominio/frase institucional; logos global/projeto carregados; bundle com dois SVGs; separador entre imprimir/limpar; sidebar expandiu para 249 px sem alterar eixo de 23,33 px e sem overflow; breakpoint de 500 px ocultou o texto de autosave, preservou o icone e manteve header/toolbar sem overflow; tema escuro preservou toolbar grafite e icones claros.
 - Correcao adicional por evidencia visual: os dois icones da versao offline preservam largura compacta individual, mas usam a mesma altura de 2 rem dos demais icones da toolbar.
 - Proximo ponto: validar ajuste cromatico e altura final, gerar handoff e criar dois commits operacionais.
+
+### Refinamento de marca e navegacao 20260717.0015.00
+
+- Marca de autoria do header substituida por `https://jcem.pro/logo/64-yellow.png`, com link para `https://www.jeancarloem.com`; Web conserva URL remota e Bundle incorpora PNG Base64 sem asset local distinto.
+- Construtor segregado em entrada de preparacao remota e nucleo preservado; catalogo e JavaScript Web sao restaurados após cada build, enquanto o ZIP fica integralmente autocontido.
+- Ordem do header: autosave, switch, MPL e autoria. Badge MPL e autoria usam altura compativel; switch usa Font Awesome `f042` ampliado; trio possui hover/foco suave.
+- Autosave deixou de usar elipse: frase completa quando couber, resumo por breakpoint e somente icone em largura critica.
+- Sidebar usa `f0c9`; expansao por CSS projeta superficie unica, continua e animada por toda a altura, sem reflow nem deslocamento do eixo dos icones.
+- Ao alcançar o topo durante a rolagem, o trilho permanece visivel e uma animacao CSS de scroll reserva progressivamente 3,5 rem no header e toolbar; no topo normal, nenhum recuo residual permanece.
+- Botao offline normatizado com primeiro icone principal maior e opaco; `f358` complementar menor e de opacidade reduzida.
+- Switch vetorial centralizado explicitamente; autosave ampliado para 1,6 rem com confirmacao animada curta e respeito a movimento reduzido.
+- Validacao Web: marca remota 64x64 carregada, link correto, ordem confirmada, superficie expandida em 240 px com transicao de 0,18 s e texto de autosave sem truncagem.
