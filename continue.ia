@@ -145,3 +145,4 @@
 - Preview A4 isolado por contenção de layout/pintura, mantendo scroll interno e eliminando overflow horizontal do documento raiz em viewport de 625 px.
 - Módulo de dízimo removido da fonte, catálogo, compilação, publicação e Bundle por solicitação humana; catálogo vigente contém Faturamento, Ofício admissional e Conversor CSV.
 - Evidência de navegador: tema claro com menu `rgb(41,70,91)` sobre `rgb(215,225,231)`; tema escuro do CSV com Logs `rgb(41,44,48)` e texto `rgb(237,237,237)`; toolbar completa com quatro ações; header e toolbar terminam em 625 px tanto no topo quanto após rolagem.
+- Refinamento cirurgico posterior: o seletor visivel `Arquivo CSV` foi removido do formulario; o mesmo `input[type=file]` permanece oculto como controle funcional da toolbar, sem duplicacao visual. Navegador confirmou zero labels redundantes e a acao `csv-open` com SVG ativo.

@@ -13,6 +13,7 @@
 
   <body>
     <div data-jcem-actions hidden>
+      <input id="csv-file" type="file" accept=".csv,text/csv,text/plain" />
       <button type="button" class="ico csv-open">Abrir CSV</button>
       <button type="button" class="ico csv-download">Baixar CSV convertido</button>
       <button type="button" class="ico clear">Limpar</button>
@@ -39,13 +40,6 @@
         <form class="panel controls" id="bd-form">
           <fieldset>
             <legend>Entrada</legend>
-            <label for="csv-file">Arquivo CSV</label>
-            <input
-              id="csv-file"
-              type="file"
-              accept=".csv,text/csv,text/plain"
-            />
-
             <label for="csv-text">Conteudo CSV</label>
             <textarea
               id="csv-text"

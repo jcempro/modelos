@@ -326,6 +326,8 @@ test("CSV module preserves readable local surfaces in both themes", async () => 
   assert.match(css, /:root\[data-theme="dark"\] \.bd-app \.summary-grid div\s*{[^}]*background:\s*#32353a/s);
   assert.match(css, /:root\[data-theme="dark"\] \.bd-app \.decisions\s*{[^}]*background:\s*#3a3525/s);
   assert.match(html, /class="ico csv-open"/);
+  assert.match(html, /<div data-jcem-actions hidden>[\s\S]*<input id="csv-file" type="file"/);
+  assert.doesNotMatch(html, /<label for="csv-file">/);
   assert.match(html, /class="ico csv-download"/);
   assert.match(html, /class="ico clear"/);
   assert.match(ts, /"csv-open":\s*\(\)\s*=>\s*input\("#csv-file"\)\.click\(\)/);
