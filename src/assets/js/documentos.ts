@@ -2,6 +2,7 @@ import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import {
   faBoxOpen,
   faEraser,
+  faFilePdf,
   faFileArrowDown,
   faFileArrowUp,
   faFloppyDisk,
@@ -874,6 +875,7 @@ import { g as guard } from "./guard";
     faEraser,
     faFileArrowDown,
     faFileArrowUp,
+    faFilePdf,
     faFloppyDisk,
     faPaperPlane,
     faPrint,
@@ -906,8 +908,8 @@ import { g as guard } from "./guard";
   ];
   const toolbarLegacyBlueprints: ToolbarLegacyBlueprint[] = [
     { datasetSource: "bundle", download: true, hint: "Baixar versao offline", hrefSource: "href", icon: { unicode: "f49e" }, id: "bundle", label: "fixed:Versão Offline", order: 90, selector: "[data-bundle-download],.bundle" },
-    { hint: "Gerar PDF", icon: { unicode: "f02f" }, id: "pdf", label: "text:PDF", order: 40, selector: ".pdf.print" },
-    { hint: "Gerar PDF em branco", icon: { unicode: "f02f" }, id: "blank-pdf", label: "text:Imprimir Branco", order: 45, selector: ".pdf.formulario" },
+    { hint: "Imprimir PDF", icon: { unicode: "f1c1" }, id: "pdf", label: "", order: 40, selector: ".pdf.print" },
+    { hint: "Imprimir em branco", icon: { unicode: "f1c1" }, id: "blank-pdf", label: "fixed:em branco", order: 45, selector: ".pdf.formulario" },
     { hint: "Imprimir", hook: "window.print", icon: { unicode: "f02f" }, id: "print", label: "", order: 50, selector: ".browser-print,.print:not(.pdf):not(.formulario)" },
     { hint: "Limpar", icon: { unicode: "f12d" }, id: "clear", label: "", order: 60, selector: ".clear" },
     { hint: "Enviar", icon: { unicode: "f1d8" }, id: "share", label: "", order: 80, selector: ".share" },

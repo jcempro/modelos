@@ -59,3 +59,12 @@
 
 - Pendencia de `NOSCRIPT.html` resolvida em 20260714.1605.00: `scripts/compile.mjs` exclui `src/NOSCRIPT.html` da copia estatica, extrai o conteudo renderizavel e estilos para um fragmento oficial e injeta `<noscript>` nas paginas HTML publicadas. `scripts/validate-publication.mjs` bloqueia `dist/NOSCRIPT.html`, bloqueia redirecionamento para `/NOSCRIPT.html` e exige `<noscript>` oficial em HTML publicado. `tests/infrastructure.test.ts` cobre o contrato.
 - Validacao final apos NOSCRIPT: `npm run check` concluido com sucesso; 37 testes passaram; build gerou bundles offline; `validate:publication` confirmou 4 paginas e 26 arquivos em `dist/`.
+
+### Retomada evolutiva 20260716.1946.00
+
+- Objetivo ampliado por solicitacao humana: consolidar arquitetura e legado; corrigir toolbar, localizacao e impressao; implementar dashboard, navegacao, temas, consentimento, SCSS e identidades visuais; validar Web, PDF, bundle e publicacao sem regressao.
+- Etapa atual: 1/6 - preparacao, governanca e auditoria.
+- Tarefa atual: 1.1 - corrigir a execucao ESM/CommonJS da API `agent:*`.
+- Falha confirmada: `scripts/.agents/repo-tools.js` usa CommonJS sob o pacote raiz ESM, produzindo `ReferenceError: require is not defined`.
+- Correcao em validacao: limite CommonJS declarado em `scripts/package.json`, preservando os bootstraps `.mjs`.
+- Proximas tarefas: inventariar implementacoes existentes, confrontar requisitos novos com RCFs e executar as etapas tecnicas sequencialmente.
