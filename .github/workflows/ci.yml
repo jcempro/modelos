@@ -27,7 +27,8 @@ jobs:
       - run: npm ci --prefer-offline --no-audit --fund=false
       - run: npm run check
         env:
-          JCEM_BUILD_VERSION: ${{ github.sha }}
+          # ENSAIO TEMPORARIO: comprova divergencia real contra o primeiro bundle publicado.
+          JCEM_BUILD_VERSION: 0192a511fc66fdfa2a88ff9b6ca6d4d35569a544
       - name: Validate Pages artifact root
         run: |
           test -f dist/CNAME
