@@ -122,6 +122,7 @@ O modulo deve consumir `src/assets/js/tabular.ts` para deteccao/leitura de CSV, 
 ## 14. Decisoes Locais
 
 - O modulo permanece estatico, offline e executado no navegador.
+- O modulo nao possui salvamento automatico e deve declarar `autosave: false` ao chrome compartilhado, que omite o indicador global.
 - Nao consome regras A4/PDF, mas usa cabecalho, barra extensivel e rodape globais. A toolbar deve manter visiveis as acoes de abrir CSV, baixar o CSV convertido, limpar e obter o Bundle offline, com icones e comportamento normalizados pela infraestrutura compartilhada.
 - O nucleo tabular pertence a camada compartilhada por potencial de reuso.
 - A saida CSV e sempre UTF-8 com BOM.

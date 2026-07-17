@@ -157,7 +157,7 @@ test("printable modules consume the shared document workspace layout", async () 
   assert.match(sharedTs, /jcem-document-workspace/);
   assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*min-height:\s*100vh;/s);
   assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*margin:\s*0;/s);
-  assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*overflow-y:\s*auto;/s);
+  assert.match(sharedCss, /body\.jcem-printable-layout\s*{[^}]*overflow-x:\s*clip[^}]*overflow-y:\s*visible;/s);
   assert.match(sharedCss, /html\s*{[^}]*overflow-x:\s*clip;/s);
   assert.doesNotMatch(sharedCss, /body\.jcem-printable-layout\s*{[^}]*overflow:\s*hidden;/s);
   assert.match(sharedCss, /\.jcem-document-workspace\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s);
@@ -188,6 +188,7 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   assert.equal(pkg.devDependencies["@fortawesome/fontawesome-free"], undefined);
   assert.equal(pkg.devDependencies["@fortawesome/fontawesome-svg-core"], undefined);
   assert.match(sharedTs, /renderIcon/);
+  assert.match(sharedTs, /<span>Local e <\/span><strong>automático<\/strong>/);
   assert.match(sharedTs, /ToolbarItemConfig/);
   assert.match(sharedTs, /toolbarLegacyBlueprints/);
   assert.match(sharedTs, /toolbarFillItems/);
@@ -212,7 +213,10 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   assert.match(sharedCss, /\.jcem-theme-toggle\s*{[^}]*place-items:\s*center[^}]*padding:\s*0/s);
   assert.match(sharedCss, /\[data-jcem-toolbar-id="bundle"\] \.jcem-fa-icon:first-child\s*{[^}]*width:\s*1\.8rem[^}]*opacity:\s*1/s);
   assert.match(sharedCss, /\[data-jcem-toolbar-id="bundle"\] \.jcem-fa-icon:nth-child\(2\)\s*{[^}]*opacity:\s*0\.68[^}]*scale\(0\.82\)/s);
-  assert.match(sharedCss, /@keyframes jcem-autosave-confirm/);
+  assert.match(sharedCss, /@keyframes jcem-autosave-breathe/);
+  assert.match(sharedCss, /animation:\s*jcem-autosave-breathe 1\.2s cubic-bezier\(\.4, 0, \.2, 1\) infinite/);
+  assert.match(sharedCss, /\.jcem-license-badge\s*{[^}]*font-size:\s*0\.68rem/s);
+  assert.doesNotMatch(sharedTs, /setTimeout\(\(\) => tick/);
   assert.match(sharedCss, /\[data-jcem-toolbar-id="bundle"\] \.jcem-fa-icon\s*{[^}]*height:\s*2rem/s);
   assert.match(faturamentoTs, /actions:\s*{/);
   assert.match(admissionalTs, /actions:\s*{/);
@@ -296,6 +300,10 @@ test("dashboard catalog, themes and consent remain centralized", async () => {
   assert.match(shared, /jcem-nav-state/);
   const sharedCss = await readFile("src/assets/css/documentos.scss", "utf8");
   assert.match(sharedCss, /\.jcem-app-shell\s*{[^}]*grid-template-columns:\s*3\.5rem minmax\(0, 1fr\)/s);
+  assert.match(sharedCss, /\.jcem-app-shell::before\s*{[^}]*inset:\s*0 auto 0 0[^}]*background:\s*#d6e0e7/s);
+  assert.match(sharedCss, /\.jcem-app-nav\s*{[^}]*position:\s*sticky[^}]*height:\s*max-content/s);
+  assert.match(sharedCss, /\.jcem-app-nav::before\s*{[^}]*height:\s*100vh[^}]*background:\s*transparent/s);
+  assert.match(sharedCss, /:root\[data-theme="dark"\] \.jcem-app-shell::before\s*{[^}]*background:\s*#25272a/s);
   assert.match(sharedCss, /\.jcem-nav-state:checked\s*~\s*\.jcem-app-shell \.jcem-app-nav/);
   assert.match(shared, /renderIcon\(\{ unicode: "f0c9" \}\)/);
   assert.match(sharedCss, /\.jcem-app-nav::before\s*{[^}]*transition:\s*width \.18s ease/s);
@@ -303,6 +311,7 @@ test("dashboard catalog, themes and consent remain centralized", async () => {
   assert.match(sharedCss, /@keyframes jcem-header-nav-clearance\s*{[^}]*padding-left:\s*1rem[\s\S]*padding-left:\s*4\.5rem/s);
   assert.match(sharedCss, /@keyframes jcem-toolbar-nav-clearance\s*{[^}]*margin-right:\s*-1rem[\s\S]*margin-right:\s*-4\.5rem/s);
   assert.match(sharedCss, /:root\[data-theme="light"\] \.jcem-nav-toggle\s*{[^}]*color:\s*#29465b/s);
+  assert.match(sharedCss, /:root\[data-theme="light"\] \.jcem-theme-toggle\s*{[^}]*color:\s*#526a7a/s);
   assert.match(sharedCss, /\.jcem-dashboard-footer p\s*{[^}]*color:\s*inherit/s);
   assert.match(sharedCss, /:root\[data-theme="dark"\] \.jcem-dashboard-footer p\s*{[^}]*color:\s*#b6bac0/s);
   assert.match(sharedCss, /\.jcem-nav-state:checked\s*~\s*\.jcem-app-shell \.jcem-app-nav::before\s*{[^}]*width:\s*min\(18rem/s);
@@ -332,8 +341,10 @@ test("CSV module preserves readable local surfaces in both themes", async () => 
   assert.match(html, /class="ico clear"/);
   assert.match(ts, /"csv-open":\s*\(\)\s*=>\s*input\("#csv-file"\)\.click\(\)/);
   assert.match(ts, /"csv-download":\s*downloadCsv/);
+  assert.match(ts, /chrome\.render\(\{[^}]*autosave:\s*false/s);
   assert.match(shared, /selector:\s*"\.csv-open"/);
   assert.match(shared, /selector:\s*"\.csv-download"/);
+  assert.match(shared, /options\.autosave === false \? ""/);
 });
 
 test("all published applications have SVG identity and SCSS sources", async () => {

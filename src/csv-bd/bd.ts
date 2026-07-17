@@ -378,7 +378,7 @@ import {
         clear: clearAll
       }
     });
-    shared?.chrome.render({ actionsSelector: "[data-jcem-actions]", mountBefore: ".bd-app" });
+    shared?.chrome.render({ actionsSelector: "[data-jcem-actions]", autosave: false, mountBefore: ".bd-app" });
     shared?.bundle.bindDownload();
 
     input("#csv-file").addEventListener("change", (event) => {

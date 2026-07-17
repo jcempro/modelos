@@ -178,6 +178,7 @@ declare global {
 
   interface ChromeOptions {
     actionsSelector?: string;
+    autosave?: boolean;
     author?: string;
     authorName?: string;
     authorUrl?: string;

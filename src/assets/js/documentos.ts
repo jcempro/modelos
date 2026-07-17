@@ -445,18 +445,7 @@ import { g as guard } from "./guard";
   function initAutosaveIndicator(selector = ".autosave"): void {
     const indicator = one<HTMLElement>(selector);
 
-    if (!indicator) {
-      return;
-    }
-    const indicatorElement = indicator;
-
-    function tick(state: 0 | 1): void {
-      indicatorElement.className = indicatorElement.className.replace(/( |^)save2? ?/i, "");
-      indicatorElement.className += state ? " save" : " save2";
-      w.setTimeout(() => tick(state ? 0 : 1), 850);
-    }
-
-    tick(0);
+    if (indicator) indicator.dataset.jcemAutosaveIndicator = "true";
   }
 
   function clearAutoFields(options: ClearFieldsOptions = {}): void {
@@ -1640,6 +1629,7 @@ import { g as guard } from "./guard";
     const authorUrl = options.authorUrl ?? seal.__p1;
     const authorLink = externalLink(authorUrl, authorName);
     const licenseLink = externalLink(licenseUrl, licenseName, "license noopener noreferrer");
+    const autosave = options.autosave === false ? "" : `<span class="ico autosave jcem-autosave" title="${escapeHtml(seal.__p11)}"><span class="jcem-autosave-copy"><span>Local e </span><strong>automático</strong></span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>`;
     const mount = typeof options.mountBefore === "string"
       ? one(options.mountBefore)
       : options.mountBefore ?? d.body.firstElementChild;
@@ -1651,7 +1641,7 @@ import { g as guard } from "./guard";
         <a class="jcem-chrome-brand" href="https://${domain}/"><img class="jcem-global-logo" src="/assets/brand/logo.svg" alt=""><span>${escapeHtml(brandName)}</span></a>
       </div>
       <div class="jcem-chrome-meta">
-        <span class="ico autosave jcem-autosave" title="${escapeHtml(seal.__p11)}"><span class="jcem-autosave-copy"><span>Salvamento local, offline e </span><strong>automático</strong></span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>
+        ${autosave}
       </div>
       <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
     `;

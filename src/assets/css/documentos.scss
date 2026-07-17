@@ -74,8 +74,9 @@ body.jcem-printable-layout {
   margin: 0;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* FIX-BUG: evita criar um scroll container inerte que invalida o sticky da navegação. */
+  overflow-x: clip;
+  overflow-y: visible;
   background: #fff;
 }
 
@@ -581,13 +582,13 @@ body.jcem-has-app-nav:not(.imprimir) .jcem-chrome-actions.menu {
   border: 1px solid #788794;
   border-radius: 0.25rem;
   font-family: "Noto Sans", sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   line-height: 1;
   text-decoration: none;
 }
 
 .jcem-license-badge span,
-.jcem-license-badge strong { display: inline-flex; align-items: center; padding: 0.25rem 0.42rem; }
+.jcem-license-badge strong { display: inline-flex; align-items: center; padding: 0.25rem 0.36rem; }
 .jcem-license-badge span { background: #4f5c66; color: #fff; letter-spacing: 0.04em; }
 .jcem-license-badge strong { background: #fff; color: #26333f; }
 
@@ -618,7 +619,7 @@ body.jcem-has-app-nav:not(.imprimir) .jcem-chrome-actions.menu {
   white-space: nowrap;
 }
 
-.jcem-theme-toggle { display: grid; place-items: center; padding: 0; line-height: 1; }
+.jcem-theme-toggle { display: grid; place-items: center; padding: 0; border-color: #9dafbb; background: #f5f8fa; color: #526a7a; line-height: 1; }
 .jcem-theme-toggle .jcem-fa-icon { width: 1.65rem; height: 1.65rem; }
 
 .jcem-autosave-copy {
@@ -629,7 +630,7 @@ body.jcem-has-app-nav:not(.imprimir) .jcem-chrome-actions.menu {
 .jcem-autosave-copy strong { font-weight: 800; }
 
 .jcem-autosave-icon {  
-  color: #18534e;
+  color: #2e756e;
   display: inline-flex;/* não regredir, ajuste manual do dev */
 }
 
@@ -638,25 +639,16 @@ body.jcem-has-app-nav:not(.imprimir) .jcem-chrome-actions.menu {
   height: 1.6rem;
   fill: currentColor;
   transform-origin: center;
-  transition: color 180ms ease, opacity 220ms ease, transform 260ms cubic-bezier(.2, .8, .2, 1);
+  opacity: 0.92;
 }
 
-.jcem-autosave.save .jcem-autosave-icon .jcem-fa-icon {
-  color: #2d7fbd;
-  opacity: 1;
-  animation: jcem-autosave-confirm 320ms cubic-bezier(.2, .8, .2, 1);
+.jcem-autosave[data-jcem-autosave-indicator="true"] .jcem-autosave-icon .jcem-fa-icon {
+  animation: jcem-autosave-breathe 1.2s cubic-bezier(.4, 0, .2, 1) infinite;
 }
 
-.jcem-autosave.save2 .jcem-autosave-icon .jcem-fa-icon {
-  color: #58938d;
-  opacity: 0.72;
-  transform: scale(0.94);
-}
-
-@keyframes jcem-autosave-confirm {
-  0% { transform: scale(0.94); }
-  55% { transform: scale(1.12); }
-  100% { transform: scale(1); }
+@keyframes jcem-autosave-breathe {
+  0%, 100% { opacity: 0.82; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.08); }
 }
 
 .jcem-chrome-actions.menu {
@@ -1088,9 +1080,7 @@ body.imprimir input::placeholder {
 :root[data-theme="dark"] .jcem-chrome-identity p,
 :root[data-theme="dark"] .jcem-chrome-footer p,
 :root[data-theme="dark"] .jcem-autosave { color: #c8c9cc; }
-:root[data-theme="dark"] .jcem-autosave-icon { color: #8dc7b8; }
-:root[data-theme="dark"] .jcem-autosave.save .jcem-autosave-icon .jcem-fa-icon { color: #8fc7ed; }
-:root[data-theme="dark"] .jcem-autosave.save2 .jcem-autosave-icon .jcem-fa-icon { color: #8dc7b8; }
+:root[data-theme="dark"] .jcem-autosave-icon { color: #91c8ba; }
 :root[data-theme="dark"] .jcem-license-badge { border-color: #666a70; }
 :root[data-theme="dark"] .jcem-license-badge span { background: #494c51; }
 :root[data-theme="dark"] .jcem-license-badge strong { background: #303236; color: #ececec; }
@@ -1131,15 +1121,16 @@ body.imprimir input::placeholder {
 :root[data-theme="light"] .jcem-document-preview-region { background: #cbd3da; }
 :root[data-theme="light"] .jcem-app-nav::before { background: #e9eef1; border-color: #aebbc5; }
 :root[data-theme="light"] .jcem-nav-toggle { background: #d7e1e7; color: #29465b; border-color: #aebbc5; }
+:root[data-theme="light"] .jcem-theme-toggle { background: #f5f8fa; border-color: #9dafbb; color: #526a7a; }
 .jcem-theme-toggle, .jcem-nav-toggle { border: 1px solid #9eb6c7; border-radius: .55rem; background: transparent; color: inherit; cursor: pointer; min-width: 2.25rem; min-height: 2.25rem; flex: 0 0 2.25rem; }
 .jcem-nav-state { position: fixed; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
-.jcem-app-shell { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); align-items: stretch; min-height: 50vh; }
+.jcem-app-shell { position: relative; display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); align-items: stretch; min-height: 50vh; }
+.jcem-app-shell::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3.5rem; background: #d6e0e7; border-right: 1px solid #9dabb6; box-shadow: .3rem 0 1rem rgb(0 0 0 / .08); pointer-events: none; }
 .jcem-app-shell-content { min-width: 0; }
-.jcem-app-nav { position: sticky; z-index: 900; top: 0; align-self: start; justify-self: start; width: 3.5rem; height: 100vh; padding: 0; overflow: hidden; background: transparent; border: 0; border-radius: 0; }
-.jcem-app-nav::before { content: ""; position: absolute; z-index: -1; inset: 0 auto 0 0; width: 3.5rem; background: #eef1f3; border-right: 1px solid #b7c1c9; box-shadow: .3rem 0 1rem rgb(0 0 0 / .08); transition: width .18s ease, box-shadow .18s ease; }
+.jcem-app-nav { position: sticky; z-index: 900; top: 0; align-self: start; justify-self: start; width: 3.5rem; height: max-content; padding: 0; overflow: visible; background: transparent; border: 0; border-radius: 0; }
+.jcem-app-nav::before { content: ""; position: absolute; z-index: -1; inset: 0 auto auto 0; width: 3.5rem; height: 100vh; background: transparent; border-right: 1px solid transparent; transition: width .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease; pointer-events: none; }
 .jcem-app-nav-right { grid-column: 2; border-right: 0; border-left: 1px solid #b7c1c9; box-shadow: -.3rem 0 1rem rgb(0 0 0 / .08); }
-.jcem-nav-state:checked ~ .jcem-app-shell .jcem-app-nav { overflow: visible; }
-.jcem-nav-state:checked ~ .jcem-app-shell .jcem-app-nav::before { width: min(18rem, calc(100vw - 1rem)); box-shadow: .65rem 0 1.8rem rgb(0 0 0 / .2); }
+.jcem-nav-state:checked ~ .jcem-app-shell .jcem-app-nav::before { width: min(18rem, calc(100vw - 1rem)); background: #d6e0e7; border-color: #9dabb6; box-shadow: .65rem 0 1.8rem rgb(0 0 0 / .2); }
 .jcem-nav-state:checked ~ .jcem-app-shell .jcem-app-nav nav,
 .jcem-nav-state:checked ~ .jcem-app-shell .jcem-app-nav .jcem-nav-toggle { width: min(18rem, calc(100vw - 1rem)); }
 .jcem-nav-state:checked ~ .jcem-app-shell .jcem-app-nav-right { box-shadow: -.65rem 0 1.8rem rgb(0 0 0 / .2); }
@@ -1154,8 +1145,9 @@ body.imprimir input::placeholder {
 .jcem-app-nav a:hover, .jcem-app-nav a:focus-visible { background: #d9e0e5; outline: 2px solid #647887; outline-offset: -2px; }
 .jcem-app-nav img { justify-self: center; width: 2.15rem; height: 2.15rem; object-fit: contain; border-radius: .45rem; transition: filter 180ms ease; }
 .jcem-nav-dot { width: .75rem; height: .75rem; margin: auto; border-radius: 50%; background: #1b5f8c; }
-:root[data-theme="dark"] .jcem-theme-toggle { background: #303236; border-color: #62656b; color: #f0f0f0; }
-:root[data-theme="dark"] .jcem-app-nav::before { background: #25272a; border-color: #55585e; box-shadow: .3rem 0 1rem rgb(0 0 0 / .3); }
+:root[data-theme="dark"] .jcem-theme-toggle { background: #34363a; border-color: #666a70; color: #c6c9cd; }
+:root[data-theme="dark"] .jcem-app-shell::before { background: #25272a; border-color: #55585e; box-shadow: .3rem 0 1rem rgb(0 0 0 / .3); }
+:root[data-theme="dark"] .jcem-nav-state:checked ~ .jcem-app-shell .jcem-app-nav::before { background: #25272a; border-color: #55585e; box-shadow: .65rem 0 1.8rem rgb(0 0 0 / .35); }
 :root[data-theme="dark"] .jcem-app-nav-right { box-shadow: -.3rem 0 1rem rgb(0 0 0 / .3); }
 :root[data-theme="dark"] .jcem-nav-toggle { background: #323438; border-color: #55585e; color: #f1f1f1; }
 :root[data-theme="dark"] .jcem-app-nav a { color: #e3e3e3; }
