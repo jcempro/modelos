@@ -68,6 +68,7 @@ test("shared chrome checks updates once and delegates presentation to CSS", asyn
   assert.doesNotMatch(sharedTs, /setInterval\(/);
   assert.match(sharedTs, /há atualização disponível, baixe e substitua/);
   assert.match(sharedTs, /unicode: "f019"/);
+  assert.match(sharedTs, /faDownload/);
   assert.match(sharedCss, /\.jcem-chrome-meta\.has-update \.jcem-update-indicator\s*{\s*display:\s*inline-grid/);
   assert.match(sharedCss, /@keyframes jcem-update-pulse/);
   assert.match(sharedCss, /:root\[data-theme="dark"\] \.jcem-update-indicator/);
