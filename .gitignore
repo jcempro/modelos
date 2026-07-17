@@ -1,8 +1,7 @@
 node_modules/
 .cache/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.log
+*.tmp
 
 0. Autoriza .md em ./.agents/
 /.agents/*

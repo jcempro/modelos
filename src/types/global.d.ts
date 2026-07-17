@@ -180,6 +180,7 @@ declare global {
     actionsSelector?: string;
     autosave?: boolean;
     author?: string;
+    authorLogoUrl?: string;
     authorName?: string;
     authorUrl?: string;
     domain?: string;

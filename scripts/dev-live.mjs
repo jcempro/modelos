@@ -10,6 +10,16 @@ const srcRoot = path.join(root, "src");
 const distRoot = path.join(root, "dist");
 const port = Number(process.env.PORT || 4173);
 const clients = new Set();
+const vendorResources = new Map([
+  [
+    "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.14.0/html2pdf.bundle.min.js",
+    { file: path.join(root, "node_modules", "html2pdf.js", "dist", "html2pdf.bundle.min.js"), route: "/__vendor/html2pdf.bundle.min.js" }
+  ],
+  [
+    "https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js",
+    { file: path.join(root, "node_modules", "zepto", "dist", "zepto.min.js"), route: "/__vendor/zepto.min.js" }
+  ]
+]);
 let activeBuild;
 let buildQueued = false;
 let buildTimer;
@@ -18,6 +28,13 @@ let stopped = false;
 const liveSnippet = `<script>(()=>{const e=new EventSource("/__live");e.addEventListener("reload",()=>location.reload())})()</script>`;
 
 function injectLiveReload(html) {
+  for (const [url, { route }] of vendorResources) {
+    html = html.replaceAll(url, route);
+  }
+  html = html
+    .replace(/(<script\b[^>]*\bsrc=(["'])\/__vendor\/[^"']+\2[^>]*)\s+integrity=(["']).*?\3/gi, "$1")
+    .replace(/(<script\b[^>]*\bsrc=(["'])\/__vendor\/[^"']+\2[^>]*)\s+crossorigin=(["']).*?\3/gi, "$1")
+    .replace(/(<script\b[^>]*\bsrc=(["'])\/__vendor\/[^"']+\2[^>]*)\s+referrerpolicy=(["']).*?\3/gi, "$1");
   // PROTECAO: somente o fechamento estrutural final; bundles podem conter </body> em JavaScript inline.
   return /<\/body>\s*<\/html>\s*$/i.test(html)
     ? html.replace(/<\/body>\s*<\/html>\s*$/i, `${liveSnippet}</body></html>`)
@@ -25,9 +42,9 @@ function injectLiveReload(html) {
 }
 const mime = new Map([[".css", "text/css; charset=utf-8"], [".html", "text/html; charset=utf-8"], [".js", "text/javascript; charset=utf-8"], [".json", "application/json; charset=utf-8"], [".svg", "image/svg+xml"]]);
 
-function runNodeScript(relativePath) {
+function runNodeScript(relativePath, env = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [path.join(root, relativePath)], { cwd: root, shell: false, stdio: "inherit" });
+    const child = spawn(process.execPath, [path.join(root, relativePath)], { cwd: root, env: { ...process.env, ...env }, shell: false, stdio: "inherit" });
     child.once("error", reject);
     child.once("exit", (code, signal) => code === 0 ? resolve() : reject(new Error(`${relativePath} falhou (${signal || code}).`)));
   });
@@ -39,7 +56,7 @@ function runBuild() {
     return activeBuild;
   }
   activeBuild = runNodeScript("scripts/compile.mjs")
-    .then(() => runNodeScript("scripts/build-bundles.mjs"))
+    .then(() => runNodeScript("scripts/build-bundles.mjs", { JCEM_DEV_LIVE: "1" }))
     .finally(async () => {
     activeBuild = undefined;
     if (buildQueued && !stopped) {
@@ -77,6 +94,16 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/__live") {
       response.writeHead(200, { "cache-control": "no-cache", connection: "keep-alive", "content-type": "text/event-stream; charset=utf-8" });
       response.write("\n"); clients.add(response); request.on("close", () => clients.delete(response)); return;
+    }
+    if (url.pathname === "/favicon.ico") {
+      response.writeHead(204, { "cache-control": "no-store" });
+      response.end(); return;
+    }
+    for (const { file, route } of vendorResources.values()) {
+      if (url.pathname === route) {
+        response.writeHead(200, { "cache-control": "no-store", "content-type": "text/javascript; charset=utf-8" });
+        createReadStream(file).pipe(response); return;
+      }
     }
     const requested = path.normalize(path.join(distRoot, decodeURIComponent(url.pathname)));
     if (!isInside(distRoot, requested)) { response.writeHead(403); response.end("Forbidden"); return; }

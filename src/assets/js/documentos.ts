@@ -48,10 +48,12 @@ declare const __JCEM_BUILD_VERSION__: string;
   };
 
   const storage = w.localStorage;
+  const defaultAuthorLogoUrl = "https://jcem.pro/logo/64-dark.png";
   const placeholders = new WeakMap<HTMLInputElement, string | null>();
   const autosaveBound = new WeakSet<HTMLInputElement>();
   const tooltipBound = new WeakSet<HTMLElement>();
   let updateCheckStarted = false;
+  const mpl2BadgeSvg = `<svg class="jcem-mpl2-icon" aria-hidden="true" focusable="false" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><path d="M42.05 0.08C99.37 0.08 156.7 0.08 214.03 0.08C215.92 1.22 218.05 0.69 220.12 1.19C225 2.38 230.38 4.27 234.6 7.15C242.68 12.65 249.15 20.35 252.78 29.41C254.28 33.18 254.24 39.4 255.92 42.4C255.92 67.44 255.92 92.47 255.92 117.5C254.11 116.7 255 111.22 255 109.25C255 101.07 256.35 91.48 254.75 83.5C254.58 114.89 254.42 146.28 254.25 177.67C253.92 155.89 253.58 134.1 253.25 112.32C252.75 113.27 252.25 114.23 251.75 115.19C248.87 109.54 249.73 126.63 249.72 128.25C249.72 138.24 249.52 148.25 249.41 158.25C249.3 168.58 249.04 178.92 249.12 189.25C249.18 197.62 250.23 207.02 248.6 215.26C245.33 231.9 233.41 244.8 216.74 248.46C210.52 249.82 203.58 249.14 197.25 249.06C186.92 248.94 176.58 249.03 166.25 249.05C130.58 249.08 94.92 249.07 59.25 249.09C53.4 249.09 47.22 249.61 41.42 248.77C27.85 246.8 15.9 237.42 10.24 225.04C5.46 214.59 6.7 202.92 6.65 191.75C6.55 172.44 6.78 153.04 6.1 133.75C5.81 125.75 7.24 114.15 5.51 106.75C4.28 107.8 5.31 113.54 2.7 112.25C2.38 119.05 2.07 125.84 1.75 132.64C1.58 114.19 1.42 95.73 1.25 77.27C0.03 84.49 1 92.06 1 99.25C1 103.82 0.24 108.37 0.5 112.75C0.71 116.34 1.61 127.08 0.08 130C0.08 100.34 0.08 70.69 0.08 41.03C1.41 39.18 2.76 30.26 4.25 26.95C7.4 19.97 12.56 14.07 18.46 9.21C22.24 6.1 27.73 3.51 32.34 2.16C35.22 1.31 39.67 1.76 42.05 0.08Z" fill="#044c99"/><path d="M42.3 7.21C57.9 5.92 74.09 7.11 89.75 7.11C119.92 7.11 150.08 7.11 180.25 7.11C199.11 7.11 221.46 3.3 236.47 17.28C251.83 31.58 249.06 52.09 249.01 71.25C248.99 79.42 249.03 87.58 249.02 95.75C249.02 98.43 249.94 103.15 248.8 105.59C247.81 107.72 239.69 111.84 237.43 113.21C225.33 120.51 212.37 125.83 198.99 130.26C152.29 145.72 93.67 144.19 47.64 127.16C36.81 123.15 26.42 118.25 16.56 112.22C13.94 110.61 8.99 108.59 7.28 105.98C5.97 103.97 6.79 99.61 6.8 97.25C6.82 90.25 6.79 83.25 6.81 76.25C6.87 51.17 1.99 23.38 29.43 10.68C33.43 8.83 37.88 7.57 42.3 7.21ZM75.75 73.71C71.67 69.78 65.31 55.79 62.17 50.11C60.88 47.78 59.12 42.25 56.78 40.95C54.48 39.67 49.37 40.65 46.75 40.65C44.45 40.66 42.21 40.39 40.06 41.25C40.06 63.75 40.06 86.25 40.06 108.75C43.67 110.16 51.83 110.2 55.42 108.75C55.42 95.46 55.42 82.16 55.42 68.87C57.31 69.98 58.15 72.51 59.29 74.46C62.36 79.7 65.55 84.89 68.57 90.16C70.65 93.79 72.12 97.77 77.18 96.4C79.57 95.76 80.96 91.29 82.13 89.36C85.07 84.46 87.91 79.47 90.74 74.51C91.85 72.55 92.69 69.99 94.56 68.88C94.56 82.17 94.56 95.46 94.56 108.75C98.22 110.22 106.29 110.11 110.02 108.8C110.02 86.27 110.02 63.73 110.02 41.2C108.03 40.46 95.9 39.94 94.35 41.07C91.89 42.86 90.31 47.99 88.83 50.61C84.63 58.11 80.99 66.91 75.75 73.71ZM137.87 87.25C147.34 85.94 156.53 88.42 165.05 82.78C177.36 74.65 177.72 53.67 165.38 45.36C156.46 39.35 145.5 40.69 135.25 40.66C131.17 40.65 126.03 39.81 122.21 41.25C122.21 63.75 122.21 86.25 122.21 108.75C125.91 110.16 134.18 110.21 137.87 108.75C137.87 101.58 137.87 94.42 137.87 87.25ZM198.23 40.96C193.91 40.11 186.27 39.61 182.18 41.25C182.18 63.75 182.18 86.25 182.18 108.75C185.96 110.2 191.2 109.33 195.25 109.32C202.82 109.31 217.41 110.65 224.12 108.94C224.12 104.6 224.12 100.26 224.12 95.93C215.49 95.93 206.86 95.93 198.23 95.93C198.23 77.6 198.23 59.28 198.23 40.96Z" fill="#fefefe"/><path d="M255.92 117.5C255.92 149.17 255.92 180.84 255.92 212.51C254.81 214.35 255.27 216.47 254.74 218.49C253.95 221.51 253.09 224.8 251.83 227.64C248.4 235.37 242.83 241.65 236.35 247.09C232.75 250.11 227.5 252.32 223.11 253.76C220.49 254.62 216.73 254.37 214.52 255.92C156.87 255.92 99.22 255.92 41.57 255.92C39.64 254.35 33.14 253.95 30.33 252.84C24.45 250.52 18.64 246.67 14.11 242.14C9.47 237.5 5.33 231.31 3.17 225.19C2.28 222.69 1.42 215.41 0.08 213.94C0.08 185.96 0.08 157.98 0.08 130C1.61 127.08 0.71 116.34 0.5 112.75C0.24 108.37 1 103.82 1 99.25C1 92.06 0.03 84.49 1.25 77.27C1.42 95.73 1.58 114.19 1.75 132.64C2.07 125.84 2.38 119.05 2.7 112.25C5.31 113.54 4.28 107.8 5.51 106.75C7.24 114.15 5.81 125.75 6.1 133.75C6.78 153.04 6.55 172.44 6.65 191.75C6.7 202.92 5.46 214.59 10.24 225.04C15.9 237.42 27.85 246.8 41.42 248.77C47.22 249.61 53.4 249.09 59.25 249.09C94.92 249.07 130.58 249.08 166.25 249.05C176.58 249.03 186.92 248.94 197.25 249.06C203.58 249.14 210.52 249.82 216.74 248.46C233.41 244.8 245.33 231.9 248.6 215.26C250.23 207.02 249.18 197.62 249.12 189.25C249.04 178.92 249.3 168.58 249.41 158.25C249.52 148.25 249.72 138.24 249.72 128.25C249.73 126.63 248.87 109.54 251.75 115.19C252.25 114.23 252.75 113.27 253.25 112.32C253.58 134.1 253.92 155.89 254.25 177.67C254.42 146.28 254.58 114.89 254.75 83.5C256.35 91.48 255 101.07 255 109.25C255 111.22 254.11 116.7 255.92 117.5Z" fill="#2271c0"/></svg>`;
 
   function $<T extends Element = Element>(selector: string, root: ParentNode = d): T[] {
     return Array.from(root.querySelectorAll<T>(selector));
@@ -695,6 +697,36 @@ declare const __JCEM_BUILD_VERSION__: string;
     }
   }
 
+  function ensureFormDrawerControl(workspace: HTMLElement): void {
+    const controlId = `${moduleIdFromPath()}-form-drawer`;
+    let control = one<HTMLInputElement>(`#${controlId}`);
+
+    if (!control) {
+      control = d.createElement("input");
+      control.className = "jcem-form-drawer-state";
+      control.id = controlId;
+      control.type = "checkbox";
+      control.setAttribute("aria-label", "Expandir ou recolher formulario");
+    }
+
+    if (control.parentElement !== workspace) {
+      workspace.prepend(control);
+    }
+  }
+
+  function ensureFormDrawerToggle(form: HTMLElement): void {
+    const control = one<HTMLInputElement>(".jcem-form-drawer-state");
+    if (!control || one(".jcem-document-form-toggle", form)) {
+      return;
+    }
+
+    const toggle = d.createElement("label");
+    toggle.className = "jcem-document-form-toggle";
+    toggle.htmlFor = control.id;
+    toggle.innerHTML = "<span>Preencher campos</span>";
+    form.prepend(toggle);
+  }
+
   function renderPrintableLayout(options: PrintableLayoutOptions): void {
     const documentElement = resolveLayoutElement(options.document);
 
@@ -730,8 +762,10 @@ declare const __JCEM_BUILD_VERSION__: string;
 
     if (externalForms.length > 0) {
       workspace.classList.remove("jcem-document-workspace--document-only");
+      ensureFormDrawerControl(workspace);
       for (const form of externalForms) {
         ensureClass(form, "jcem-document-form-region");
+        ensureFormDrawerToggle(form);
         if (form.parentElement !== workspace) {
           workspace.insertBefore(form, preview);
         }
@@ -1565,7 +1599,7 @@ declare const __JCEM_BUILD_VERSION__: string;
 
   async function renderAppNavigation(): Promise<void> {
     try {
-      type AppCatalog = { apps?: Array<{ href: string; id: string; logo?: string; offlineLogo?: string; title: string }>; authorLogo?: string; currentAppId?: string; navigationPosition?: string; workspaceLogo?: string; workspaceOfflineLogo?: string };
+      type AppCatalog = { apps?: Array<{ href: string; id: string; logo?: string; offlineLogo?: string; title: string }>; authorLogo?: string; authorLogoUrl?: string; currentAppId?: string; navigationPosition?: string; workspaceLogo?: string; workspaceOfflineLogo?: string };
       const embedded = (w as Window & { __JCEM_APP_CATALOG__?: AppCatalog }).__JCEM_APP_CATALOG__;
       const encoded = one<HTMLMetaElement>('meta[name="jcem-app-catalog"]')?.content;
       const metadata: AppCatalog | undefined = encoded
@@ -1577,6 +1611,8 @@ declare const __JCEM_BUILD_VERSION__: string;
       const authorImage = one<HTMLImageElement>(".jcem-author-badge img");
       if (authorImage && bundled && catalog.authorLogo?.startsWith("data:image/png;base64,")) {
         authorImage.src = catalog.authorLogo;
+      } else if (authorImage && catalog.authorLogoUrl) {
+        authorImage.src = catalog.authorLogoUrl;
       }
       const appLogo = (app: NonNullable<AppCatalog["apps"]>[number]): string => bundled ? (app.offlineLogo ?? app.logo ?? "") : (app.logo ?? "");
       const aside = d.createElement("aside");
@@ -1686,6 +1722,7 @@ declare const __JCEM_BUILD_VERSION__: string;
     const brandName = seal.__p2;
     const authorName = options.authorName ?? options.author ?? seal.__p0;
     const authorUrl = options.authorUrl ?? seal.__p1;
+    const authorLogoUrl = options.authorLogoUrl ?? defaultAuthorLogoUrl;
     const authorLink = externalLink(authorUrl, authorName);
     const licenseLink = externalLink(licenseUrl, licenseName, "license noopener noreferrer");
     const autosave = options.autosave === false ? "" : `<span class="ico autosave jcem-autosave" title="${escapeHtml(seal.__p11)}"><span class="jcem-autosave-copy"><span>Local e </span><strong>automático</strong></span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>`;
@@ -1747,7 +1784,7 @@ declare const __JCEM_BUILD_VERSION__: string;
     licenseBadge.rel = "license noopener noreferrer";
     licenseBadge.setAttribute("aria-label", seal.__p9 + licenseName);
     licenseBadge.title = licenseName;
-    licenseBadge.innerHTML = "<span>MPL</span><strong>2.0</strong>";
+    licenseBadge.innerHTML = mpl2BadgeSvg;
     meta?.appendChild(licenseBadge);
     const authorBadge = d.createElement("a");
     authorBadge.className = "jcem-author-badge";
@@ -1756,7 +1793,7 @@ declare const __JCEM_BUILD_VERSION__: string;
     authorBadge.rel = "noopener noreferrer";
     authorBadge.setAttribute("aria-label", authorName);
     const authorImage = d.createElement("img");
-    authorImage.src = "https://jcem.pro/logo/64-yellow.png";
+    authorImage.src = authorLogoUrl;
     authorImage.alt = "";
     authorBadge.appendChild(authorImage);
     meta?.appendChild(authorBadge);

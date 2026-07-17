@@ -127,7 +127,7 @@
 
 ### Refinamento de marca e navegacao 20260717.0015.00
 
-- Marca de autoria do header substituida por `https://jcem.pro/logo/64-yellow.png`, com link para `https://www.jeancarloem.com`; Web conserva URL remota e Bundle incorpora PNG Base64 sem asset local distinto.
+- Marca de autoria do header configurada como `https://jcem.pro/logo/64-dark.png`, com link para `https://www.jeancarloem.com`; Web conserva URL remota e Bundle incorpora PNG Base64 sem asset local distinto.
 - Construtor segregado em entrada de preparacao remota e nucleo preservado; catalogo e JavaScript Web sao restaurados após cada build, enquanto o ZIP fica integralmente autocontido.
 - Ordem do header: autosave, switch, MPL e autoria. Badge MPL e autoria usam altura compativel; switch usa Font Awesome `f042` ampliado; trio possui hover/foco suave.
 - Autosave deixou de usar elipse: frase completa quando couber, resumo por breakpoint e somente icone em largura critica.
@@ -189,3 +189,54 @@
 - A divergencia controlada aplicou `.has-update`, exibiu link canonico, glifo `f019` e animacao `jcem-update-pulse`; a primeira captura revelou o glifo vazio por importacao Font Awesome incorreta, corrigida para `faDownload` e protegida por teste.
 - Capturas reais registraram indicador e tooltip integral nos temas claro e escuro. Claro: fundo `rgb(255, 241, 199)` e texto `rgb(154, 88, 0)`. Escuro: fundo `rgb(76, 58, 32)` e texto `rgb(255, 210, 123)`.
 - Todo parametro e cache-buster temporario do ensaio foi removido antes do build e da publicacao final.
+
+## FT-003 - Refatoracao da GUI global, MPL2 e gaveta de formularios
+
+- Objetivo: padronizar o ativo MPL2 no bundle, reequilibrar o cabecalho para ergonomia movel e criar gaveta de formulario documental com estado e transicao controlados por CSS/SASS puro.
+- Prioridade: alta.
+- Escopo: Tecnico.
+- Status: concluido.
+- Inicio: 20260717.
+
+### Plano vigente
+
+1. Atualizar contexto, confirmar memoria canonica e limpar correlatos obsoletos comprovados. Status: concluido.
+2. Incorporar SVG MPL2 no componente global e remover dependencia visual de arquivo externo no badge. Status: concluido.
+3. Refatorar cabecalho para alvos minimos de 44 px, sem bordas visuais padrao em icones e com alinhamento proporcional da marca. Status: concluido.
+4. Implementar gaveta de formulario externo com `input[type="checkbox"]`, `label`, seletores de irmaos e transicoes CSS. Status: concluido.
+5. Mapear breakpoints para retracao horizontal em layout lateral e vertical em layout superior. Status: concluido.
+6. Validar build, publicacao, contraste claro/escuro e ausencia de JavaScript de estado visual. Status: concluido.
+
+### Estado registrado
+
+- Branch observada: `dev`.
+- Memoria canonica vigente: `continue.ia` na raiz; `continue.dev` nao existe. Nenhuma duplicata canonica concorrente foi encontrada fora de `node_modules`.
+- Alteracoes preexistentes antes desta FT incluem `dist/`, `src/assets/js/documentos.ts`, `src/assets/js/tabular.ts`, `package-lock.json`, `src/assets/brand/MPL2.svg` e derivados de bundle. Devem ser preservadas e tratadas como estado de trabalho do repositorio.
+- RCF global sincronizado para exigir SVG MPL2 incorporado no componente distribuido, alvos de toque de 44 px sem bordas padrao nos icones do cabecalho e gaveta de formulario documental retraida por CSS puro.
+- `src/assets/brand/MPL2.svg` foi removido por se tornar copia externa redundante; `dist/assets/brand/MPL2.svg` foi purgado pelo build.
+- Validacao automatizada final: `npm run type-check`, `npm test`, `npm run lint`, `npm run build` e `npm run validate:publication` aprovados. Testes: 44 aprovados. Build: tres bundles offline. Publicacao: 4 paginas e 30 arquivos em `dist/`.
+- Validacao renderizada final no Chrome instalado via Playwright: cabecalho com logo, switch, MPL2, autoria e botoes de toolbar em 44 px e borda 0; SVG MPL2 inline presente e nenhum `img` usando `MPL2.svg`; formulario inicia retraido; desktop retraido em coluna de 44 px com barra vertical; desktop expandido estabiliza em 413 px, conteudo visivel, opacidade 1 e eventos ativos; mobile retraido em 44 px de altura com barra horizontal; texto `Preencher campos` legivel em modo claro e escuro; sem overflow horizontal.
+
+### Compactacao vigente
+
+- Fonte canonica para UI global: `src/assets/js/documentos.ts` e `src/assets/css/documentos.scss`.
+- `dist/` permanece artefato gerado pelo pipeline; alteracoes manuais devem ser evitadas e substituidas por `npm run build` ou `npm run check`.
+- Formulario externo documental deve iniciar retraido. JavaScript pode criar estrutura sem registrar eventos de layout; abertura/fechamento pertence a CSS por checkbox e seletores.
+- A regra expandida desktop usa `clamp(21rem, 32vw, 31rem) minmax(0, 1fr)`; a forma anterior com `minmax(..., clamp(...))` casava no CSSOM, mas nao produzia coluna expandida no Chrome.
+
+### Correcao dev-live 20260717.1500.00
+
+- Falha confirmada: `dev-live` interrompia a abertura quando `scripts/build-bundles.mjs` nao conseguia baixar a URL remota vigente da marca de autoria para incorporar no ZIP. A pagina live tambem preservava CDN/SRI remotos de dependencias documentais, criando fragilidade local sem necessidade.
+- Correcao vigente: `scripts/build-bundles.mjs` grava cache operacional da marca remota em `.cache/build/author-logo-64-dark.png`; em `JCEM_DEV_LIVE=1`, usa esse cache ou mantem a URL remota configurada apenas no bundle live. O build normal fora de `dev-live` continua rigoroso e falha sem origem/cache valido.
+- Correcao vigente: `scripts/dev-live.mjs` injeta `JCEM_DEV_LIVE=1`, serve `html2pdf.js` e `zepto` por rotas internas `__vendor`, remove SRI/crossorigin/referrerpolicy dessas rotas na resposta HTML live e responde `/favicon.ico` com 204.
+- Evidencia automatizada: `npm test` aprovou 44 testes; `npm run lint` e `npm run type-check` aprovaram.
+- Evidencia operacional: `dev-live` abriu em sandbox, `/faturamento/` respondeu 200, `/__vendor/html2pdf.bundle.min.js` respondeu 200, o HTML live referenciou `__vendor` sem SRI remoto e `/favicon.ico` respondeu 204.
+
+### Ajuste visual e autoria 20260717.1610.00
+
+- Solicitacao humana: remover label visual do icone MPL, elevar legibilidade e alinhamento da barra `Preencher campos`, fazer a barra vertical pintar toda a aresta durante rolagem e tornar o icone de autoria configuravel, usando obrigatoriamente `https://jcem.pro/logo/64-dark.png` ate edicao manual.
+- Correcao aplicada: `src/assets/js/documentos.ts` removeu o texto visual `MPL 2.0` do badge, mantendo aria-label/title; `src/assets/css/documentos.scss` passou a pintar a barra de formulario por variaveis e gradiente no layout lateral, com texto maior, centralizado e alto contraste em claro/escuro.
+- Correcao aplicada: `src/assets/config/apps.json` ganhou `authorLogoUrl`; `ChromeOptions` ganhou `authorLogoUrl`; o header usa `https://jcem.pro/logo/64-dark.png` como fallback normativo e nunca usa logo de aplicativo como autoria.
+- Correcao aplicada: o build de bundle baixa a URL de autoria configurada, grava cache operacional em `.cache/build/author-logo-64-dark.png` e incorpora PNG como Data URL; `dev-live` deixou de substituir a autoria por SVG local de aplicacao.
+- Evidencia automatizada: `npm run type-check`, `npm test`, `npm run lint`, `npm run build` e `npm run validate:publication` aprovaram. Os tres ZIPs extraidos continham Data URL PNG de autoria, sem `64-dark.png`, sem `64-yellow` e sem `MPL 2.0</span>`.
+- Observacao de validacao visual: Chrome/Edge headless locais falharam no ambiente por GPU/CDP antes de gerar captura confiavel; a validacao ficou coberta por testes estruturais, build, publicacao e inspecao de artefato extraido.
