@@ -274,6 +274,40 @@
 - RCF global sincronizado para exigir asset isolado unico e permitir embedding exclusivamente em tempo de bundle, sem persistir Data URL na fonte nem no catalogo Web restaurado.
 - Evidencia automatizada: `npm run check` aprovado. Inspecao direta confirmou `dist/assets/config/apps.json` sem `data:image`, `offlineLogo` ou `workspaceOfflineLogo`; o ZIP `dist/faturamento/faturamento.bundle.zip` contem `offlineLogo`, `workspaceOfflineLogo` e `data:image/svg+xml;base64`.
 
+## FT-004 - Centralizacao da configuracao e consolidacao da publicacao
+
+- Objetivo: eliminar valores customizaveis ou personalizaveis embutidos nos scripts locais e no workflow GitHub Pages, estabelecer uma fonte canonica centralizada e oferecer um comando all-in-one de publicacao.
+- Prioridade: alta.
+- Escopo: Tecnico.
+- Status: em andamento.
+- Inicio: 20260717.
+- Branch: `dev`.
+
+### Plano vigente
+
+1. Etapa 1/5 - inventariar configuracoes duplicadas, scripts genericos e contratos de build, validacao e publicacao. Status: em andamento.
+   1.1. Mapear valores customizaveis presentes em `scripts/`, `.github/workflows/`, manifestos e configuracoes de `src/`. Previsao: curta. Status: em andamento.
+   1.2. Classificar cada script por finalidade, consumidor e especializacao. Previsao: curta. Status: pendente.
+2. Etapa 2/5 - definir e documentar a fonte unica de configuracao e seu carregador validado. Status: pendente.
+   2.1. Consolidar configuracoes de build, bundle, validacao, desenvolvimento e publicacao. Previsao: moderada. Status: pendente.
+   2.2. Sincronizar o contrato arquitetural no RCF global. Previsao: curta. Status: pendente.
+3. Etapa 3/5 - migrar scripts e workflow para consumo exclusivo da configuracao central. Status: pendente.
+   3.1. Remover constantes customizaveis duplicadas dos scripts locais. Previsao: moderada. Status: pendente.
+   3.2. Substituir valores personalizaveis do GitHub Pages por entradas derivadas da fonte central. Previsao: moderada. Status: pendente.
+   3.3. Renomear ou consolidar entradas vagas, preservando aliases de compatibilidade quando exigidos. Previsao: moderada. Status: pendente.
+4. Etapa 4/5 - implementar publicacao all-in-one com validacao, build, empacotamento e preparacao deterministica do artefato. Status: pendente.
+   4.1. Criar comando especializado `agent:publish` e entrada NPM explicita. Previsao: moderada. Status: pendente.
+   4.2. Integrar o workflow Pages ao mesmo orquestrador sem duplicar regras. Previsao: moderada. Status: pendente.
+5. Etapa 5/5 - comprovar ausencia de duplicacao e regressao, atualizar memoria e concluir a FT. Status: pendente.
+   5.1. Executar type-check, lint, testes, build, bundles e validacao da publicacao. Previsao: moderada. Status: pendente.
+   5.2. Validar configuracao central, nomes publicos, artefato Pages e fluxo all-in-one. Previsao: moderada. Status: pendente.
+
+### Estado inicial
+
+- A solicitacao humana determinou migracao para `dev`, remocao de `dist/` e preservacao das demais alteracoes.
+- `dist/` foi removido integralmente e permanece como exclusao local rastreada; nenhum arquivo externo a `dist/` estava modificado no momento da migracao.
+- A implementacao somente pode iniciar depois do commit e push deste registro inicial da FT.
+
 ### Refinamento final da GUI global 20260717.1905.00
 
 - Ajuste de requisito: o indicador da gaveta de campos deve preservar o texto contextual `Campos preenchíveis`, mas o estado de expandir/recolher deve ser expresso por icones Font Awesome adequados, com respiro proprio e sem corte.
