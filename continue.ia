@@ -164,7 +164,7 @@
 2. Formalizar indexador, contingencia e estado visual no RCF. Status: concluido.
 3. Implementar revisao de build, geracao exclusiva no deploy e verificador client-side. Status: em andamento.
 4. Validar testes automatizados e comportamento visual local. Status: pendente.
-5. Executar publicacoes reais e comprovar deteccao por bundle anterior. Status: pendente.
+5. Executar publicacoes reais e comprovar deteccao por bundle anterior. Status: em andamento.
 6. Atualizar derivados, concluir FT e convergir `dev`/`master`. Status: pendente.
 
 ### Decisoes vigentes
@@ -173,3 +173,11 @@
 - A revisao local e a revisao do indexador derivam do mesmo SHA imutavel da execucao de deploy.
 - O indicador existe oculto no chrome; JavaScript apenas alterna `.has-update` apos comparacao assincrona.
 - Cada carregamento executa um fluxo unico, com no maximo duas requisicoes: tentativa normal e um unico desvio anti-cache por falha imediata.
+
+### Evidencia da primeira publicacao
+
+- Commit publicado: `0192a511fc66fdfa2a88ff9b6ca6d4d35569a544`.
+- Workflow Pages `29545446382`: validacao, geracao do indexador, upload e deploy concluidos com sucesso.
+- `https://tools.jcem.pro/version.json` retornou o mesmo SHA e timestamp Unix inteiro.
+- A pagina produtiva de Faturamento manteve `.has-update` ausente e o indicador em `display: none` quando revisao local e upstream coincidiram.
+- O ZIP publicado foi preservado fora da arvore versionada para comprovar divergencia apos a publicacao seguinte.
