@@ -26,6 +26,8 @@ jobs:
           cache: npm
       - run: npm ci --prefer-offline --no-audit --fund=false
       - run: npm run check
+        env:
+          JCEM_BUILD_VERSION: ${{ github.sha }}
       - name: Validate Pages artifact root
         run: |
           test -f dist/CNAME
@@ -35,6 +37,16 @@ jobs:
           test ! -f dist/README.md
           test -n "$(find dist -name '*.bundle.zip' -print -quit)"
           test -z "$(find dist -name '*.bundle.html' -print -quit)"
+      - name: Generate deployed version index
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          JCEM_DEPLOY_VERSION: ${{ github.sha }}
+        run: npm run generate:version-index
+      - name: Validate deployed version index
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          JCEM_DEPLOY_VERSION: ${{ github.sha }}
+        run: node -e "const fs=require('node:fs');const v=JSON.parse(fs.readFileSync('dist/version.json'));if(v.hash!==process.env.JCEM_DEPLOY_VERSION||!Number.isSafeInteger(v.timestamp))process.exit(1)"
       - uses: actions/configure-pages@v6
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       - uses: actions/upload-pages-artifact@v5

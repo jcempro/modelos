@@ -5,6 +5,7 @@ import {
   faCircleDown,
   faCircleHalfStroke,
   faFolderOpen,
+  faCloudArrowDown,
   faEraser,
   faFilePdf,
   faFileArrowDown,
@@ -15,6 +16,8 @@ import {
   faStamp
 } from "@fortawesome/free-solid-svg-icons";
 import { g as guard } from "./guard";
+
+declare const __JCEM_BUILD_VERSION__: string;
 
 (function bootstrapDocumentos(w: Window, d: Document): void {
   "use strict";
@@ -48,6 +51,7 @@ import { g as guard } from "./guard";
   const placeholders = new WeakMap<HTMLInputElement, string | null>();
   const autosaveBound = new WeakSet<HTMLInputElement>();
   const tooltipBound = new WeakSet<HTMLElement>();
+  let updateCheckStarted = false;
 
   function $<T extends Element = Element>(selector: string, root: ParentNode = d): T[] {
     return Array.from(root.querySelectorAll<T>(selector));
@@ -866,6 +870,7 @@ import { g as guard } from "./guard";
     faBars,
     faCircleDown,
     faCircleHalfStroke,
+    faCloudArrowDown,
     faFolderOpen,
     faEraser,
     faFileArrowDown,
@@ -1617,6 +1622,60 @@ import { g as guard } from "./guard";
     } catch { /* PROTECAO: falha do catalogo nao bloqueia o aplicativo. */ }
   }
 
+  /** Resolve a pagina publica equivalente, inclusive quando o bundle e aberto por `file:`. */
+  function publicPageUrl(domain: string): string {
+    if (w.location.protocol === "https:" || w.location.protocol === "http:") {
+      return `https://${domain}${w.location.pathname.endsWith("/") ? w.location.pathname : `${w.location.pathname}/`}`;
+    }
+
+    try {
+      const encoded = one<HTMLMetaElement>('meta[name="jcem-app-catalog"]')?.content;
+      if (encoded) {
+        const catalog = JSON.parse((encoded.match(/\\u[0-9a-f]{4}/gi) ?? []).map((unit) => String.fromCharCode(Number.parseInt(unit.slice(2), 16))).join("")) as {
+          apps?: Array<{ href: string; id: string }>;
+          currentAppId?: string;
+        };
+        const href = catalog.apps?.find((app) => app.id === catalog.currentAppId)?.href;
+        if (href) return href;
+      }
+    } catch { /* PROTECAO: metadado offline invalido converge para a raiz publica. */ }
+
+    return `https://${domain}/`;
+  }
+
+  /** Busca e valida o indexador com timeout; cada chamada representa uma unica tentativa de rede. */
+  async function fetchVersionIndex(url: string, cache: RequestCache): Promise<{ hash: string; timestamp: number }> {
+    const controller = new AbortController();
+    const timeout = w.setTimeout(() => controller.abort(), 3500);
+    try {
+      const response = await fetch(url, { cache, headers: { Accept: "application/json" }, signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json() as { hash?: unknown; timestamp?: unknown };
+      if (typeof payload.hash !== "string" || !/^[0-9a-f]{40}$/i.test(payload.hash) || !Number.isSafeInteger(payload.timestamp)) {
+        throw new Error("Indexador de versao invalido");
+      }
+      return { hash: payload.hash.toLowerCase(), timestamp: Number(payload.timestamp) };
+    } finally {
+      w.clearTimeout(timeout);
+    }
+  }
+
+  /** Executa uma checagem fail-safe por carregamento e alterna somente a classe visual de estado. */
+  async function checkForUpdate(container: HTMLElement | null, domain: string): Promise<void> {
+    if (updateCheckStarted || !container || __JCEM_BUILD_VERSION__ === "development") return;
+    updateCheckStarted = true;
+    const endpoint = `https://${domain}/version.json`;
+    try {
+      let upstream: { hash: string; timestamp: number };
+      try {
+        upstream = await fetchVersionIndex(endpoint, "no-cache");
+      } catch {
+        upstream = await fetchVersionIndex(`${endpoint}?t=${Date.now()}`, "no-store");
+      }
+      container.classList.toggle("has-update", upstream.hash !== __JCEM_BUILD_VERSION__.toLowerCase());
+    } catch { /* PROTECAO: atualizacao indisponivel nunca interfere na interface principal. */ }
+  }
+
   function renderChrome(options: ChromeOptions = {}): void {
     removeExistingChrome();
 
@@ -1630,6 +1689,8 @@ import { g as guard } from "./guard";
     const authorLink = externalLink(authorUrl, authorName);
     const licenseLink = externalLink(licenseUrl, licenseName, "license noopener noreferrer");
     const autosave = options.autosave === false ? "" : `<span class="ico autosave jcem-autosave" title="${escapeHtml(seal.__p11)}"><span class="jcem-autosave-copy"><span>Local e </span><strong>automático</strong></span><span class="jcem-autosave-icon">${renderIcon({ unicode: "f0c7" })}</span></span>`;
+    const updateHint = "há atualização disponível, baixe e substitua";
+    const updateIndicator = `<a class="jcem-update-indicator" href="${escapeHtml(publicPageUrl(domain))}" aria-label="${updateHint}" data-jcem-tooltip="${updateHint}">${renderIcon({ unicode: "f019" })}</a>`;
     const mount = typeof options.mountBefore === "string"
       ? one(options.mountBefore)
       : options.mountBefore ?? d.body.firstElementChild;
@@ -1642,6 +1703,7 @@ import { g as guard } from "./guard";
       </div>
       <div class="jcem-chrome-meta">
         ${autosave}
+        ${updateIndicator}
       </div>
       <nav class="menu jcem-chrome-actions" aria-label="Ferramentas"></nav>
     `;
@@ -1701,6 +1763,7 @@ import { g as guard } from "./guard";
     d.body.appendChild(footer);
     void renderAppNavigation();
     initTooltips(header);
+    queueMicrotask(() => void checkForUpdate(meta, domain));
   }
 
   w.JCEMDocumentos = {

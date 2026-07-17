@@ -34,6 +34,7 @@ const staticSourceExtensions = new Set([
 ]);
 const optimizableTextExtensions = new Set([".css", ".html", ".js", ".json"]);
 const noscriptSource = "NOSCRIPT.html";
+const buildVersion = process.env.JCEM_BUILD_VERSION?.trim() || "development";
 let noscriptFragmentCache;
 
 async function ensureParent(file) {
@@ -225,6 +226,7 @@ async function buildBrowserScripts() {
     const result = await esbuild.build({
       entryPoints: [path.join(root, source)],
       bundle: true,
+      define: { __JCEM_BUILD_VERSION__: JSON.stringify(buildVersion) },
       format: "iife",
       legalComments: "none",
       logLevel: "silent",

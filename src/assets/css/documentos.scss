@@ -646,9 +646,34 @@ body.jcem-has-app-nav:not(.imprimir) .jcem-chrome-actions.menu {
   animation: jcem-autosave-breathe 1.2s cubic-bezier(.4, 0, .2, 1) infinite;
 }
 
+.jcem-update-indicator {
+  display: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-inline: 0.2rem;
+  border: 1px solid #b87912;
+  border-radius: 0.55rem;
+  background: #fff1c7;
+  color: #9a5800 !important;
+  text-decoration: none;
+  box-shadow: 0 0.15rem 0.45rem rgb(145 89 0 / 18%);
+}
+
+.jcem-chrome-meta.has-update .jcem-update-indicator { display: inline-grid; }
+.jcem-update-indicator .jcem-fa-icon { width: 1.35rem; height: 1.35rem; fill: currentColor; animation: jcem-update-pulse 1.65s ease-in-out infinite; }
+.jcem-update-indicator:hover,
+.jcem-update-indicator:focus-visible { background: #ffe39a; border-color: #8f5100; color: #784000 !important; outline: 2px solid rgb(184 121 18 / 32%); outline-offset: 0.12rem; }
+
 @keyframes jcem-autosave-breathe {
   0%, 100% { opacity: 0.82; transform: scale(0.96); }
   50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes jcem-update-pulse {
+  0%, 100% { opacity: 0.78; transform: scale(0.94) rotate(-4deg); }
+  50% { opacity: 1; transform: scale(1.08) rotate(4deg); }
 }
 
 .jcem-chrome-actions.menu {
@@ -1081,6 +1106,9 @@ body.imprimir input::placeholder {
 :root[data-theme="dark"] .jcem-chrome-footer p,
 :root[data-theme="dark"] .jcem-autosave { color: #c8c9cc; }
 :root[data-theme="dark"] .jcem-autosave-icon { color: #91c8ba; }
+:root[data-theme="dark"] .jcem-update-indicator { background: #4c3a20; border-color: #d69a38; color: #ffd27b !important; box-shadow: 0 0.2rem 0.55rem rgb(0 0 0 / 35%); }
+:root[data-theme="dark"] .jcem-update-indicator:hover,
+:root[data-theme="dark"] .jcem-update-indicator:focus-visible { background: #604923; border-color: #f0b653; color: #ffe0a1 !important; outline-color: rgb(240 182 83 / 34%); }
 :root[data-theme="dark"] .jcem-license-badge { border-color: #666a70; }
 :root[data-theme="dark"] .jcem-license-badge span { background: #494c51; }
 :root[data-theme="dark"] .jcem-license-badge strong { background: #303236; color: #ececec; }
@@ -1158,6 +1186,7 @@ body.imprimir input::placeholder {
 @media (prefers-reduced-motion: reduce) {
   .jcem-app-nav, .jcem-app-card { transition: none; }
   .jcem-autosave-icon .jcem-fa-icon { animation: none !important; transition: none; }
+  .jcem-update-indicator .jcem-fa-icon { animation: none !important; }
 }
 .jcem-consent-blocker { position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center; padding: 1rem; background: rgb(8 19 30 / .78); backdrop-filter: blur(.3rem); }
 .jcem-consent-blocker section { width: min(34rem, 100%); padding: 1.5rem; background: #fff; color: #173047; border-radius: 1rem; box-shadow: 0 1rem 4rem rgb(0 0 0 / .4); }

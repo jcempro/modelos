@@ -12,6 +12,7 @@
     "compile:watch": "node scripts/compile.mjs --watch",
     "dev": "node scripts/dev.mjs",
     "dev-live": "node scripts/dev-live.mjs",
+    "generate:version-index": "node scripts/generate-version-index.mjs",
     "lint": "eslint . --cache --cache-location .cache/eslint/",
     "test": "tsx --test tests/**/*.test.ts",
     "type-check": "tsc --noEmit",

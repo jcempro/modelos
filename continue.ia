@@ -149,3 +149,27 @@
 - Sidebar corrigida na causa raiz: a pintura do trilho pertence ao shell completo, com contraste claro `rgb(214,224,231)` e escuro `rgb(37,39,42)`; o `body` deixou de criar scroll container inerte, permitindo que o menu permaneça sticky em `top: 0` sem crop durante toda a rolagem. Expansão preservou 240 px e eixo dos ícones em 23,33 px.
 - Chrome global passou a aceitar `autosave: false`; o CSV declara a inaplicabilidade e não renderiza texto nem ícone, preservando tema, licença, autoria e toolbar. Nenhuma ocultação ficou sob CSS ou manipulação local do módulo.
 - Cabeçalho refinado: badge MPL reduzido para `0.68rem`; switch usa contraste intermediário por tema; autosave usa texto compacto `Local e automático`, tooltip integral e ícone com cores legíveis. A antiga alternância por temporizador foi removida e substituída por animação CSS pura de 1,2 s, suave, curta e perceptível, respeitando `prefers-reduced-motion`.
+
+## FT-002 - Verificacao assincrona de atualizacoes
+
+- Objetivo: publicar indexador efemero de versao e sinalizar bundles desatualizados sem bloquear a interface.
+- Prioridade: alta.
+- Escopo: Tecnico.
+- Status: em andamento.
+- Inicio: 20260716.
+
+### Plano vigente
+
+1. Auditar pipeline, build, chrome e contrato de publicacao. Status: concluido.
+2. Formalizar indexador, contingencia e estado visual no RCF. Status: concluido.
+3. Implementar revisao de build, geracao exclusiva no deploy e verificador client-side. Status: em andamento.
+4. Validar testes automatizados e comportamento visual local. Status: pendente.
+5. Executar publicacoes reais e comprovar deteccao por bundle anterior. Status: pendente.
+6. Atualizar derivados, concluir FT e convergir `dev`/`master`. Status: pendente.
+
+### Decisoes vigentes
+
+- `version.json` nao possui fonte em `src/` nem copia rastreada em `dist/`; o workflow o cria somente no artefato Pages da branch primaria.
+- A revisao local e a revisao do indexador derivam do mesmo SHA imutavel da execucao de deploy.
+- O indicador existe oculto no chrome; JavaScript apenas alterna `.has-update` apos comparacao assincrona.
+- Cada carregamento executa um fluxo unico, com no maximo duas requisicoes: tentativa normal e um unico desvio anti-cache por falha imediata.

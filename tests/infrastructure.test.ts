@@ -40,6 +40,40 @@ test("package exposes the full development lifecycle", async () => {
   }
 });
 
+test("Pages deploy owns the ephemeral version index", async () => {
+  const workflow = await readFile(".github/workflows/ci.yml", "utf8");
+  const generator = await readFile("scripts/generate-version-index.mjs", "utf8");
+  const { createVersionIndex, generateVersionIndex } = await import("../scripts/generate-version-index.mjs");
+  const hash = "a".repeat(40);
+
+  assert.deepEqual(createVersionIndex(hash.toUpperCase(), 123456789), { hash, timestamp: 123456789 });
+  assert.throws(() => createVersionIndex("short", 123), /SHA Git completo/);
+  await assert.rejects(() => generateVersionIndex({ GITHUB_ACTIONS: "false", GITHUB_REF: "refs/heads/master", JCEM_DEPLOY_VERSION: hash }), /deploy oficial/);
+  assert.match(workflow, /JCEM_BUILD_VERSION:\s*\$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /Generate deployed version index[\s\S]*github\.ref == 'refs\/heads\/master'/);
+  assert.match(workflow, /npm run generate:version-index/);
+  assert.match(generator, /Math\.floor\(Date\.now\(\) \/ 1000\)/);
+});
+
+test("shared chrome checks updates once and delegates presentation to CSS", async () => {
+  const sharedTs = await readFile("src/assets/js/documentos.ts", "utf8");
+  const sharedCss = await readFile("src/assets/css/documentos.scss", "utf8");
+  const compile = await readFile("scripts/compile.mjs", "utf8");
+
+  assert.match(compile, /__JCEM_BUILD_VERSION__:\s*JSON\.stringify\(buildVersion\)/);
+  assert.match(sharedTs, /let updateCheckStarted = false/);
+  assert.match(sharedTs, /fetchVersionIndex\(endpoint, "no-cache"\)/);
+  assert.match(sharedTs, /fetchVersionIndex\(`\$\{endpoint\}\?t=\$\{Date\.now\(\)\}`, "no-store"\)/);
+  assert.match(sharedTs, /container\.classList\.toggle\("has-update"/);
+  assert.doesNotMatch(sharedTs, /setInterval\(/);
+  assert.match(sharedTs, /há atualização disponível, baixe e substitua/);
+  assert.match(sharedTs, /unicode: "f019"/);
+  assert.match(sharedCss, /\.jcem-chrome-meta\.has-update \.jcem-update-indicator\s*{\s*display:\s*inline-grid/);
+  assert.match(sharedCss, /@keyframes jcem-update-pulse/);
+  assert.match(sharedCss, /:root\[data-theme="dark"\] \.jcem-update-indicator/);
+  assert.match(sharedCss, /prefers-reduced-motion[\s\S]*\.jcem-update-indicator \.jcem-fa-icon\s*{\s*animation:\s*none !important/);
+});
+
 test("TypeScript target is ES2020 or newer", async () => {
   const tsconfig = JSON.parse(await readFile("tsconfig.json", "utf8")) as {
     compilerOptions: { target: string };
