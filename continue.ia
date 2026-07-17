@@ -265,3 +265,20 @@
 - Correcao aplicada: `src/assets/config/apps.json` passou a declarar `siteNameFull: "Tools JeanCarloEM"` e `siteNameShort: "Tools JCEM"`. O chrome consome essa configuracao, tenta exibir o nome completo, alterna para o reduzido quando o espaco real nao couber e so entao recolhe controles institucionais para o menu, sem permitir que icones cortem ou ocultem a marca exibida.
 - RCF global sincronizado para tornar obrigatoria a configuracao JSON de nome completo/reduzido e a regra de recolher controles antes de cortar a marca.
 - Evidencia automatizada: `npm run check` aprovado com type-check, lint, 44 testes, build, tres bundles offline e publicacao validada com 4 paginas/30 arquivos.
+
+### Normatizacao de assets editaveis e embedding 20260717.1830.00
+
+- Ajuste de requisito: SVGs, logos e assets analogos devem permanecer como arquivos fonte isolados e editaveis. Catalogos Web/GitHub Pages devem referenciar caminhos/URLs cacheaveis; `data:` nao deve ficar versionado na configuracao fonte.
+- Correcao aplicada: `src/assets/config/apps.json` removeu `workspaceOfflineLogo` e `offlineLogo`, mantendo `workspaceLogo` e `apps[].logo` como referencias aos SVGs reais.
+- Correcao aplicada: `scripts/build-bundles-core.mjs` passou a gerar `workspaceOfflineLogo` e `offlineLogo` somente durante `embedOfflineCatalog`, lendo os arquivos em `dist/` e incorporando-os como Data URL apenas no HTML offline do ZIP.
+- RCF global sincronizado para exigir asset isolado unico e permitir embedding exclusivamente em tempo de bundle, sem persistir Data URL na fonte nem no catalogo Web restaurado.
+- Evidencia automatizada: `npm run check` aprovado. Inspecao direta confirmou `dist/assets/config/apps.json` sem `data:image`, `offlineLogo` ou `workspaceOfflineLogo`; o ZIP `dist/faturamento/faturamento.bundle.zip` contem `offlineLogo`, `workspaceOfflineLogo` e `data:image/svg+xml;base64`.
+
+### Refinamento final da GUI global 20260717.1905.00
+
+- Ajuste de requisito: o indicador da gaveta de campos deve preservar o texto contextual `Campos preenchíveis`, mas o estado de expandir/recolher deve ser expresso por icones Font Awesome adequados, com respiro proprio e sem corte.
+- Correcao aplicada: a gaveta usa `f054`/`f053` no eixo lateral e `f078`/`f077` no eixo superior; o CSS alterna os icones por checkbox e breakpoint, mantendo o texto contextual fixo. O icone recebeu caixa circular translucida, gap real e limite de texto vertical.
+- Correcao aplicada: a gaveta lateral de campos foi desacoplada da navegacao vertical de aplicativos. O chrome mede a altura real do cabecalho com `ResizeObserver` e expõe `--jcem-chrome-header-block-size`; a gaveta lateral passa a ficar sticky abaixo do header, sem subir para dentro dele durante a rolagem.
+- Correcao aplicada: a linha divisoria da toolbar passou a ser pseudo-elemento com recuo quando ha trilho de aplicativos, evitando atravessar visualmente a barra vertical retraida.
+- Correcao aplicada: as animacoes do autosave e do alerta de update foram restauradas e reforcadas. O autosave anima contêiner e SVG com `transform-box: fill-box`; o alerta de update anima botao e glifo quando visivel; `prefers-reduced-motion` desativa ambas.
+- RCF global sincronizado para bloquear regressao de assets editaveis, iconografia da gaveta, desacoplamento da gaveta lateral, refinamento visual do gatilho e animacoes globais perceptiveis.

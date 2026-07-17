@@ -71,8 +71,11 @@ test("shared chrome checks updates once and delegates presentation to CSS", asyn
   assert.match(sharedTs, /faDownload/);
   assert.match(sharedCss, /\.jcem-chrome-meta\.has-update \.jcem-update-indicator\s*{\s*display:\s*inline-grid/);
   assert.match(sharedCss, /@keyframes jcem-update-pulse/);
+  assert.match(sharedCss, /@keyframes jcem-update-button-pulse/);
+  assert.match(sharedCss, /\.jcem-chrome-meta\.has-update \.jcem-update-indicator\s*{[^}]*animation:\s*jcem-update-button-pulse 1\.65s ease-in-out infinite/s);
+  assert.match(sharedCss, /\.jcem-update-indicator \.jcem-fa-icon\s*{[^}]*transform-box:\s*fill-box;[^}]*animation:\s*jcem-update-pulse 1\.65s ease-in-out infinite/s);
   assert.match(sharedCss, /:root\[data-theme="dark"\] \.jcem-update-indicator/);
-  assert.match(sharedCss, /prefers-reduced-motion[\s\S]*\.jcem-update-indicator \.jcem-fa-icon\s*{\s*animation:\s*none !important/);
+  assert.match(sharedCss, /prefers-reduced-motion[\s\S]*\.jcem-update-indicator,[\s\S]*\.jcem-update-indicator \.jcem-fa-icon\s*{\s*animation:\s*none !important/);
 });
 
 test("TypeScript target is ES2020 or newer", async () => {
@@ -197,6 +200,8 @@ test("printable modules consume the shared document workspace layout", async () 
   assert.doesNotMatch(sharedCss, /body\.jcem-printable-layout\s*{[^}]*overflow:\s*hidden;/s);
   assert.match(sharedCss, /\.jcem-document-workspace\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s);
   assert.match(sharedCss, /\.jcem-document-workspace\s*{[^}]*overflow:\s*clip;/s);
+  assert.match(sharedCss, /\.jcem-chrome-toolbar-row::before\s*{[^}]*border-top:\s*1px solid/s);
+  assert.match(sharedCss, /body\.jcem-has-app-nav:not\(\.imprimir\) \.jcem-chrome-toolbar-row::before\s*{[^}]*left:\s*3\.5rem;/s);
   assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[^}]*\.jcem-document-workspace\s*{[^}]*grid-template-columns:/s);
   assert.match(sharedCss, /\.jcem-document-workspace\.jcem-document-workspace--document-only\s*{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
   assert.match(sharedCss, /\.jcem-document-preview-region\s*{[^}]*padding:\s*1rem;/s);
@@ -206,14 +211,23 @@ test("printable modules consume the shared document workspace layout", async () 
   assert.match(sharedTs, /className = "jcem-form-drawer-state"/);
   assert.match(sharedTs, /className = "jcem-document-form-scroll"/);
   assert.match(sharedTs, /Campos preenchíveis/);
-  assert.match(sharedTs, /Recolher campos/);
+  assert.match(sharedTs, /renderIcon\(\{ unicode: "f054" \}\)/);
+  assert.match(sharedTs, /renderIcon\(\{ unicode: "f053" \}\)/);
+  assert.match(sharedTs, /renderIcon\(\{ unicode: "f078" \}\)/);
+  assert.match(sharedTs, /renderIcon\(\{ unicode: "f077" \}\)/);
+  assert.match(sharedTs, /syncChromeHeaderOffset\(header\)/);
   assert.match(sharedCss, /\.jcem-document-workspace:has\(> \.jcem-form-drawer-state:not\(:checked\)\) \.jcem-document-form-region\s*{[^}]*max-block-size:\s*44px/s);
   assert.match(sharedCss, /body\.jcem-printable-layout \.jcem-document-workspace:has\(> \.jcem-form-drawer-state:checked\)\s*{[^}]*grid-template-columns:\s*clamp\(21rem,\s*32vw,\s*31rem\) minmax\(0,\s*1fr\) !important/s);
-  assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[\s\S]*\.jcem-document-form-region\s*{[^}]*align-self:\s*stretch;[^}]*min-block-size:\s*100%;[\s\S]*linear-gradient\(/s);
+  assert.match(sharedCss, /\.jcem-form-toggle-icon\s*{[^}]*inline-size:\s*1\.45rem;[^}]*block-size:\s*1\.45rem;[^}]*box-shadow:/s);
+  assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[\s\S]*\.jcem-document-form-region\s*{[^}]*position:\s*sticky;[^}]*top:\s*var\(--jcem-chrome-header-block-size,\s*0\);[^}]*min-block-size:\s*calc\(100svh - var\(--jcem-chrome-header-block-size,\s*0px\)\);[\s\S]*linear-gradient\(/s);
   assert.match(sharedCss, /\.jcem-document-workspace:has\(> \.jcem-form-drawer-state:checked\) \.jcem-document-form-scroll\s*{[^}]*visibility:\s*visible;[^}]*opacity:\s*1;[^}]*pointer-events:\s*auto;/s);
   assert.match(sharedCss, /\.jcem-document-form-scroll\s*{[^}]*overflow:\s*auto;[^}]*overscroll-behavior:\s*contain;/s);
   assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[\s\S]*\.jcem-document-form-region\s*{[^}]*overflow:\s*hidden;/s);
-  assert.match(sharedCss, /\.jcem-document-workspace:has\(> \.jcem-form-drawer-state:checked\) \.jcem-form-toggle-copy--close\s*{[^}]*display:\s*block;/s);
+  assert.match(sharedCss, /\.jcem-document-workspace:has\(> \.jcem-form-drawer-state:not\(:checked\)\) \.jcem-form-toggle-icon--expand-top\s*{[^}]*display:\s*inline-grid;/s);
+  assert.match(sharedCss, /\.jcem-document-workspace:has\(> \.jcem-form-drawer-state:checked\) \.jcem-form-toggle-icon--collapse-top\s*{[^}]*display:\s*inline-grid;/s);
+  assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[\s\S]*\.jcem-document-form-toggle\s*{[^}]*gap:\s*0\.72rem;[\s\S]*\.jcem-document-form-toggle \.jcem-form-toggle-copy\s*{[^}]*max-inline-size:\s*calc\(100svh - var\(--jcem-chrome-header-block-size,\s*0px\) - 5rem\);/s);
+  assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[\s\S]*\.jcem-document-workspace:has\(> \.jcem-form-drawer-state:not\(:checked\)\) \.jcem-form-toggle-icon--expand-side\s*{[^}]*display:\s*inline-grid;/s);
+  assert.match(sharedCss, /@media\s*\(min-width:\s*1120px\)\s*{[\s\S]*\.jcem-document-workspace:has\(> \.jcem-form-drawer-state:checked\) \.jcem-form-toggle-icon--collapse-side\s*{[^}]*display:\s*inline-grid;/s);
   assert.doesNotMatch(sharedTs, /jcem-form-drawer-state[\s\S]{0,300}addEventListener\("click"/);
   assert.doesNotMatch(sharedCss, /background:\s*#ff3333/);
   assert.doesNotMatch(sharedCss, /\.jcem-chrome-footer\s*{[^}]*position:\s*fixed;/s);
@@ -277,7 +291,12 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   assert.match(sharedCss, /\[data-jcem-toolbar-id="bundle"\] \.jcem-fa-icon:first-child\s*{[^}]*width:\s*1\.8rem[^}]*opacity:\s*1/s);
   assert.match(sharedCss, /\[data-jcem-toolbar-id="bundle"\] \.jcem-fa-icon:nth-child\(2\)\s*{[^}]*opacity:\s*0\.68[^}]*scale\(0\.82\)/s);
   assert.match(sharedCss, /@keyframes jcem-autosave-breathe/);
+  assert.match(sharedCss, /@keyframes jcem-autosave-glow/);
+  assert.match(sharedCss, /\.jcem-autosave \.jcem-autosave-icon,[\s\S]*\.jcem-autosave\[data-jcem-autosave-indicator="true"\] \.jcem-autosave-icon\s*{[^}]*animation:\s*jcem-autosave-glow/s);
+  assert.match(sharedCss, /\.jcem-autosave \.jcem-autosave-icon \.jcem-fa-icon,[\s\S]*\.jcem-autosave\[data-jcem-autosave-indicator="true"\] \.jcem-autosave-icon \.jcem-fa-icon\s*{[^}]*animation:\s*jcem-autosave-breathe/s);
+  assert.match(sharedCss, /\.jcem-autosave-icon \.jcem-fa-icon\s*{[^}]*transform-box:\s*fill-box;/s);
   assert.match(sharedCss, /animation:\s*jcem-autosave-breathe 1\.2s cubic-bezier\(\.4, 0, \.2, 1\) infinite/);
+  assert.match(sharedCss, /prefers-reduced-motion[\s\S]*\.jcem-autosave-icon,[\s\S]*\.jcem-autosave-icon \.jcem-fa-icon\s*{\s*animation:\s*none !important/);
   assert.match(sharedCss, /\.jcem-theme-toggle, \.jcem-nav-toggle, \.jcem-header-menu-toggle, \.jcem-toolbar-menu-toggle\s*{[^}]*min-width:\s*44px[^}]*min-height:\s*44px/s);
   assert.match(sharedCss, /\.jcem-license-badge\s*{[^}]*min-width:\s*44px[^}]*height:\s*44px[^}]*border:\s*0/s);
   assert.match(sharedCss, /\.jcem-chrome-actions\.menu > \*,[\s\S]*\.jcem-chrome-toolbar-overflow\.menu > \*\s*{[^}]*min-height:\s*44px[^}]*border:\s*0/s);
@@ -363,8 +382,9 @@ test("dashboard catalog, themes and consent remain centralized", async () => {
   assert.match(dashboard, /data-app-grid/);
   assert.match(dashboard, /data-dashboard-theme/);
   assert.ok(catalog.apps.every((app: { logo?: string }) => app.logo?.endsWith("/logo.svg")));
-  assert.ok(catalog.apps.every((app: { offlineLogo?: string }) => app.offlineLogo?.startsWith("data:image/svg+xml;base64,")));
-  assert.match(catalog.workspaceOfflineLogo, /^data:image\/svg\+xml;base64,/);
+  assert.ok(catalog.apps.every((app: { offlineLogo?: string }) => typeof app.offlineLogo === "undefined"));
+  assert.equal(catalog.workspaceOfflineLogo, undefined);
+  assert.doesNotMatch(JSON.stringify(catalog), /data:image/);
   assert.match(shared, /jcem-theme/);
   assert.match(shared, /assets\/config\/apps\.json/);
   assert.match(shared, /jcem-app-shell-content/);
@@ -459,6 +479,9 @@ test("offline bundles embed the app catalog as metadata with absolute upstream r
   assert.match(shared, /__JCEM_APP_CATALOG__/);
   assert.match(shared, /meta\[name="jcem-app-catalog"\]/);
   assert.match(shared, /offlineLogo/);
+  assert.match(bundleCore, /workspaceOfflineLogo:\s*await dataUrlFromCatalogRef\(source\.workspaceLogo\)/);
+  assert.match(bundleCore, /offlineLogo:\s*await dataUrlFromCatalogRef\(app\.logo\)/);
+  assert.match(bundleCore, /toDataUrl\(file\)/);
   assert.match(bundleEntry, /https:\/\/jcem\.pro\/logo\/64-dark\.png/);
   assert.match(bundleEntry, /author-logo-64-dark\.png/);
   assert.doesNotMatch(bundleEntry, /src", "assets", "brand", "logo\.svg"/);

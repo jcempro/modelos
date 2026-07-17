@@ -2,6 +2,10 @@ import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import {
   faBoxOpen,
   faBars,
+  faChevronDown,
+  faChevronLeft,
+  faChevronRight,
+  faChevronUp,
   faCircleDown,
   faCircleHalfStroke,
   faEllipsisVertical,
@@ -728,7 +732,7 @@ declare const __JCEM_BUILD_VERSION__: string;
       toggle.htmlFor = control.id;
       toggle.setAttribute("aria-label", "Abrir ou recolher campos do formulario");
       toggle.title = "Abrir ou recolher campos do formulario";
-      toggle.innerHTML = `${renderIcon({ unicode: "f142" })}<span class="jcem-form-toggle-copy jcem-form-toggle-copy--open">Campos preenchíveis</span><span class="jcem-form-toggle-copy jcem-form-toggle-copy--close">Recolher campos</span>`;
+      toggle.innerHTML = `<span class="jcem-form-toggle-icon jcem-form-toggle-icon--expand-side" title="Expandir campos">${renderIcon({ unicode: "f054" })}</span><span class="jcem-form-toggle-icon jcem-form-toggle-icon--collapse-side" title="Recolher campos">${renderIcon({ unicode: "f053" })}</span><span class="jcem-form-toggle-icon jcem-form-toggle-icon--expand-top" title="Expandir campos">${renderIcon({ unicode: "f078" })}</span><span class="jcem-form-toggle-icon jcem-form-toggle-icon--collapse-top" title="Recolher campos">${renderIcon({ unicode: "f077" })}</span><span class="jcem-form-toggle-copy">Campos preenchíveis</span>`;
       form.prepend(toggle);
     }
 
@@ -826,6 +830,21 @@ declare const __JCEM_BUILD_VERSION__: string;
     root.addEventListener("jcem:overflow-refresh", schedule);
 
     schedule();
+  }
+
+  function syncChromeHeaderOffset(header: HTMLElement): void {
+    const update = (): void => {
+      d.documentElement.style.setProperty("--jcem-chrome-header-block-size", `${Math.ceil(header.getBoundingClientRect().height)}px`);
+    };
+
+    if ("ResizeObserver" in w) {
+      const observer = new ResizeObserver(update);
+      observer.observe(header);
+    } else {
+      w.addEventListener("resize", update, { passive: true });
+    }
+
+    update();
   }
 
   function renderPrintableLayout(options: PrintableLayoutOptions): void {
@@ -1003,6 +1022,10 @@ declare const __JCEM_BUILD_VERSION__: string;
   const iconDefinitions: FaIconDefinition[] = [
     faBoxOpen,
     faBars,
+    faChevronDown,
+    faChevronLeft,
+    faChevronRight,
+    faChevronUp,
     faCircleDown,
     faCircleHalfStroke,
     faDownload,
@@ -1902,6 +1925,7 @@ declare const __JCEM_BUILD_VERSION__: string;
     `;
 
     d.body.insertBefore(header, mount ?? null);
+    syncChromeHeaderOffset(header);
     const meta = one<HTMLElement>(".jcem-chrome-meta", header);
     headerActions?.appendChild(initTheme());
     const licenseBadge = d.createElement("a");

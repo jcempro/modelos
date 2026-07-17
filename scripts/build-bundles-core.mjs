@@ -231,9 +231,23 @@ function assertOffline(html, rel) {
 
 async function embedOfflineCatalog(html) {
   const source = JSON.parse(await readFile(path.join(distDir, "assets", "config", "apps.json"), "utf8"));
+  const dataUrlFromCatalogRef = async (ref) => {
+    if (!ref || /^data:/i.test(ref)) {
+      return ref;
+    }
+    const file = resolveResource(ref, distDir);
+    return file ? await toDataUrl(file) : undefined;
+  };
   const catalog = {
     ...source,
-    apps: Array.isArray(source.apps) ? source.apps.map((app) => ({ ...app, href: new URL(app.href, "https://tools.jcem.pro/").href })) : []
+    workspaceOfflineLogo: await dataUrlFromCatalogRef(source.workspaceLogo),
+    apps: Array.isArray(source.apps)
+      ? await Promise.all(source.apps.map(async (app) => ({
+        ...app,
+        href: new URL(app.href, "https://tools.jcem.pro/").href,
+        offlineLogo: await dataUrlFromCatalogRef(app.logo)
+      })))
+      : []
   };
   const encoded = JSON.stringify(catalog).split("")
     .map((char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
