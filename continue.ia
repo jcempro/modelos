@@ -5,7 +5,7 @@
 - Objetivo: executar a sequencia completa de manutencao, atualizacao de contexto, padronizacao, diagnostico do modulo `admissional` e continuidade de implementacao.
 - Prioridade: alta.
 - Escopo: Tecnico.
-- Status: em andamento.
+- Status: concluido.
 - Inicio: 20260714.1527.21.
 - Atualizacao: 20260714.1605.00.
 
@@ -162,10 +162,10 @@
 
 1. Auditar pipeline, build, chrome e contrato de publicacao. Status: concluido.
 2. Formalizar indexador, contingencia e estado visual no RCF. Status: concluido.
-3. Implementar revisao de build, geracao exclusiva no deploy e verificador client-side. Status: em andamento.
-4. Validar testes automatizados e comportamento visual local. Status: pendente.
-5. Executar publicacoes reais e comprovar deteccao por bundle anterior. Status: em andamento.
-6. Atualizar derivados, concluir FT e convergir `dev`/`master`. Status: pendente.
+3. Implementar revisao de build, geracao exclusiva no deploy e verificador client-side. Status: concluido.
+4. Validar testes automatizados e comportamento visual local. Status: concluido.
+5. Executar publicacoes reais e comprovar deteccao por bundle anterior. Status: concluido.
+6. Atualizar derivados, concluir FT e convergir `dev`/`master`. Status: concluido.
 
 ### Decisoes vigentes
 
@@ -181,3 +181,11 @@
 - `https://tools.jcem.pro/version.json` retornou o mesmo SHA e timestamp Unix inteiro.
 - A pagina produtiva de Faturamento manteve `.has-update` ausente e o indicador em `display: none` quando revisao local e upstream coincidiram.
 - O ZIP publicado foi preservado fora da arvore versionada para comprovar divergencia apos a publicacao seguinte.
+
+### Evidencia final
+
+- `npm run check` aprovou type-check, lint, 44 testes, build dos tres bundles e validacao de 4 paginas/30 arquivos.
+- Publicacoes reais `29545446382`, `29545558954`, `29545826744`, `29545988985`, `29546147791` e `29546308639` comprovaram geracao efemera, upload e deploy; o ensaio `29545709044` foi corretamente bloqueado pelo teste que exige `github.sha` como revisao do build.
+- A divergencia controlada aplicou `.has-update`, exibiu link canonico, glifo `f019` e animacao `jcem-update-pulse`; a primeira captura revelou o glifo vazio por importacao Font Awesome incorreta, corrigida para `faDownload` e protegida por teste.
+- Capturas reais registraram indicador e tooltip integral nos temas claro e escuro. Claro: fundo `rgb(255, 241, 199)` e texto `rgb(154, 88, 0)`. Escuro: fundo `rgb(76, 58, 32)` e texto `rgb(255, 210, 123)`.
+- Todo parametro e cache-buster temporario do ensaio foi removido antes do build e da publicacao final.
