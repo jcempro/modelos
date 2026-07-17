@@ -5,11 +5,12 @@ import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
 import * as sass from "sass";
 import { optimizeTextByPath } from "./asset-optimizer.mjs";
-import { loadBuildConfig } from "./config.mjs";
+import { loadBuildConfig, loadProjectConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const srcRoot = path.join(root, "src");
-const distRoot = path.join(root, "dist");
+const projectConfig = await loadProjectConfig();
+const srcRoot = path.join(root, projectConfig.paths.source);
+const distRoot = path.join(root, projectConfig.paths.distribution);
 const watch = process.argv.includes("--watch");
 const buildConfig = await loadBuildConfig();
 const generatedFiles = new Set([
@@ -221,7 +222,7 @@ async function pruneEmptyDirectories(dir = distRoot) {
 
 async function buildBrowserScripts() {
   for (const { source, output } of buildConfig.browserScripts) {
-    const outfile = path.join("dist", output);
+    const outfile = path.join(projectConfig.paths.distribution, output);
     await ensureParent(outfile);
     const result = await esbuild.build({
       entryPoints: [path.join(root, source)],
@@ -257,7 +258,7 @@ async function buildStyles() {
 
 async function buildBookmarklets() {
   for (const { source, output } of buildConfig.bookmarklets) {
-    const outfile = path.join("dist", output);
+    const outfile = path.join(projectConfig.paths.distribution, output);
     await ensureParent(outfile);
     const result = await esbuild.build({
       bundle: true,

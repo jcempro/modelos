@@ -16,6 +16,9 @@ permissions:
 
 jobs:
   validate:
+    outputs:
+      should-deploy: ${{ steps.publish.outputs.should-deploy }}
+      artifact-path: ${{ steps.publish.outputs.artifact-path }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,38 +28,21 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --prefer-offline --no-audit --fund=false
-      - run: npm run check
+      - id: publish
+        name: Build, validate and prepare publication
+        run: npm run publish:pages
         env:
           JCEM_BUILD_VERSION: ${{ github.sha }}
-      - name: Validate Pages artifact root
-        run: |
-          test -f dist/CNAME
-          test -f dist/.nojekyll
-          test ! -e dist/src
-          test ! -e dist/dist
-          test ! -f dist/README.md
-          test -n "$(find dist -name '*.bundle.zip' -print -quit)"
-          test -z "$(find dist -name '*.bundle.html' -print -quit)"
-      - name: Generate deployed version index
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        env:
-          JCEM_DEPLOY_VERSION: ${{ github.sha }}
-        run: npm run generate:version-index
-      - name: Validate deployed version index
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        env:
-          JCEM_DEPLOY_VERSION: ${{ github.sha }}
-        run: node -e "const fs=require('node:fs');const v=JSON.parse(fs.readFileSync('dist/version.json'));if(v.hash!==process.env.JCEM_DEPLOY_VERSION||!Number.isSafeInteger(v.timestamp))process.exit(1)"
       - uses: actions/configure-pages@v6
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: steps.publish.outputs.should-deploy == 'true'
       - uses: actions/upload-pages-artifact@v5
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: steps.publish.outputs.should-deploy == 'true'
         with:
-          path: dist
+          path: ${{ steps.publish.outputs.artifact-path }}
           include-hidden-files: true
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: needs.validate.outputs.should-deploy == 'true'
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10

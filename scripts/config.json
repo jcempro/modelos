@@ -1,4 +1,45 @@
 {
+  "paths": {
+    "source": "src",
+    "distribution": "dist",
+    "cache": ".cache/build",
+    "catalog": "assets/config/apps.json",
+    "sharedBrowserScript": "assets/js/documentos.js"
+  },
+  "site": {
+    "publicBaseUrl": "https://tools.jcem.pro/"
+  },
+  "development": {
+    "host": "127.0.0.1",
+    "port": 4173,
+    "rebuildDebounceMs": 180,
+    "liveRoute": "/__live",
+    "vendor": [
+      {
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.0/html2pdf.bundle.min.js",
+        "file": "node_modules/html2pdf.js/dist/html2pdf.bundle.min.js",
+        "route": "/__vendor/html2pdf.bundle.min.js"
+      },
+      {
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.14.0/html2pdf.bundle.min.js",
+        "file": "node_modules/html2pdf.js/dist/html2pdf.bundle.min.js",
+        "route": "/__vendor/html2pdf.bundle.min.js"
+      },
+      {
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js",
+        "file": "node_modules/zepto/dist/zepto.min.js",
+        "route": "/__vendor/zepto.min.js"
+      }
+    ]
+  },
+  "publication": {
+    "primaryBranch": "master",
+    "versionIndex": "version.json",
+    "requiredFiles": ["CNAME", ".nojekyll"],
+    "forbiddenRoots": ["src", "dist", "README.md"],
+    "bundlePattern": ".bundle.zip",
+    "legacyBundlePattern": ".bundle.html"
+  },
   "build": {
     "browserScripts": [
       {

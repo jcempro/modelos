@@ -26,11 +26,12 @@ npm run dev-live
 ```bash
 npm run check
 npm run build
+npm run publish
 ```
 
 `src/` é a única fonte canônica para TypeScript, TSX, HTML, CSS e RCFs específicos. `dist/` é a única saída gerada: raiz publicada, artefato de produção e local dos bundles offline `*.bundle.zip`.
 
-Entradas explícitas de build, bookmarklets e arquivos raiz publicados ficam em `scripts/config.json`.
+`scripts/config.json` é a fonte central da toolchain: caminhos, URL pública, servidor local, dependências offline, entradas de build e contrato GitHub Pages. `build:web`, `build:offline-bundles`, `validate:publication` e `validate:all` explicitam a especialização; `publish`/`agent:publish` executa o fluxo all-in-one de preparação, enquanto `publish:pages` é a mesma entrada usada pelo CI.
 
 Toolbar, ícones, tooltips, exportação/importação local e layout de módulos imprimíveis são infraestrutura global em `src/assets/`. Ícones usam pacotes Font Awesome modulares e apenas as definições gratuitas efetivamente importadas entram no bundle.
 

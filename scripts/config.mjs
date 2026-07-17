@@ -68,9 +68,62 @@ function normalizeGeneratedRootFiles(value, label) {
   });
 }
 
-export async function loadBuildConfig() {
+function normalizeUrl(value, label) {
+  try {
+    const url = new URL(value);
+    if (!/^https?:$/.test(url.protocol)) throw new Error();
+    return url.href;
+  } catch {
+    throw new Error(`Configuracao invalida em ${label}: URL HTTP(S) absoluta esperada.`);
+  }
+}
+
+function normalizePositiveInteger(value, label) {
+  if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Configuracao invalida em ${label}: inteiro positivo esperado.`);
+  return value;
+}
+
+export async function loadProjectConfig() {
   const config = assertRecord(JSON.parse(await readFile(configPath, "utf8")), "scripts/config.json");
-  const build = assertRecord(config.build, "scripts/config.json.build");
+  const paths = assertRecord(config.paths, "paths");
+  const site = assertRecord(config.site, "site");
+  const development = assertRecord(config.development, "development");
+  const publication = assertRecord(config.publication, "publication");
+  const vendor = Array.isArray(development.vendor) ? development.vendor.map((item, index) => {
+    const entry = assertRecord(item, `development.vendor[${index}]`);
+    return {
+      url: normalizeUrl(entry.url, `development.vendor[${index}].url`),
+      file: normalizeRelativePath(entry.file, `development.vendor[${index}].file`),
+      route: `/${normalizeRelativePath(`${entry.route ?? ""}`.replace(/^\/+/, ""), `development.vendor[${index}].route`)}`
+    };
+  }) : (() => { throw new Error("Configuracao invalida em development.vendor: lista esperada."); })();
+
+  return {
+    paths: Object.fromEntries(Object.entries(paths).map(([key, value]) => [key, normalizeRelativePath(value, `paths.${key}`)])),
+    site: {
+      publicBaseUrl: normalizeUrl(site.publicBaseUrl, "site.publicBaseUrl")
+    },
+    development: {
+      host: `${development.host ?? ""}`.trim(),
+      port: normalizePositiveInteger(development.port, "development.port"),
+      rebuildDebounceMs: normalizePositiveInteger(development.rebuildDebounceMs, "development.rebuildDebounceMs"),
+      liveRoute: `/${normalizeRelativePath(`${development.liveRoute ?? ""}`.replace(/^\/+/, ""), "development.liveRoute")}`,
+      vendor
+    },
+    publication: {
+      primaryBranch: normalizeRelativePath(publication.primaryBranch, "publication.primaryBranch"),
+      versionIndex: normalizeRelativePath(publication.versionIndex, "publication.versionIndex"),
+      requiredFiles: normalizeRootFiles(publication.requiredFiles, "publication.requiredFiles"),
+      forbiddenRoots: normalizeRootFiles(publication.forbiddenRoots, "publication.forbiddenRoots"),
+      bundlePattern: `${publication.bundlePattern ?? ""}`,
+      legacyBundlePattern: `${publication.legacyBundlePattern ?? ""}`
+    },
+    build: assertRecord(config.build, "build")
+  };
+}
+
+export async function loadBuildConfig() {
+  const { build } = await loadProjectConfig();
 
   return {
     browserScripts: normalizeScriptEntries(build.browserScripts, "build.browserScripts"),

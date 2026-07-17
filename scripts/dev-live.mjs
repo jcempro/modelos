@@ -4,28 +4,22 @@ import { mkdir, readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadProjectConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const srcRoot = path.join(root, "src");
-const distRoot = path.join(root, "dist");
-const port = Number(process.env.PORT || 4173);
+const config = await loadProjectConfig();
+const srcRoot = path.join(root, config.paths.source);
+const distRoot = path.join(root, config.paths.distribution);
+const port = Number(process.env.PORT || config.development.port);
+const host = config.development.host;
 const clients = new Set();
-const vendorResources = new Map([
-  [
-    "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.14.0/html2pdf.bundle.min.js",
-    { file: path.join(root, "node_modules", "html2pdf.js", "dist", "html2pdf.bundle.min.js"), route: "/__vendor/html2pdf.bundle.min.js" }
-  ],
-  [
-    "https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js",
-    { file: path.join(root, "node_modules", "zepto", "dist", "zepto.min.js"), route: "/__vendor/zepto.min.js" }
-  ]
-]);
+const vendorResources = new Map(config.development.vendor.map(({ url, file, route }) => [url, { file: path.join(root, file), route }]));
 let activeBuild;
 let buildQueued = false;
 let buildTimer;
 let stopped = false;
 
-const liveSnippet = `<script>(()=>{const e=new EventSource("/__live");e.addEventListener("reload",()=>location.reload())})()</script>`;
+const liveSnippet = `<script>(()=>{const e=new EventSource(${JSON.stringify(config.development.liveRoute)});e.addEventListener("reload",()=>location.reload())})()</script>`;
 
 function injectLiveReload(html) {
   for (const [url, { route }] of vendorResources) {
@@ -80,7 +74,7 @@ function scheduleBuild() {
   buildTimer = setTimeout(async () => {
     try { await runBuild(); notifyReload(); }
     catch (error) { reportBuildError(error); }
-  }, 180);
+  }, config.development.rebuildDebounceMs);
 }
 
 function isInside(base, target) {
@@ -91,7 +85,7 @@ function isInside(base, target) {
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url || "/", `http://${request.headers.host || "127.0.0.1"}`);
-    if (url.pathname === "/__live") {
+    if (url.pathname === config.development.liveRoute) {
       response.writeHead(200, { "cache-control": "no-cache", connection: "keep-alive", "content-type": "text/event-stream; charset=utf-8" });
       response.write("\n"); clients.add(response); request.on("close", () => clients.delete(response)); return;
     }
@@ -136,6 +130,6 @@ server.once("error", async (error) => {
   reportBuildError(error.code === "EADDRINUSE" ? new Error(`Porta ${port} ocupada. Encerre o processo anterior ou defina PORT.`) : error);
   sourceWatcher.close(); process.exitCode = 1;
 });
-server.listen(port, "127.0.0.1", () => console.log(`Servidor live pronto em http://127.0.0.1:${port}/ (Web + bundles sincronizados)`));
+server.listen(port, host, () => console.log(`Servidor live pronto em http://${host}:${port}/ (Web + bundles sincronizados)`));
 process.on("SIGINT", () => void stop().then(() => process.exit(0)));
 process.on("SIGTERM", () => void stop().then(() => process.exit(0)));

@@ -7,12 +7,14 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadProjectConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const catalogPath = path.join(root, "dist", "assets", "config", "apps.json");
-const sharedScriptPath = path.join(root, "dist", "assets", "js", "documentos.js");
-const defaultAuthorLogoUrl = "https://jcem.pro/logo/64-dark.png";
-const authorLogoCachePath = path.join(root, ".cache", "build", "author-logo-64-dark.png");
+const config = await loadProjectConfig();
+const distRoot = path.join(root, config.paths.distribution);
+const catalogPath = path.join(distRoot, config.paths.catalog);
+const sharedScriptPath = path.join(distRoot, config.paths.sharedBrowserScript);
+const authorLogoCachePath = path.join(root, config.paths.cache, "author-logo.png");
 
 async function authorLogoDataUrl(authorLogoUrl) {
   try {
@@ -45,11 +47,12 @@ const originalSharedScript = await readFile(sharedScriptPath, "utf8");
 
 try {
   const catalog = JSON.parse(originalCatalog);
-  const configuredAuthorLogoUrl = typeof catalog.authorLogoUrl === "string" && catalog.authorLogoUrl.trim() ? catalog.authorLogoUrl : defaultAuthorLogoUrl;
+  const configuredAuthorLogoUrl = typeof catalog.authorLogoUrl === "string" && catalog.authorLogoUrl.trim() ? catalog.authorLogoUrl : undefined;
+  if (!configuredAuthorLogoUrl) throw new Error(`authorLogoUrl ausente em ${config.paths.catalog}.`);
   const authorLogo = await authorLogoDataUrl(configuredAuthorLogoUrl);
   catalog.authorLogo = authorLogo;
   await writeFile(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
-  await writeFile(sharedScriptPath, originalSharedScript.replaceAll(defaultAuthorLogoUrl, authorLogo).replaceAll(configuredAuthorLogoUrl, authorLogo), "utf8");
+  await writeFile(sharedScriptPath, originalSharedScript.replaceAll(configuredAuthorLogoUrl, authorLogo), "utf8");
   await import("./build-bundles-core.mjs");
 } finally {
   // PROTECAO: a publicação Web conserva exclusivamente a URL remota declarada.

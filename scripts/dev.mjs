@@ -4,11 +4,14 @@ import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadProjectConfig } from "./config.mjs";
 
+const config = await loadProjectConfig();
 const compile = spawn("npm", ["run", "compile:watch"], { shell: true, stdio: "inherit" });
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const distRoot = path.join(root, "dist");
-const port = Number(process.env.PORT || 4173);
+const distRoot = path.join(root, config.paths.distribution);
+const port = Number(process.env.PORT || config.development.port);
+const host = config.development.host;
 
 const mime = new Map([
   [".css", "text/css; charset=utf-8"],
@@ -56,8 +59,8 @@ const server = createServer(async (request, response) => {
   }
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`Servidor local em http://127.0.0.1:${port}/ servindo dist/`);
+server.listen(port, host, () => {
+  console.log(`Servidor local em http://${host}:${port}/ servindo ${config.paths.distribution}/`);
 });
 
 function stop() {

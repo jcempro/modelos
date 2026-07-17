@@ -279,34 +279,44 @@
 - Objetivo: eliminar valores customizaveis ou personalizaveis embutidos nos scripts locais e no workflow GitHub Pages, estabelecer uma fonte canonica centralizada e oferecer um comando all-in-one de publicacao.
 - Prioridade: alta.
 - Escopo: Tecnico.
-- Status: em andamento.
+- Status: concluido.
 - Inicio: 20260717.
 - Branch: `dev`.
 
 ### Plano vigente
 
-1. Etapa 1/5 - inventariar configuracoes duplicadas, scripts genericos e contratos de build, validacao e publicacao. Status: em andamento.
-   1.1. Mapear valores customizaveis presentes em `scripts/`, `.github/workflows/`, manifestos e configuracoes de `src/`. Previsao: curta. Status: em andamento.
-   1.2. Classificar cada script por finalidade, consumidor e especializacao. Previsao: curta. Status: pendente.
-2. Etapa 2/5 - definir e documentar a fonte unica de configuracao e seu carregador validado. Status: pendente.
-   2.1. Consolidar configuracoes de build, bundle, validacao, desenvolvimento e publicacao. Previsao: moderada. Status: pendente.
-   2.2. Sincronizar o contrato arquitetural no RCF global. Previsao: curta. Status: pendente.
-3. Etapa 3/5 - migrar scripts e workflow para consumo exclusivo da configuracao central. Status: pendente.
-   3.1. Remover constantes customizaveis duplicadas dos scripts locais. Previsao: moderada. Status: pendente.
-   3.2. Substituir valores personalizaveis do GitHub Pages por entradas derivadas da fonte central. Previsao: moderada. Status: pendente.
-   3.3. Renomear ou consolidar entradas vagas, preservando aliases de compatibilidade quando exigidos. Previsao: moderada. Status: pendente.
-4. Etapa 4/5 - implementar publicacao all-in-one com validacao, build, empacotamento e preparacao deterministica do artefato. Status: pendente.
-   4.1. Criar comando especializado `agent:publish` e entrada NPM explicita. Previsao: moderada. Status: pendente.
-   4.2. Integrar o workflow Pages ao mesmo orquestrador sem duplicar regras. Previsao: moderada. Status: pendente.
-5. Etapa 5/5 - comprovar ausencia de duplicacao e regressao, atualizar memoria e concluir a FT. Status: pendente.
-   5.1. Executar type-check, lint, testes, build, bundles e validacao da publicacao. Previsao: moderada. Status: pendente.
-   5.2. Validar configuracao central, nomes publicos, artefato Pages e fluxo all-in-one. Previsao: moderada. Status: pendente.
+1. Etapa 1/5 - inventariar configuracoes duplicadas, scripts genericos e contratos de build, validacao e publicacao. Status: concluido.
+   1.1. Mapear valores customizaveis presentes em `scripts/`, `.github/workflows/`, manifestos e configuracoes de `src/`. Previsao: curta. Status: concluido.
+   1.2. Classificar cada script por finalidade, consumidor e especializacao. Previsao: curta. Status: concluido.
+2. Etapa 2/5 - definir e documentar a fonte unica de configuracao e seu carregador validado. Status: concluido.
+   2.1. Consolidar configuracoes de build, bundle, validacao, desenvolvimento e publicacao. Previsao: moderada. Status: concluido.
+   2.2. Sincronizar o contrato arquitetural no RCF global. Previsao: curta. Status: concluido.
+3. Etapa 3/5 - migrar scripts e workflow para consumo exclusivo da configuracao central. Status: concluido.
+   3.1. Remover constantes customizaveis duplicadas dos scripts locais. Previsao: moderada. Status: concluido.
+   3.2. Substituir valores personalizaveis do GitHub Pages por entradas derivadas da fonte central. Previsao: moderada. Status: concluido.
+   3.3. Renomear ou consolidar entradas vagas, preservando aliases de compatibilidade quando exigidos. Previsao: moderada. Status: concluido.
+4. Etapa 4/5 - implementar publicacao all-in-one com validacao, build, empacotamento e preparacao deterministica do artefato. Status: concluido.
+   4.1. Criar comando especializado `agent:publish` e entrada NPM explicita. Previsao: moderada. Status: concluido.
+   4.2. Integrar o workflow Pages ao mesmo orquestrador sem duplicar regras. Previsao: moderada. Status: concluido.
+5. Etapa 5/5 - comprovar ausencia de duplicacao e regressao, atualizar memoria e concluir a FT. Status: concluido.
+   5.1. Executar type-check, lint, testes, build, bundles e validacao da publicacao. Previsao: moderada. Status: concluido.
+   5.2. Validar configuracao central, nomes publicos, artefato Pages e fluxo all-in-one. Previsao: moderada. Status: concluido.
 
 ### Estado inicial
 
 - A solicitacao humana determinou migracao para `dev`, remocao de `dist/` e preservacao das demais alteracoes.
 - `dist/` foi removido integralmente e permanece como exclusao local rastreada; nenhum arquivo externo a `dist/` estava modificado no momento da migracao.
 - A implementacao somente pode iniciar depois do commit e push deste registro inicial da FT.
+
+### Resultado
+
+- Commit inicial da FT publicado em `origin/dev`: `01c34c8`.
+- `scripts/config.json` centraliza caminhos, URL publica, host/porta, debounce, recursos CDN e copias locais, branch primaria e contrato do artefato Pages; `scripts/config.mjs` valida e distribui essa configuracao.
+- Build Web, bundles, servidores locais, gerador de versao, validador e workflow Pages consomem a fonte central; a URL de autoria permanece exclusivamente no catalogo runtime `src/assets/config/apps.json`.
+- Entradas especializadas vigentes: `build:web`, `build:offline-bundles`, `validate:publication`, `validate:all`, `publish`, `publish:pages` e `agent:publish`; aliases anteriores delegam sem duplicar implementacao.
+- `scripts/publish-pages.mjs` executa o fluxo all-in-one e fornece ao GitHub Actions a decisao de deploy e o caminho do artefato, eliminando regras duplicadas do YAML.
+- `dist/` foi removido do versionamento e incluido no `.gitignore`; permanece saida reconstruivel local e efemera no CI.
+- Validacao final: `npm run publish` aprovado com type-check, lint, 44 testes, build Web, tres bundles offline, validacao de 4 paginas/30 arquivos e preparacao do artefato.
 
 ### Refinamento final da GUI global 20260717.1905.00
 

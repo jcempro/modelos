@@ -2,11 +2,12 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inflateRawSync } from "node:zlib";
-import { loadBuildConfig } from "./config.mjs";
+import { loadBuildConfig, loadProjectConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const srcDir = path.join(root, "src");
-const distDir = path.join(root, "dist");
+const projectConfig = await loadProjectConfig();
+const srcDir = path.join(root, projectConfig.paths.source);
+const distDir = path.join(root, projectConfig.paths.distribution);
 const buildConfig = await loadBuildConfig();
 
 const staticSourceExtensions = new Set([

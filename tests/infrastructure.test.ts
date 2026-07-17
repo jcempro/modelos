@@ -35,7 +35,7 @@ test("package exposes the full development lifecycle", async () => {
     scripts: Record<string, string>;
   };
 
-  for (const script of ["build", "build:dist", "bundle", "check", "compile", "dev", "dev-live", "lint", "test", "type-check", "validate", "validate:publication"]) {
+  for (const script of ["build", "build:web", "build:offline-bundles", "check", "validate:all", "publish", "publish:pages", "dev", "dev-live", "lint", "test", "type-check", "validate:publication", "agent:publish"]) {
     assert.ok(pkg.scripts[script], `missing npm script: ${script}`);
   }
 });
@@ -43,6 +43,8 @@ test("package exposes the full development lifecycle", async () => {
 test("Pages deploy owns the ephemeral version index", async () => {
   const workflow = await readFile(".github/workflows/ci.yml", "utf8");
   const generator = await readFile("scripts/generate-version-index.mjs", "utf8");
+  const publisher = await readFile("scripts/publish-pages.mjs", "utf8");
+  const config = JSON.parse(await readFile("scripts/config.json", "utf8"));
   const { createVersionIndex, generateVersionIndex } = await import("../scripts/generate-version-index.mjs");
   const hash = "a".repeat(40);
 
@@ -50,8 +52,12 @@ test("Pages deploy owns the ephemeral version index", async () => {
   assert.throws(() => createVersionIndex("short", 123), /SHA Git completo/);
   await assert.rejects(() => generateVersionIndex({ GITHUB_ACTIONS: "false", GITHUB_REF: "refs/heads/master", JCEM_DEPLOY_VERSION: hash }), /deploy oficial/);
   assert.match(workflow, /JCEM_BUILD_VERSION:\s*\$\{\{ github\.sha \}\}/);
-  assert.match(workflow, /Generate deployed version index[\s\S]*github\.ref == 'refs\/heads\/master'/);
-  assert.match(workflow, /npm run generate:version-index/);
+  assert.equal(config.publication.primaryBranch, "master");
+  assert.doesNotMatch(workflow, /refs\/heads\/master|path:\s*dist/);
+  assert.match(workflow, /npm run publish:pages/);
+  assert.match(workflow, /steps\.publish\.outputs\.artifact-path/);
+  assert.match(publisher, /config\.publication\.primaryBranch/);
+  assert.match(publisher, /generateVersionIndex/);
   assert.match(generator, /Math\.floor\(Date\.now\(\) \/ 1000\)/);
 });
 
@@ -459,7 +465,7 @@ test("dev-live builds before serving and keeps Web plus bundles synchronized", a
   assert.doesNotMatch(live, /64-yellow\.png/);
   assert.doesNotMatch(live, /assets", "brand", "logo\.svg"/);
   assert.doesNotMatch(live, /localAuthorLogoFallback/);
-  assert.match(live, /\/__vendor\/html2pdf\.bundle\.min\.js/);
+  assert.match(live, /config\.development\.vendor/);
   assert.match(live, /vendorResources/);
   assert.match(live, /integrity=\(\["'\]\)\.\*\?\\3/);
   assert.match(live, /buildQueued/);
@@ -482,8 +488,8 @@ test("offline bundles embed the app catalog as metadata with absolute upstream r
   assert.match(bundleCore, /workspaceOfflineLogo:\s*await dataUrlFromCatalogRef\(source\.workspaceLogo\)/);
   assert.match(bundleCore, /offlineLogo:\s*await dataUrlFromCatalogRef\(app\.logo\)/);
   assert.match(bundleCore, /toDataUrl\(file\)/);
-  assert.match(bundleEntry, /https:\/\/jcem\.pro\/logo\/64-dark\.png/);
-  assert.match(bundleEntry, /author-logo-64-dark\.png/);
+  assert.match(bundleEntry, /config\.paths\.catalog/);
+  assert.match(bundleEntry, /author-logo\.png/);
   assert.doesNotMatch(bundleEntry, /src", "assets", "brand", "logo\.svg"/);
   assert.doesNotMatch(bundleEntry, /data:image\/svg\+xml;base64/);
   assert.match(bundleEntry, /const configuredAuthorLogoUrl\s*=/);
@@ -491,11 +497,11 @@ test("offline bundles embed the app catalog as metadata with absolute upstream r
   assert.match(bundleEntry, /readFile\(authorLogoCachePath\)/);
   assert.match(bundleEntry, /process\.env\.JCEM_DEV_LIVE === "1"/);
   assert.match(bundleEntry, /catalog\.authorLogo\s*=\s*authorLogo/);
-  assert.match(bundleEntry, /originalSharedScript\.replaceAll\(defaultAuthorLogoUrl, authorLogo\)\.replaceAll\(configuredAuthorLogoUrl, authorLogo\)/);
-  assert.match(shared, /defaultAuthorLogoUrl = "https:\/\/jcem\.pro\/logo\/64-dark\.png"/);
-  assert.match(shared, /authorLogoUrl = options\.authorLogoUrl \?\? defaultAuthorLogoUrl/);
-  assert.match(shared, /authorImage\.src = authorLogoUrl/);
+  assert.match(bundleEntry, /originalSharedScript\.replaceAll\(configuredAuthorLogoUrl, authorLogo\)/);
+  assert.doesNotMatch(shared, /defaultAuthorLogoUrl/);
+  assert.match(shared, /authorLogoUrl = options\.authorLogoUrl/);
+  assert.match(shared, /if \(authorLogoUrl\) authorImage\.src = authorLogoUrl/);
   assert.match(shared, /catalog\.authorLogoUrl/);
-  assert.match(await readFile("src/assets/config/apps.json", "utf8"), /"authorLogoUrl":\s*"https:\/\/jcem\.pro\/logo\/64-dark\.png"/);
+  assert.match(await readFile("src/assets/config/apps.json", "utf8"), /"authorLogoUrl":\s*"https:\/\/jcem\.pro\/logo\/64\.png"/);
   assert.match(shared, /authorLogo\?\.startsWith\("data:image\/png;base64,"\)/);
 });

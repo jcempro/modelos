@@ -7,6 +7,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadProjectConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -21,11 +22,12 @@ export function createVersionIndex(hash, timestamp) {
 
 /** Grava somente no artefato efemero de uma publicacao oficial da branch primaria. */
 export async function generateVersionIndex(environment = process.env) {
-  if (environment.GITHUB_ACTIONS !== "true" || environment.GITHUB_REF !== "refs/heads/master") {
+  const config = await loadProjectConfig();
+  if (environment.GITHUB_ACTIONS !== "true" || environment.GITHUB_REF !== `refs/heads/${config.publication.primaryBranch}`) {
     throw new Error("version.json so pode ser gerado no deploy oficial do GitHub Pages.");
   }
   const payload = createVersionIndex(environment.JCEM_DEPLOY_VERSION, Math.floor(Date.now() / 1000));
-  const output = path.join(root, "dist", "version.json");
+  const output = path.join(root, config.paths.distribution, config.publication.versionIndex);
   await writeFile(output, `${JSON.stringify(payload)}\n`, "utf8");
   return output;
 }

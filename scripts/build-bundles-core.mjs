@@ -5,26 +5,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { constants as zlibConstants, deflateRawSync } from "node:zlib";
 import { minifyCssText, minifyHtmlText, minifyJsText, stripSourceMapReferences } from "./asset-optimizer.mjs";
+import { loadProjectConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const distDir = path.join(root, "dist");
-const cacheDir = path.join(root, ".cache", "build");
+const config = await loadProjectConfig();
+const distDir = path.join(root, config.paths.distribution);
+const cacheDir = path.join(root, config.paths.cache);
 const lockPath = path.join(cacheDir, "bundle.lock");
 
-const externalResources = new Map([
-  [
-    "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.0/html2pdf.bundle.min.js",
-    path.join(root, "node_modules", "html2pdf.js", "dist", "html2pdf.bundle.min.js")
-  ],
-  [
-    "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.14.0/html2pdf.bundle.min.js",
-    path.join(root, "node_modules", "html2pdf.js", "dist", "html2pdf.bundle.min.js")
-  ],
-  [
-    "https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js",
-    path.join(root, "node_modules", "zepto", "dist", "zepto.min.js")
-  ]
-]);
+const externalResources = new Map(config.development.vendor.map(({ url, file }) => [url, path.join(root, file)]));
 
 const mimeByExt = new Map([
   [".avif", "image/avif"],
@@ -244,7 +233,7 @@ async function embedOfflineCatalog(html) {
     apps: Array.isArray(source.apps)
       ? await Promise.all(source.apps.map(async (app) => ({
         ...app,
-        href: new URL(app.href, "https://tools.jcem.pro/").href,
+        href: new URL(app.href, config.site.publicBaseUrl).href,
         offlineLogo: await dataUrlFromCatalogRef(app.logo)
       })))
       : []

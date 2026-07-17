@@ -42,7 +42,7 @@
 
 `dist/` e reconstruivel, ignorado pelo Git, otimizado para producao, raiz unica enviada ao GitHub Pages e unico local de artefatos Web e Bundle. Ele deve conter apenas a arvore publica esperada, arquivos raiz obrigatorios de publicacao, JavaScript compilado, recursos estaticos, `index.html` otimizados e bundles ZIP. Nao deve conter fontes canonicas, caminhos com segmento `src/` ou `dist/`, diretorios vazios, rotas obsoletas, artefatos sem origem publica prevista nem `*.bundle.html` solto.
 
-`scripts/` contem apenas automacao interna de desenvolvimento, build, manutencao, importacao e publicacao; seu conteudo nao integra a publicacao. `scripts/config.json` centraliza entradas TypeScript, bookmarklets, arquivos raiz obrigatorios e saidas publicas, evitando caminhos duplicados ou fixados em scripts.
+`scripts/` contem apenas automacao interna de desenvolvimento, build, manutencao, importacao e publicacao; seu conteudo nao integra a publicacao. `scripts/config.json` e a fonte canonica unica da toolchain e centraliza caminhos de fonte, distribuicao e cache, URL publica, servidor local, recursos CDN com copias locais, entradas TypeScript, bookmarklets, arquivos raiz, saidas publicas, branch primaria e contrato do artefato Pages. Scripts locais e workflows nao podem repetir nem fixar valores customizaveis ou personalizaveis mantidos nessa configuracao. `src/assets/config/*.json` permanece fonte de configuracao exclusiva do runtime Web; quando a toolchain precisar desses valores, deve ler o arquivo fonte ou sua projecao compilada, sem criar fallback concorrente em codigo.
 
 Nao deve haver sobreposicao funcional entre `src/`, `dist/` e `scripts/`.
 
@@ -145,7 +145,9 @@ TypeScript e a fonte padrao do codigo de aplicacao. JavaScript e permitido apena
 
 ## 9. Build, Bundle, CI e Publicacao
 
-O projeto deve possuir scripts NPM para desenvolvimento, recarregamento automatico, compilacao, build, bundle, testes, lint, type-check e validacao. `dev-live` deve servir `dist/`, reconstruir `src/` em watch e recarregar quando artefatos publicos mudarem.
+O projeto deve possuir scripts NPM especializados e semanticamente nomeados para desenvolvimento, recarregamento automatico, build Web, bundles offline, testes, lint, type-check, validacao da publicacao, validacao integral e publicacao. Aliases legados podem existir somente para compatibilidade e devem delegar a uma entrada especializada. `dev-live` deve servir a saida configurada, reconstruir a fonte configurada em watch e recarregar quando artefatos publicos mudarem.
+
+`publish`/`agent:publish` deve ser o fluxo local all-in-one de preparacao da publicacao: executar type-check, lint, testes, build Web, bundles offline, validacao da arvore publica e validacao exclusiva do artefato Pages. `publish:pages` deve usar o mesmo orquestrador no CI, decidir a aplicabilidade do deploy pela branch primaria centralizada, gerar o indexador efemero somente no deploy oficial e fornecer ao workflow o caminho configurado do artefato. O workflow deve limitar-se a instalar dependencias, invocar esse orquestrador, enviar o artefato indicado e acionar o Pages, sem reimplementar regras ou valores da toolchain.
 
 O build deve ser incremental quando possivel, mas fail-safe: erro de IO, cache corrompido, lock concorrente, falha de compilacao, inconsistencia de tipos ou validacao deve impedir publicacao. A validacao deve garantir que cada pagina funcional de `src/` esteja materializada na raiz logica correspondente em `dist/`, que nao haja segmentos publicos `src/` ou `dist/`, que arquivos raiz obrigatorios existam, que artefatos obsoletos sejam podados e que a arvore final contenha somente arquivos esperados.
 
@@ -211,7 +213,7 @@ Novas regras de negocio devem ser documentadas no RCF apropriado. Logica duplica
 - TypeScript e fonte canonica de aplicacao; TSX e preferencial para componentes reutilizaveis.
 - Scripts Node.js em `.mjs` dentro de `scripts/` sao bootstrap executavel da toolchain.
 - Build incremental usa manifestos/locks em `.cache/build/` quando util e protege `dist/`.
-- Entradas de build ficam em `scripts/config.json`.
+- Toda configuracao customizavel da toolchain, inclusive build, bundle, desenvolvimento, validacao e Pages, fica em `scripts/config.json` e e consumida por `scripts/config.mjs`.
 - Cada ferramenta com `index.html` gera ZIP offline no mesmo caminho publico.
 - Publicacao estatica usa `dist/` como raiz unica do Pages.
 - A validacao bloqueia `src/` ou `dist/` como segmento/referencia publica, arquivos obsoletos, diretorios vazios e `*.bundle.html` solto.
