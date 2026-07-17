@@ -1675,7 +1675,11 @@ declare const __JCEM_BUILD_VERSION__: string;
       } catch {
         upstream = await fetchVersionIndex(`${endpoint}?t=${Date.now()}`, "no-store");
       }
-      container.classList.toggle("has-update", upstream.hash !== localVersion.toLowerCase());
+      const hasUpdate = upstream.hash !== localVersion.toLowerCase();
+      container.classList.toggle("has-update", hasUpdate);
+      if (hasUpdate && testVersion && new URLSearchParams(w.location.search).has("__jcem_update_tooltip")) {
+        one<HTMLElement>(".jcem-update-indicator", container)?.focus();
+      }
     } catch { /* PROTECAO: atualizacao indisponivel nunca interfere na interface principal. */ }
   }
 
