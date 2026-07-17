@@ -4,6 +4,7 @@ import {
   faBars,
   faCircleDown,
   faCircleHalfStroke,
+  faEllipsisVertical,
   faFolderOpen,
   faDownload,
   faEraser,
@@ -743,12 +744,21 @@ declare const __JCEM_BUILD_VERSION__: string;
     }
   }
 
-  function initOverflowGroup(root: HTMLElement, actions: HTMLElement, overflow: HTMLElement, stateSelector: string, options: { compactAutosave?: boolean } = {}): void {
+  function initOverflowGroup(root: HTMLElement, actions: HTMLElement, overflow: HTMLElement, stateSelector: string, options: { compactAutosave?: boolean; compactBrand?: boolean } = {}): void {
     const state = one<HTMLInputElement>(stateSelector, root);
+    const brandName = one<HTMLElement>(".jcem-brand-name", root);
     const items = Array.from(actions.children) as HTMLElement[];
     let pending = 0;
 
-    const fits = (): boolean => root.scrollWidth <= root.clientWidth + 1 && actions.scrollWidth <= actions.clientWidth + 1;
+    const setBrandMode = (mode: "full" | "short"): void => {
+      if (!brandName) {
+        return;
+      }
+      const value = mode === "short" ? (brandName.dataset.short || brandName.dataset.full || brandName.textContent || "") : (brandName.dataset.full || brandName.textContent || "");
+      brandName.textContent = value;
+    };
+    const brandFits = (): boolean => !brandName || brandName.scrollWidth <= brandName.clientWidth + 1;
+    const fits = (): boolean => root.scrollWidth <= root.clientWidth + 1 && actions.scrollWidth <= actions.clientWidth + 1 && brandFits();
 
     const restoreItems = (): void => {
       for (const item of items) {
@@ -758,7 +768,8 @@ declare const __JCEM_BUILD_VERSION__: string;
 
     const rebalance = (): void => {
       pending = 0;
-      root.classList.remove("jcem-header-autosave-compact", "jcem-header-autosave-icon-only", "jcem-has-overflow");
+      root.classList.remove("jcem-header-brand-short", "jcem-header-autosave-compact", "jcem-header-autosave-icon-only", "jcem-has-overflow");
+      setBrandMode("full");
       restoreItems();
       if (state) {
         state.checked = false;
@@ -766,6 +777,14 @@ declare const __JCEM_BUILD_VERSION__: string;
 
       if (fits()) {
         return;
+      }
+
+      if (options.compactBrand) {
+        root.classList.add("jcem-header-brand-short");
+        setBrandMode("short");
+        if (fits()) {
+          return;
+        }
       }
 
       if (options.compactAutosave) {
@@ -987,6 +1006,7 @@ declare const __JCEM_BUILD_VERSION__: string;
     faCircleDown,
     faCircleHalfStroke,
     faDownload,
+    faEllipsisVertical,
     faFolderOpen,
     faEraser,
     faFileArrowDown,
@@ -1681,7 +1701,7 @@ declare const __JCEM_BUILD_VERSION__: string;
 
   async function renderAppNavigation(): Promise<void> {
     try {
-      type AppCatalog = { apps?: Array<{ href: string; id: string; logo?: string; offlineLogo?: string; title: string }>; authorLogo?: string; authorLogoUrl?: string; currentAppId?: string; navigationPosition?: string; workspaceLogo?: string; workspaceOfflineLogo?: string };
+      type AppCatalog = { apps?: Array<{ href: string; id: string; logo?: string; offlineLogo?: string; title: string }>; authorLogo?: string; authorLogoUrl?: string; currentAppId?: string; navigationPosition?: string; siteNameFull?: string; siteNameShort?: string; workspaceLogo?: string; workspaceOfflineLogo?: string };
       const embedded = (w as Window & { __JCEM_APP_CATALOG__?: AppCatalog }).__JCEM_APP_CATALOG__;
       const encoded = one<HTMLMetaElement>('meta[name="jcem-app-catalog"]')?.content;
       const metadata: AppCatalog | undefined = encoded
@@ -1695,6 +1715,16 @@ declare const __JCEM_BUILD_VERSION__: string;
         authorImage.src = catalog.authorLogo;
       } else if (authorImage && catalog.authorLogoUrl) {
         authorImage.src = catalog.authorLogoUrl;
+      }
+      const brandName = one<HTMLElement>(".jcem-brand-name");
+      if (brandName) {
+        const full = catalog.siteNameFull || brandName.dataset.full || brandName.textContent || "";
+        const short = catalog.siteNameShort || brandName.dataset.short || full;
+        brandName.dataset.full = full;
+        brandName.dataset.short = short;
+        brandName.textContent = full;
+        brandName.parentElement?.setAttribute("aria-label", full);
+        one<HTMLElement>(".jcem-chrome-header")?.dispatchEvent(new Event("jcem:overflow-refresh"));
       }
       const appLogo = (app: NonNullable<AppCatalog["apps"]>[number]): string => bundled ? (app.offlineLogo ?? app.logo ?? "") : (app.logo ?? "");
       const aside = d.createElement("aside");
@@ -1802,6 +1832,7 @@ declare const __JCEM_BUILD_VERSION__: string;
     const licenseName = options.licenseName ?? seal.__p4;
     const licenseUrl = options.licenseUrl ?? seal.__p5;
     const brandName = seal.__p2;
+    const brandShortName = brandName;
     const authorName = options.authorName ?? options.author ?? seal.__p0;
     const authorUrl = options.authorUrl ?? seal.__p1;
     const authorLogoUrl = options.authorLogoUrl ?? defaultAuthorLogoUrl;
@@ -1818,7 +1849,7 @@ declare const __JCEM_BUILD_VERSION__: string;
     header.className = "jcem-chrome jcem-chrome-header no-print";
     header.innerHTML = `
       <div class="jcem-chrome-identity">
-        <a class="jcem-chrome-brand" href="https://${domain}/"><img class="jcem-global-logo" src="/assets/brand/logo.svg" alt=""><span>${escapeHtml(brandName)}</span></a>
+        <a class="jcem-chrome-brand" href="https://${domain}/" aria-label="${escapeHtml(brandName)}"><img class="jcem-global-logo" src="/assets/brand/logo.svg" alt=""><span class="jcem-brand-name" data-full="${escapeHtml(brandName)}" data-short="${escapeHtml(brandShortName)}">${escapeHtml(brandName)}</span></a>
       </div>
       <div class="jcem-chrome-meta">
         ${autosave}
@@ -1897,7 +1928,7 @@ declare const __JCEM_BUILD_VERSION__: string;
       renderToolbarFromSlot(actions, options.actionsSelector);
     }
     if (headerActions && headerOverflow) {
-      initOverflowGroup(header, headerActions, headerOverflow, ".jcem-header-menu-state", { compactAutosave: true });
+      initOverflowGroup(header, headerActions, headerOverflow, ".jcem-header-menu-state", { compactAutosave: true, compactBrand: true });
     }
     if (toolbarRow && actions && toolbarOverflow) {
       initOverflowGroup(toolbarRow, actions, toolbarOverflow, ".jcem-toolbar-menu-state");

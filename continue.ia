@@ -257,3 +257,11 @@
 - Correcao aplicada: a gaveta de formulario nao exibe scrollbar no trilho retraido; a rolagem existe somente em `.jcem-document-form-scroll` quando expandida. O gatilho exibe icone `f142`, texto `Campos preenchíveis` no estado retraido e `Recolher campos` no expandido; em layout lateral fica no topo da barra, centralizado horizontalmente e com texto ampliado sem aumentar a espessura do trilho.
 - RCF global sincronizado para bloquear regressao nesses pontos, incluindo separacao cabecalho/toolbar, recalculo responsivo, ausencia de fundo vermelho legado e contrato visual da barra da gaveta.
 - Evidencia automatizada: `npm run check` aprovado com type-check, lint, 44 testes, build, tres bundles offline e publicacao validada com 4 paginas/30 arquivos.
+
+### Correcao de marca e icone f142 20260717.1815.00
+
+- Falha confirmada: os botoes `f142` renderizavam vazios porque `faEllipsisVertical` nao estava importado no bundle Font Awesome modular.
+- Correcao aplicada: `faEllipsisVertical` foi incorporado ao conjunto de icones renderizaveis, preservando `f142` para menus retrateis de cabecalho, toolbar e gaveta.
+- Correcao aplicada: `src/assets/config/apps.json` passou a declarar `siteNameFull: "Tools JeanCarloEM"` e `siteNameShort: "Tools JCEM"`. O chrome consome essa configuracao, tenta exibir o nome completo, alterna para o reduzido quando o espaco real nao couber e so entao recolhe controles institucionais para o menu, sem permitir que icones cortem ou ocultem a marca exibida.
+- RCF global sincronizado para tornar obrigatoria a configuracao JSON de nome completo/reduzido e a regra de recolher controles antes de cortar a marca.
+- Evidencia automatizada: `npm run check` aprovado com type-check, lint, 44 testes, build, tres bundles offline e publicacao validada com 4 paginas/30 arquivos.

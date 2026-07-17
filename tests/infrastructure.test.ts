@@ -258,9 +258,12 @@ test("shared toolbar uses declarative Font Awesome icons and portable data actio
   assert.match(sharedTs, /item\.icons/);
   assert.match(sharedTs, /renderIcon\(\{ unicode: "f042" \}\)/);
   assert.match(sharedTs, /renderIcon\(\{ unicode: "f142" \}\)/);
+  assert.match(sharedTs, /faEllipsisVertical/);
   assert.match(sharedTs, /class="jcem-header-menu-state"/);
   assert.match(sharedTs, /class="jcem-toolbar-menu-state"/);
-  assert.match(sharedTs, /initOverflowGroup\(header, headerActions, headerOverflow, "\.jcem-header-menu-state", \{ compactAutosave: true \}\)/);
+  assert.match(sharedTs, /initOverflowGroup\(header, headerActions, headerOverflow, "\.jcem-header-menu-state", \{ compactAutosave: true, compactBrand: true \}\)/);
+  assert.match(sharedTs, /jcem-brand-name/);
+  assert.match(sharedTs, /jcem-header-brand-short/);
   assert.match(sharedTs, /initOverflowGroup\(toolbarRow, actions, toolbarOverflow, "\.jcem-toolbar-menu-state"\)/);
   assert.match(sharedTs, /ResizeObserver/);
   assert.match(sharedTs, /addEventListener\("orientationchange", schedule/);
@@ -353,6 +356,8 @@ test("dashboard catalog, themes and consent remain centralized", async () => {
   const dashboard = await readFile("src/index.html", "utf8");
   const shared = await readFile("src/assets/js/documentos.ts", "utf8");
   assert.equal(catalog.defaultApp, null);
+  assert.equal(catalog.siteNameFull, "Tools JeanCarloEM");
+  assert.equal(catalog.siteNameShort, "Tools JCEM");
   assert.equal(catalog.apps.length, 3);
   assert.equal(consent.cdnVersion, "2.0.0");
   assert.match(dashboard, /data-app-grid/);
