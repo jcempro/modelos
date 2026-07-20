@@ -24,3 +24,4 @@ Ao alterar o sistema:
 - Separe regras globais no [RCF.md](RCF.md) raiz e regras específicas no `RCF.md` do documento ou módulo correspondente dentro de `src/`.
 - Valide visualmente mudanças que afetem impressão, margens, paginação, campos editáveis, timbre, toolbar ou geração de PDF.
 - Não altere arquivos reais do usuário, histórico git ou arquivos fora do escopo solicitado sem autorização explícita.
+- Inspecionar continuamente a raiz para extrair demandas pendentes do `TODO.md` em etapas atômicas para FT/etapas; editar `TODO.md`, para indicar FT/etapa vinculada; e consolidar a remoção via commit isolado no Git para rastreabilidade exclusiva; não implementar solicitações solicitadas sem solicitação explicita; as FTs e etapas DEVEM ter tarefa finais, que ao concluir, que remova o conteúdo análogo de `TODO.md`, garantido limpeza contínua de `TODO.md`.
