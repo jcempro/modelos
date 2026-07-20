@@ -26,3 +26,11 @@
 ## 4 Crie uma Issue para `agents.md`
 
 * [ ]  Reportar formalmente uma issue estruturada de aprimoramento no `agents.md` justificando a padronização universal do TODO.md e detalhando seus modelos, ciclo de vida, condições e benefícios de generalização; a proposta deve codificar regras otimizadas de tratamento tolerantes a falhas e flexíveis para uma sintaxe confeccionada 95% por humanos (liberdade de expressão e mitigação de erros de digitação e sintaxe) e 5% atualizada de forma determinística por IAs para expurgo e mutação de status. Objetivo principal: ser como prompts de pendencias a sere colocados na fila de processamento/implementação ou correção para a IA. Preferir o nome `TODO.ia.md` para declarar o destino do TODO: ia.
+
+## Ícone de MPL2
+
+* [ ] O ícone de MPL2 exibido no cabeçalho deve utilizar o .svg existente em `src\assets\img\mpl2.svg`. No github pages, ele deve ser lincado, e não incorporado, e no bundles, deve ser incorporado.
+
+## Aderência a centralização de configs
+
+* [ ] Todas as configurações deve ser unificadas, não necessariamente em um único arquivo, mas em um único local. A segregação em multiplos arquivo é permitido pelo `agents.md` e permite separar por contexto, entretando não deve-se permitir que os dados claramente personalizáveis, existam soltos em várias estruturas hierarquicas, e nem diretamente em múltiplos arquivos de código/script.
