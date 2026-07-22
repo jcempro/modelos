@@ -10,18 +10,11 @@ import { fileURLToPath } from "node:url";
 import { loadProjectConfig } from "./config.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-<<<<<<< HEAD
-const catalogPath = path.join(root, "dist", "assets", "config", "apps.json");
-const sharedScriptPath = path.join(root, "dist", "assets", "js", "documentos.js");
-const defaultAuthorLogoUrl = "https://jcem.pro/logo/64.png";
-const authorLogoCachePath = path.join(root, ".cache", "build", "author-logo-64.png");
-=======
 const config = await loadProjectConfig();
 const distRoot = path.join(root, config.paths.distribution);
 const catalogPath = path.join(distRoot, config.paths.catalog);
 const sharedScriptPath = path.join(distRoot, config.paths.sharedBrowserScript);
 const authorLogoCachePath = path.join(root, config.paths.cache, "author-logo.png");
->>>>>>> dev
 
 async function authorLogoDataUrl(authorLogoUrl) {
   try {
